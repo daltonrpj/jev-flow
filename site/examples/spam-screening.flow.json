@@ -1,0 +1,80 @@
+{
+  "id": "spam-screening",
+  "name": "Spam and abuse screening",
+  "description": "Generic triage; labels never block, delete or report content.",
+  "input_schema": {
+    "text": {
+      "type": "string",
+      "required": true,
+      "minLength": 1,
+      "maxLength": 3000
+    }
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 3000
+  },
+  "start": "judge",
+  "nodes": {
+    "judge": {
+      "type": "jev.ask",
+      "state": {
+        "text": "{{input.text}}"
+      },
+      "questions": {
+        "category": {
+          "type": "choice",
+          "instructions": "Which label is best supported by the text? Choose uncertain when evidence is insufficient.",
+          "criteria": {
+            "spam": "Repeated unsolicited promotion or scam-like solicitation is explicit.",
+            "ordinary": "Ordinary communication without an explicit spam signal.",
+            "uncertain": "Neither category is clear."
+          }
+        },
+        "credential_request": {
+          "type": "noul",
+          "instructions": "Does the text explicitly request a password, one-time code or payment credential?"
+        }
+      },
+      "next": "route"
+    },
+    "route": {
+      "type": "flow.switch",
+      "on": "{{judge.valores.category}}",
+      "onInvalid": "default",
+      "cases": {
+        "spam": "review",
+        "ordinary": "credential_gate",
+        "_default": "review"
+      }
+    },
+    "credential_gate": {
+      "type": "flow.if",
+      "when": "{{judge.valores.credential_request}} < 0.2",
+      "onInvalid": "else",
+      "then": "ordinary_log",
+      "else": "review"
+    },
+    "ordinary_log": {
+      "type": "action.log",
+      "texto": "Draft label: ordinary. Separate policy controls any release."
+    },
+    "review": {
+      "type": "action.log",
+      "texto": "Draft label: human abuse review. No content is removed."
+    }
+  },
+  "fixtures": [
+    {
+      "id": "synthetic-spam",
+      "input": {
+        "text": "Example: Send a one-time code to claim a reward."
+      },
+      "answers": {
+        "category": "spam",
+        "credential_request": 0.98
+      }
+    }
+  ]
+}

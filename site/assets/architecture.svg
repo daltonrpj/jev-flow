@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+<title id="title">JEV Flow architecture</title><desc id="desc">Input state passes to a typed question, schema validation, code owned policy, and an explicit result and evidence log.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#edf2e9"/><stop offset="1" stop-color="#dce8e2"/></linearGradient><filter id="s" x="-20%" y="-25%" width="140%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#12313b" flood-opacity=".12"/></filter></defs>
+<rect width="1200" height="480" rx="18" fill="url(#bg)"/>
+<g fill="none" stroke="#6f9c97" stroke-width="3" stroke-dasharray="8 8"><path d="M242 219h43"/><path d="M503 219h43"/><path d="M764 219h43"/><path d="M1025 219h43"/></g>
+<g fill="#4a7b77"><path d="m281 212 10 7-10 7z"/><path d="m542 212 10 7-10 7z"/><path d="m803 212 10 7-10 7z"/><path d="m1064 212 10 7-10 7z"/></g>
+<g filter="url(#s)">
+<rect x="38" y="126" width="204" height="185" rx="15" fill="#fffefa" stroke="#bfd0c7"/>
+<rect x="299" y="126" width="204" height="185" rx="15" fill="#172b31"/>
+<rect x="560" y="126" width="204" height="185" rx="15" fill="#fffefa" stroke="#bfd0c7"/>
+<rect x="821" y="126" width="204" height="185" rx="15" fill="#c6f05f"/>
+<rect x="1080" y="126" width="82" height="185" rx="15" fill="#fffefa" stroke="#bfd0c7"/>
+</g>
+<g font-family="Inter,Segoe UI,Arial,sans-serif">
+<g font-size="12" font-weight="800" letter-spacing="2"><text x="64" y="159" fill="#738a80">01 / INPUT</text><text x="325" y="159" fill="#9fbab4">02 / JUDGMENT</text><text x="586" y="159" fill="#738a80">03 / VALIDATE</text><text x="847" y="159" fill="#466528">04 / POLICY</text><text x="1103" y="159" fill="#738a80">05</text></g>
+<g font-size="24" font-weight="750"><text x="64" y="213" fill="#21363a">State</text><text x="325" y="213" fill="#e7f2e6">Choice / Noul</text><text x="586" y="213" fill="#21363a">Typed schema</text><text x="847" y="213" fill="#1e3331">Code decides</text><text x="1100" y="213" fill="#21363a">Result</text></g>
+<g font-size="15" fill="#657b75"><text x="64" y="241">Known inputs</text><text x="64" y="263">+ context</text><text x="586" y="241">Range + missing</text><text x="586" y="263">answer checks</text><text x="847" y="241" fill="#405b2f">Thresholds, review</text><text x="847" y="263" fill="#405b2f">and effects gate</text><text x="1100" y="241">Log</text></g>
+<text x="325" y="241" font-size="15" fill="#a9c4bc">Score, with source</text>
+</g>
+<path d="M136 312v51h943" fill="none" stroke="#6a9c94" stroke-width="2" stroke-dasharray="6 7"/><circle cx="1079" cy="363" r="5" fill="#367e86"/>
+<rect x="395" y="343" width="412" height="43" rx="21" fill="#dcebe1" stroke="#bdd0c3"/>
+<text x="601" y="370" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#365e61">EVIDENCE + PROVENANCE + ERRORS</text>
+<text x="48" y="442" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" letter-spacing="2" font-weight="800" fill="#6b8981">THE MODEL SUPPLIES EVIDENCE. THE FLOW OWNS THE DECISION.</text>
+</svg>

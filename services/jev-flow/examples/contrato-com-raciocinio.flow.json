@@ -1,0 +1,161 @@
+{
+  "id": "contrato-com-raciocinio",
+  "name": "Contrato com raciocínio auditável",
+  "description": "Compacta o contexto, reserva orçamento, usa Jev só para ambiguidade e decide por um subgrafo lógico determinístico com revisão conservadora.",
+  "input_schema": {
+    "clausula": "string — cláusula contratual a analisar",
+    "documentado": "boolean — existe documento válido que sustenta a cláusula"
+  },
+  "fixtures": [
+    {
+      "id": "claro-e-documentado",
+      "name": "Cláusula clara e documentada",
+      "input": {
+        "clausula": "O pagamento vence em 30 dias após o aceite formal.",
+        "documentado": true
+      }
+    },
+    {
+      "id": "revisao-conservadora",
+      "name": "Evidência documental ausente",
+      "input": {
+        "clausula": "O prazo poderá mudar conforme entendimento entre as partes.",
+        "documentado": false
+      }
+    }
+  ],
+  "limits": {
+    "maxSteps": 12,
+    "maxJevCalls": 1,
+    "maxInputTokens": 3000
+  },
+  "start": "compactar",
+  "nodes": {
+    "compactar": {
+      "type": "context.compact",
+      "text": "{{input.clausula}}",
+      "maxChars": 4000,
+      "next": "reservar-orcamento"
+    },
+    "reservar-orcamento": {
+      "type": "budget.guard",
+      "budget": {
+        "steps": 7,
+        "jevCalls": 1,
+        "inputTokens": 1200
+      },
+      "next": "julgar-ambiguidade"
+    },
+    "julgar-ambiguidade": {
+      "type": "jev.ask",
+      "questions": {
+        "ambiguidade": {
+          "type": "noul",
+          "instructions": "A cláusula compactada permite duas ou mais interpretações materiais plausíveis? Considere somente o texto fornecido; ausência de contexto não é prova de ambiguidade."
+        }
+      },
+      "next": "inferir"
+    },
+    "inferir": {
+      "type": "logic.subgraph",
+      "graph": {
+        "version": "logic.graph/1",
+        "facts": {
+          "documentado": {
+            "state": "{{input.documentado}}",
+            "evidence": [
+              "documento-fonte"
+            ]
+          },
+          "ambiguidade": {
+            "state": "true",
+            "value": "{{julgar-ambiguidade.valores.ambiguidade}}"
+          }
+        },
+        "evidence": {
+          "documento-fonte": {
+            "state": "present",
+            "supports": [
+              "documentado"
+            ],
+            "source": "input do operador"
+          }
+        },
+        "rules": [
+          {
+            "id": "r-seguro-continuar",
+            "priority": 10,
+            "responsible": "compliance",
+            "burden": "high",
+            "when": {
+              "all": [
+                {
+                  "fact": "documentado",
+                  "is": "true"
+                },
+                {
+                  "compare": {
+                    "left": {
+                      "fact": "ambiguidade"
+                    },
+                    "operator": "<=",
+                    "right": 0.35
+                  }
+                }
+              ]
+            },
+            "unless": {
+              "fact": "documentado",
+              "is": "controversial"
+            },
+            "then": {
+              "conclusion": "seguro_continuar",
+              "state": "true"
+            }
+          }
+        ],
+        "conclusions": {
+          "seguro_continuar": {
+            "burden": "high",
+            "responsible": "compliance"
+          }
+        }
+      },
+      "next": "rotear-conclusao"
+    },
+    "rotear-conclusao": {
+      "type": "flow.switch",
+      "on": "{{inferir.conclusionById.seguro_continuar.state}}",
+      "cases": {
+        "true": "registrar-aprovacao",
+        "_default": "registrar-revisao"
+      }
+    },
+    "registrar-aprovacao": {
+      "type": "action.log",
+      "texto": "[auto] requisitos satisfeitos; trilha preservada em inferir.audit",
+      "next": "emitir-metrica"
+    },
+    "registrar-revisao": {
+      "type": "action.log",
+      "texto": "[review] desconhecido, conflito, derrotador ou ônus insuficiente exige revisão humana",
+      "next": "emitir-metrica"
+    },
+    "emitir-metrica": {
+      "type": "metrics.emit",
+      "event": {
+        "name": "contract.reasoning.completed",
+        "mode": "deterministic-first",
+        "humanReviewFallback": true
+      },
+      "next": "fim"
+    },
+    "fim": {
+      "type": "action.set",
+      "values": {
+        "status": "concluido",
+        "conclusao": "{{inferir.conclusionById.seguro_continuar.state}}"
+      }
+    }
+  }
+}

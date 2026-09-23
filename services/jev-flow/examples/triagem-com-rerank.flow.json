@@ -1,0 +1,53 @@
+{
+  "id": "triagem-com-rerank",
+  "name": "Triagem com rerank e ensemble",
+  "description": "Ranqueia candidatos com 1 chamada Jev batched, agrega os dois melhores scores num ensemble conservador e roteia: aprovado segue direto, reprovado vai para revisão humana.",
+  "input_schema": {
+    "candidatos": "array — lista de textos/candidatos para triar"
+  },
+  "fixtures": [
+    {
+      "id": "candidato-forte",
+      "name": "Um candidato claramente melhor",
+      "input": { "candidatos": ["Solicitação de reembolso duplicada do pedido 1234", "Dúvida sobre prazo de entrega do pedido 5678", "Elogio à equipe de suporte"] }
+    }
+  ],
+  "limits": {
+    "maxSteps": 6,
+    "maxJevCalls": 1,
+    "maxInputTokens": 6000
+  },
+  "start": "ranquear",
+  "nodes": {
+    "ranquear": {
+      "type": "jev.rerank",
+      "items": "{{input.candidatos}}",
+      "question": "Qual candidato representa o ticket mais urgente para a equipe de operações?",
+      "maxItems": 10,
+      "next": "agregar"
+    },
+    "agregar": {
+      "type": "flow.ensemble",
+      "scores": ["{{ranquear.topScore}}", "{{ranquear.scores.1}}"],
+      "policy": "conservador",
+      "threshold": 0.5,
+      "next": "decidir"
+    },
+    "decidir": {
+      "type": "flow.if",
+      "when": "{{agregar.approved}} == true",
+      "then": "prioridade-alta",
+      "else": "revisao-humana"
+    },
+    "prioridade-alta": {
+      "type": "action.log",
+      "texto": "Ticket de alta prioridade: {{ranquear.top}}",
+      "next": null
+    },
+    "revisao-humana": {
+      "type": "action.log",
+      "texto": "Sem consenso entre juízes — escalar para revisão humana",
+      "next": null
+    }
+  }
+}

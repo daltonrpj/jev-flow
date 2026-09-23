@@ -1,0 +1,90 @@
+{
+  "id": "interactive-labs",
+  "name": "Interactive JEV Labs",
+  "description": "A lesson in typed judgments and code-owned branching.",
+  "input_schema": {
+    "scenario": {
+      "type": "string",
+      "required": true,
+      "minLength": 5,
+      "maxLength": 1800
+    },
+    "learner_goal": {
+      "type": "string",
+      "maxLength": 500
+    }
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 3000
+  },
+  "start": "judge",
+  "nodes": {
+    "judge": {
+      "type": "jev.ask",
+      "state": {
+        "scenario": "{{input.scenario}}",
+        "learner_goal": "{{input.learner_goal}}"
+      },
+      "questions": {
+        "activity": {
+          "type": "choice",
+          "instructions": "Which exercise is described? Choose unclear if not identified.",
+          "criteria": {
+            "classification": "Choose among categories.",
+            "ranking": "Order candidates by a criterion.",
+            "unclear": "Activity is not sufficiently described."
+          }
+        },
+        "criterion_present": {
+          "type": "noul",
+          "instructions": "Does input explicitly state the criterion guiding the exercise?"
+        }
+      },
+      "next": "gate"
+    },
+    "gate": {
+      "type": "flow.if",
+      "when": "{{judge.valores.criterion_present}} >= 0.75",
+      "onInvalid": "else",
+      "then": "route",
+      "else": "clarify"
+    },
+    "route": {
+      "type": "flow.switch",
+      "on": "{{judge.valores.activity}}",
+      "onInvalid": "default",
+      "cases": {
+        "classification": "classification_log",
+        "ranking": "ranking_log",
+        "_default": "clarify"
+      }
+    },
+    "classification_log": {
+      "type": "action.log",
+      "texto": "Draft lab: classification exercise; no external effect."
+    },
+    "ranking_log": {
+      "type": "action.log",
+      "texto": "Draft lab: ranking exercise; no external effect."
+    },
+    "clarify": {
+      "type": "action.log",
+      "texto": "Draft lab: ask for a clearer criterion."
+    }
+  },
+  "fixtures": [
+    {
+      "id": "synthetic-lab",
+      "input": {
+        "scenario": "Example: classify support tickets by team.",
+        "learner_goal": "Use message text only."
+      },
+      "answers": {
+        "activity": "classification",
+        "criterion_present": 0.9
+      }
+    }
+  ]
+}

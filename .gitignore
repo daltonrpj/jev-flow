@@ -1,0 +1,19 @@
+# User-specific connections and execution state always live outside the checkout.
+.env
+.env.*
+data/
+runtime-data/
+*.log
+*.jsonl
+*.key
+*.pem
+*.p12
+*.sqlite
+*.db
+node_modules/
+playwright-report/
+test-results/
+site/media/generated-*
+site/media/tmp/
+.DS_Store
+Thumbs.db

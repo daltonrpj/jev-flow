@@ -1,0 +1,140 @@
+{
+  "id": "reembolso-loja",
+  "name": "Reembolso da loja com regra citada",
+  "description": "Exemplo UNIVERSAL (qualquer negócio, não jurídico): o pedido entra, o nó rules.find acha a regra aplicável da política ingerida com CITAÇÃO LITERAL, exceções marcadas desviam para revisão ANTES da ação, a confiança separa automático (>= 0.85) de humano, e o estorno só sai por webhook após budget + verificação de evidência.",
+  "input_schema": {
+    "pedido": { "type": "string", "required": true, "minLength": 10, "maxLength": 2000, "description": "o caso em linguagem natural (o que aconteceu, quando, estado do produto)" },
+    "valor": { "type": "number", "required": true, "minimum": 0, "maximum": 100000, "description": "valor do pedido em reais" },
+    "canal": { "type": "string", "enum": ["site", "app", "telefone", "loja"], "description": "onde a compra foi feita" }
+  },
+  "fixtures": [
+    {
+      "id": "defeito-claro",
+      "name": "Defeito comprovado em 3 dias (site)",
+      "input": {
+        "pedido": "Cadeira gamer chegou com o apoio de braço quebrado, foto anexada pelo cliente; recebida há 3 dias",
+        "valor": 899.9,
+        "canal": "site"
+      },
+      "answers": { "qual_regra": "R001", "existe_regra": 0.95 },
+      "esperado": { "veredicto": "aplicavel", "regra": "R001", "excecao": false, "status": "aprovado_automatico", "webhook": true }
+    },
+    {
+      "id": "alto-valor",
+      "name": "Defeito em pedido acima de R$ 2.000 (exceção antifraude)",
+      "input": {
+        "pedido": "Notebook apresentou defeito de fábrica na tela, recebido há 2 dias, nota fiscal anexada",
+        "valor": 3400,
+        "canal": "site"
+      },
+      "answers": { "qual_regra": "R009", "existe_regra": 0.93 },
+      "esperado": { "veredicto": "aplicavel", "regra": "R009", "excecao": true, "status": "revisao_humana", "webhook": false }
+    },
+    {
+      "id": "excecao-historico",
+      "name": "Regra de exceção: cliente com 3+ reembolsos",
+      "input": {
+        "pedido": "Cliente com 4 reembolsos aprovados nos últimos 30 dias pede novo estorno de produto com defeito recebido há 2 dias",
+        "valor": 450,
+        "canal": "site"
+      },
+      "answers": { "qual_regra": "R012", "existe_regra": 0.95 },
+      "esperado": { "veredicto": "aplicavel", "regra": "R012", "excecao": true, "status": "revisao_humana", "webhook": false }
+    },
+    {
+      "id": "fora-da-politica",
+      "name": "Pergunta logística (fora da política)",
+      "input": {
+        "pedido": "Cliente quer saber onde está o pedido 881 que está atrasado, pergunta sobre rastreio e entrega",
+        "valor": 0,
+        "canal": "telefone"
+      },
+      "answers": { "qual_regra": "nenhuma", "existe_regra": 0.05 },
+      "esperado": { "veredicto": "sem_regra", "regra": null, "excecao": false, "status": "revisao_humana", "webhook": false }
+    }
+  ],
+  "limits": {
+    "maxSteps": 12,
+    "maxJevCalls": 2,
+    "maxInputTokens": 8000
+  },
+  "start": "reservar",
+  "nodes": {
+    "reservar": {
+      "type": "budget.guard",
+      "budget": { "steps": 7, "jevCalls": 2, "inputTokens": 6000 },
+      "next": "aplicar_politica"
+    },
+    "aplicar_politica": {
+      "type": "rules.find",
+      "ruleset": "politica-reembolso",
+      "pergunta": "Pedido: {{input.pedido}} · valor R$ {{input.valor}} · canal {{input.canal}}",
+      "next": "rotear_veredicto"
+    },
+    "rotear_veredicto": {
+      "type": "flow.switch",
+      "on": "{{aplicar_politica.veredicto}}",
+      "cases": {
+        "aplicavel": "checar_confianca",
+        "_default": "revisar_humano"
+      }
+    },
+    "checar_confianca": {
+      "type": "flow.if",
+      "when": "{{aplicar_politica.confianca}} >= 0.85",
+      "then": "checar_excecao",
+      "else": "revisar_humano"
+    },
+    "checar_excecao": {
+      "type": "flow.if",
+      "when": "{{aplicar_politica.excecao}} == true",
+      "then": "revisar_humano",
+      "else": "verificar"
+    },
+    "verificar": {
+      "type": "jev.verify",
+      "claim": "A regra citada da política de reembolso autoriza a decisão automática deste pedido.",
+      "evidence": "regra {{aplicar_politica.regra}}: {{aplicar_politica.citacao.texto}} · fonte {{aplicar_politica.citacao.fonte}} · pedido: {{input.pedido}}",
+      "minSupport": 0.8,
+      "next": "autorizar"
+    },
+    "autorizar": {
+      "type": "flow.if",
+      "when": "{{verificar.gate.pass}} == true",
+      "then": "webhook_estorno",
+      "else": "revisar_humano"
+    },
+    "webhook_estorno": {
+      "type": "action.webhook",
+      "url": "https://SEU-ERP.example.com/reembolsos",
+      "body": {
+        "evento": "reembolso_autorizado",
+        "pedido": "{{input.pedido}}",
+        "valor": "{{input.valor}}",
+        "regra_aplicada": "{{aplicar_politica.regra}}",
+        "citacao_literal": "{{aplicar_politica.citacao.texto}}"
+      },
+      "onError": "abortar",
+      "next": "concluido"
+    },
+    "concluido": {
+      "type": "action.set",
+      "values": { "status": "aprovado_automatico" },
+      "next": "fim"
+    },
+    "revisar_humano": {
+      "type": "action.log",
+      "texto": "revisão humana: {{input.pedido}} · veredicto {{aplicar_politica.veredicto}} · regra {{aplicar_politica.regra}}",
+      "next": "fim_set"
+    },
+    "fim_set": {
+      "type": "action.set",
+      "values": { "status": "revisao_humana" },
+      "next": "fim"
+    },
+    "fim": {
+      "type": "action.log",
+      "texto": "fim do flow"
+    }
+  }
+}

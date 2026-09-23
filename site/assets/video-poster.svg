@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+<title id="title">JEV Flow video placeholder</title><desc id="desc">Illustrative media card showing a typed judgment and policy path.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#193238"/><stop offset="1" stop-color="#0f2028"/></linearGradient><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#8db1a3" opacity=".25"/></pattern></defs>
+<rect width="900" height="520" fill="url(#bg)"/><rect width="900" height="520" fill="url(#p)"/>
+<rect x="87" y="104" width="726" height="310" rx="22" fill="#203b40" stroke="#668681"/>
+<path d="M188 264h141m216 0h141" stroke="#8bbab4" stroke-width="3" stroke-dasharray="10 9"/>
+<rect x="113" y="206" width="181" height="116" rx="13" fill="#f6f6ee"/><rect x="360" y="194" width="181" height="140" rx="13" fill="#80c9d2"/><rect x="607" y="206" width="181" height="116" rx="13" fill="#c6f05f"/>
+<g font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="850" letter-spacing="2"><text x="135" y="241" fill="#53706e">INPUT</text><text x="382" y="230" fill="#22535b">JUDGMENT</text><text x="629" y="241" fill="#506c2f">POLICY</text></g>
+<g fill="#a7bab0"><rect x="135" y="260" width="132" height="9" rx="4"/><rect x="135" y="281" width="94" height="8" rx="4"/></g>
+<g fill="#d1f0ea"><rect x="382" y="250" width="129" height="8" rx="4"/><rect x="382" y="272" width="104" height="8" rx="4"/><rect x="382" y="294" width="118" height="8" rx="4"/></g>
+<g fill="#729347"><rect x="629" y="260" width="131" height="9" rx="4"/><rect x="629" y="281" width="98" height="8" rx="4"/></g>
+<rect x="366" y="245" width="168" height="43" rx="20" fill="#f8faf1" opacity=".96"/><text x="450" y="272" text-anchor="middle" fill="#18383d" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="900" letter-spacing="1.5">VIDEO PENDING</text>
+<text x="88" y="70" fill="#d5e7d8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="900" letter-spacing="4">JEV FLOW / WALKTHROUGH</text>
+<text x="88" y="457" fill="#a7c6bd" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Illustrative poster · video and captions are added after verification.</text>
+</svg>

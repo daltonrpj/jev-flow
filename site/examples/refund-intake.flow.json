@@ -1,0 +1,94 @@
+{
+  "id": "refund-intake",
+  "name": "Refund intake",
+  "description": "Classifies requests; does not decide eligibility or issue a refund.",
+  "input_schema": {
+    "request": {
+      "type": "string",
+      "required": true,
+      "minLength": 5,
+      "maxLength": 2500
+    },
+    "order_context": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 3000
+  },
+  "start": "judge",
+  "nodes": {
+    "judge": {
+      "type": "jev.ask",
+      "state": {
+        "request": "{{input.request}}",
+        "order_context": "{{input.order_context}}"
+      },
+      "questions": {
+        "intent": {
+          "type": "choice",
+          "instructions": "What does the text explicitly ask for? Choose other if uncertain.",
+          "criteria": {
+            "refund": "A refund or money back is requested.",
+            "information": "Order information is requested without a refund request.",
+            "other": "Neither intent is clear."
+          }
+        },
+        "context_present": {
+          "type": "noul",
+          "instructions": "Does input explicitly include enough order context for a human to locate the order? Do not judge eligibility."
+        }
+      },
+      "next": "route"
+    },
+    "route": {
+      "type": "flow.switch",
+      "on": "{{judge.valores.intent}}",
+      "onInvalid": "default",
+      "cases": {
+        "refund": "context_gate",
+        "information": "information_log",
+        "_default": "review"
+      }
+    },
+    "context_gate": {
+      "type": "flow.if",
+      "when": "{{judge.valores.context_present}} >= 0.8",
+      "onInvalid": "else",
+      "then": "policy_review",
+      "else": "request_context"
+    },
+    "policy_review": {
+      "type": "action.log",
+      "texto": "Draft: human policy review; no refund is approved."
+    },
+    "request_context": {
+      "type": "action.log",
+      "texto": "Draft: request order context."
+    },
+    "information_log": {
+      "type": "action.log",
+      "texto": "Draft: information queue."
+    },
+    "review": {
+      "type": "action.log",
+      "texto": "Draft: human intent clarification."
+    }
+  },
+  "fixtures": [
+    {
+      "id": "synthetic-refund",
+      "input": {
+        "request": "Example: I would like a refund for my order.",
+        "order_context": "Example order 1001"
+      },
+      "answers": {
+        "intent": "refund",
+        "context_present": 0.9
+      }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "id": "triagem-entrada",
+  "name": "Triagem de tickets na entrada",
+  "description": "Exemplo visual: julga área e urgência, reserva orçamento, verifica a evidência e só libera o webhook no ramo aprovado.",
+  "input_schema": {
+    "mensagem": "string — texto do ticket como chegou",
+    "conta": "string — tier da conta (consumer|business|enterprise)"
+  },
+  "start": "julgar",
+  "nodes": {
+    "julgar": {
+      "type": "jev.ask",
+      "questions": {
+        "area": {
+          "type": "choice",
+          "instructions": "Qual área deve tratar o ticket em `mensagem`?",
+          "criteria": {
+            "billing": "Cobranças, faturas, estornos, assinaturas e pagamentos.",
+            "tecnico": "Bugs, erros, integrações, indisponibilidade e dúvidas de uso.",
+            "outro": "Nenhuma das anteriores — fora do escopo de suporte."
+          }
+        },
+        "urgente": {
+          "type": "noul",
+          "instructions": "A `mensagem` comunica pressa de tempo de forma explícita (prazo, hoje, agora, operação parada)?"
+        }
+      },
+      "next": "rota-area"
+    },
+    "rota-area": {
+      "type": "flow.switch",
+      "on": "{{julgar.valores.area}}",
+      "cases": {
+        "billing": "se-urgente-billing",
+        "tecnico": "log-tecnico",
+        "_default": "log-outro"
+      }
+    },
+    "se-urgente-billing": {
+      "type": "flow.if",
+      "when": "{{julgar.valores.urgente}} >= 0.7",
+      "then": "reservar-notificacao",
+      "else": "log-billing-normal"
+    },
+    "reservar-notificacao": {
+      "type": "budget.guard",
+      "budget": {
+        "steps": 4,
+        "jevCalls": 1,
+        "inputTokens": 2000
+      },
+      "next": "verificar-notificacao"
+    },
+    "verificar-notificacao": {
+      "type": "jev.verify",
+      "claim": "O ticket relata uma cobrança urgente que deve ser notificada ao time de billing.",
+      "evidence": "{{input.mensagem}}",
+      "minSupport": 0.6,
+      "next": "autorizar-notificacao"
+    },
+    "autorizar-notificacao": {
+      "type": "flow.if",
+      "when": "{{verificar-notificacao.gate.pass}} == true",
+      "then": "notificar-billing-hoje",
+      "else": "revisar-notificacao"
+    },
+    "notificar-billing-hoje": {
+      "type": "action.webhook",
+      "url": "https://webhook.example.invalid/triage-billing",
+      "body": {
+        "prioridade": "hoje",
+        "motivo": "cobrança com prazo explícito",
+        "conta": "{{input.conta}}",
+        "ticket": "{{input.mensagem}}",
+        "urgencia_jev": "{{julgar.valores.urgente}}"
+      },
+      "onError": "abortar",
+      "next": "fim-ok"
+    },
+    "revisar-notificacao": {
+      "type": "action.log",
+      "texto": "[billing/revisão] evidência insuficiente para webhook automático",
+      "next": "fim-ok"
+    },
+    "log-billing-normal": {
+      "type": "action.log",
+      "texto": "[billing/normal] {{input.mensagem}} (urgencia={{julgar.valores.urgente}})",
+      "next": "fim-ok"
+    },
+    "log-tecnico": {
+      "type": "action.log",
+      "texto": "[tecnico] abrir issue para {{input.conta}}: {{input.mensagem}}",
+      "next": "fim-ok"
+    },
+    "log-outro": {
+      "type": "action.log",
+      "texto": "[outro] triagem humana: {{input.mensagem}}",
+      "next": "fim-ok"
+    },
+    "fim-ok": {
+      "type": "action.set",
+      "values": { "status": "triado", "area": "{{julgar.valores.area}}" }
+    }
+  }
+}

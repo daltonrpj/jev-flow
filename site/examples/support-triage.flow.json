@@ -1,0 +1,88 @@
+{
+  "id": "support-triage",
+  "name": "Support triage",
+  "description": "Generic ticket routing draft; no tickets are sent.",
+  "input_schema": {
+    "message": {
+      "type": "string",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 2000
+    }
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 3000
+  },
+  "start": "judge",
+  "nodes": {
+    "judge": {
+      "type": "jev.ask",
+      "state": {
+        "message": "{{input.message}}"
+      },
+      "questions": {
+        "area": {
+          "type": "choice",
+          "instructions": "Which queue best fits the message? Use other when unsupported.",
+          "criteria": {
+            "billing": "Invoices, charges, payments or subscriptions.",
+            "technical": "Errors, integrations or product behavior.",
+            "other": "Neither queue is supported."
+          }
+        },
+        "deadline": {
+          "type": "noul",
+          "instructions": "Does the message explicitly state a near-term deadline or blocked operation?"
+        }
+      },
+      "next": "route"
+    },
+    "route": {
+      "type": "flow.switch",
+      "on": "{{judge.valores.area}}",
+      "onInvalid": "default",
+      "cases": {
+        "billing": "billing_gate",
+        "technical": "technical_log",
+        "_default": "review"
+      }
+    },
+    "billing_gate": {
+      "type": "flow.if",
+      "when": "{{judge.valores.deadline}} >= 0.8",
+      "onInvalid": "else",
+      "then": "priority",
+      "else": "standard"
+    },
+    "priority": {
+      "type": "action.log",
+      "texto": "Draft: billing priority review; no ticket is sent."
+    },
+    "standard": {
+      "type": "action.log",
+      "texto": "Draft: standard billing review; no ticket is sent."
+    },
+    "technical_log": {
+      "type": "action.log",
+      "texto": "Draft: technical review; no ticket is sent."
+    },
+    "review": {
+      "type": "action.log",
+      "texto": "Draft: human triage for unsupported or unknown category."
+    }
+  },
+  "fixtures": [
+    {
+      "id": "synthetic-billing",
+      "input": {
+        "message": "Example: I see a duplicate charge on my invoice."
+      },
+      "answers": {
+        "area": "billing",
+        "deadline": 0.1
+      }
+    }
+  ]
+}

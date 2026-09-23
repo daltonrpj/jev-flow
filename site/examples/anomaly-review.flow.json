@@ -1,0 +1,75 @@
+{
+  "id": "anomaly-review",
+  "name": "Anomaly review",
+  "description": "Ordinal event prioritization, not a statistical anomaly probability.",
+  "input_schema": {
+    "event": {
+      "type": "string",
+      "required": true,
+      "minLength": 5,
+      "maxLength": 2000
+    },
+    "baseline": {
+      "type": "string",
+      "required": true,
+      "minLength": 5,
+      "maxLength": 2000
+    }
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 3000
+  },
+  "start": "judge",
+  "nodes": {
+    "judge": {
+      "type": "jev.ask",
+      "state": {
+        "event": "{{input.event}}",
+        "baseline": "{{input.baseline}}"
+      },
+      "questions": {
+        "deviation": {
+          "type": "score",
+          "instructions": "How strongly does the described event differ from the supplied baseline? Do not infer missing measurements.",
+          "criteria": {
+            "0": "No described deviation.",
+            "1": "Small deviation.",
+            "2": "Moderate deviation.",
+            "3": "Large deviation.",
+            "4": "Extreme deviation."
+          }
+        }
+      },
+      "next": "gate"
+    },
+    "gate": {
+      "type": "flow.if",
+      "when": "{{judge.valores.deviation}} < 1.5",
+      "onInvalid": "else",
+      "then": "routine",
+      "else": "review"
+    },
+    "routine": {
+      "type": "action.log",
+      "texto": "Draft: routine monitoring; no alert sent."
+    },
+    "review": {
+      "type": "action.log",
+      "texto": "Draft: human review; verify measurements before acting."
+    }
+  },
+  "fixtures": [
+    {
+      "id": "synthetic-review",
+      "input": {
+        "event": "Example: traffic doubled in one hour.",
+        "baseline": "Example: traffic was stable for a week."
+      },
+      "answers": {
+        "deviation": 2.5
+      }
+    }
+  ]
+}

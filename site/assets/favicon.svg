@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="JEV Flow mark">
+<rect width="64" height="64" rx="14" fill="#14252b"/>
+<path d="M17 20h10v20c0 9-4 13-12 13M34 20h20v8H43v5h10v8H43v12h-9z" fill="#c6f05f"/>
+<circle cx="27.5" cy="44.5" r="3" fill="#76c8d6"/>
+</svg>

@@ -1,0 +1,97 @@
+{
+  "id": "jurisprudencia-antialucinacao",
+  "name": "Jurisprudência à prova de alucinação",
+  "description": "Pipeline jurídico: caso real entra, julgado alegado é VERIFICADO contra a fonte (gate anti-alucinação), compatibilidade da causa de decidir é analisada com distinguishing, e o resultado roteia para parecer/humano. Sem fonte que sustente: bloqueado.",
+  "input_schema": {
+    "caso": "string — o caso real com fatos determinantes",
+    "julgado_tese": "string — a tese como citada (o que se diz que o julgado decide)",
+    "julgado_trecho": "string — trecho/ementa obtido DA FONTE (portal do tribunal, base oficial)"
+  },
+  "limits": {
+    "maxSteps": 12,
+    "maxJevCalls": 3,
+    "maxInputTokens": 12000
+  },
+  "start": "verificar_fonte",
+  "nodes": {
+    "verificar_fonte": {
+      "type": "jev.jevlet",
+      "jevlet": "verificacao-julgado",
+      "next": "gate_fonte"
+    },
+    "gate_fonte": {
+      "type": "flow.switch",
+      "on": "{{verificar_fonte.acao}}",
+      "cases": {
+        "bloquear_sem_fonte": "log_bloqueado",
+        "bloquear_citacao_distorcida": "log_bloqueado",
+        "_default": "compatibilizar"
+      }
+    },
+    "compatibilizar": {
+      "type": "jev.jevlet",
+      "jevlet": "compatibilidade-precedente",
+      "next": "gate_compat"
+    },
+    "gate_compat": {
+      "type": "flow.switch",
+      "on": "{{compatibilizar.acao}}",
+      "cases": {
+        "aplicavel_com_forca": "reservar_parecer",
+        "aplicavel_com_reserva": "reservar_parecer",
+        "_default": "log_analista"
+      }
+    },
+    "reservar_parecer": {
+      "type": "budget.guard",
+      "budget": {
+        "steps": 4,
+        "jevCalls": 1,
+        "inputTokens": 2500
+      },
+      "next": "verificar_parecer"
+    },
+    "verificar_parecer": {
+      "type": "jev.verify",
+      "claim": "O precedente foi verificado e considerado aplicável ao caso antes do envio do parecer.",
+      "evidence": "fonte={{verificar_fonte.acao}}; compatibilidade={{compatibilizar.acao}}; trecho={{input.julgado_trecho}}",
+      "minSupport": 0.8,
+      "next": "autorizar_parecer"
+    },
+    "autorizar_parecer": {
+      "type": "flow.if",
+      "when": "{{verificar_parecer.gate.pass}} == true",
+      "then": "webhook_parecer",
+      "else": "log_analista"
+    },
+    "webhook_parecer": {
+      "type": "action.webhook",
+      "url": "https://SEU-PARECER-STUDIO.example.com/hook",
+      "body": {
+        "evento": "precedente_verificado_e_aplicavel",
+        "caso": "{{input.caso}}",
+        "tese_verificada": "{{input.julgado_tese}}",
+        "acao_compat": "{{compatibilizar.acao}}"
+      },
+      "onError": "abortar",
+      "next": "fim_set"
+    },
+    "log_analista": {
+      "type": "action.log",
+      "texto": "[jurídico/analista] precedente sem força aplicável — revisar distinguishing: {{input.julgado_tese}}",
+      "next": "fim_set"
+    },
+    "log_bloqueado": {
+      "type": "action.log",
+      "texto": "[jurídico/BLOQUEADO] tese sem sustento na fonte (alucinação barrada): {{input.julgado_tese}}",
+      "next": "fim_set"
+    },
+    "fim_set": {
+      "type": "action.set",
+      "values": {
+        "verificacao": "{{verificar_fonte.acao}}",
+        "compatibilidade": "{{compatibilizar.acao}}"
+      }
+    }
+  }
+}

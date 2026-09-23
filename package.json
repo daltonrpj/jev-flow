@@ -1,0 +1,15 @@
+{
+  "name": "jev-flow",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Standalone open-source visual orchestration studio for typed Jev decisions.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "catalog:certify": "node scripts/certify-jev-flow-catalog.mjs",
+    "test": "node --test"
+  },
+  "dependencies": { "undici": "^6.28.0" },
+  "devDependencies": {}
+}
