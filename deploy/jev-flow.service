@@ -1,0 +1,37 @@
+[Unit]
+Description=JEV Flow standalone application
+Documentation=https://github.com/daltonrpj/jev-flow/blob/main/docs/deploy-hostinger.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jevflow
+Group=jevflow
+WorkingDirectory=/opt/jev-flow/current
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=8723
+Environment=JEVFLOW_DATA_DIR=/var/lib/jev-flow
+EnvironmentFile=/etc/jev-flow/jev-flow.env
+ExecStart=/usr/bin/node /opt/jev-flow/current/server.mjs
+Restart=on-failure
+RestartSec=5
+StateDirectory=jev-flow
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/jev-flow
+
+[Install]
+WantedBy=multi-user.target

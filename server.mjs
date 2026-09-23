@@ -24,6 +24,7 @@ import { descobrirLaya, aquecerLaya } from './services/jev/laya-local.mjs';
 import { listRulesets, loadRuleset, extrairRegrasDeConteudo, RULESETS_DIR } from './services/jev-flow/ruleset.mjs';
 import { setScheduleRunner } from './services/jev-flow/scheduler.mjs';
 import { JEV_DATA_DIR } from './services/jev/client.mjs';
+import { parsePublicOrigin, authorizeIncomingRequest } from './services/security/request-access.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join as joinPath } from 'node:path';
 
@@ -31,10 +32,13 @@ const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const SITE = join(ROOT, 'site');
 const LIMIT_BODY = 1_000_000;
 const labsWindow = { startedAt: Date.now(), used: 0, units: 120 };
-const PORT = Number(process.env.PORT || 8723);
+const PORT = Number(process.env.PORT ?? 8723);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) throw new Error('PORT must be an integer from 1 to 65535');
 const HOST = process.env.HOST || '127.0.0.1';
 const loopback = ['127.0.0.1', '::1', 'localhost'].includes(HOST);
 if (!loopback) throw new Error('Refusing non-loopback bind: browser pages can render private user flows. Use HOST=127.0.0.1.');
+const PUBLIC_ORIGIN = parsePublicOrigin(Object.hasOwn(process.env, 'JEVFLOW_PUBLIC_ORIGIN') ? process.env.JEVFLOW_PUBLIC_ORIGIN : undefined);
+if (PUBLIC_ORIGIN && HOST !== '127.0.0.1') throw new Error('JEVFLOW_PUBLIC_ORIGIN requires HOST=127.0.0.1');
 
 const send = (res, status, data, type = 'application/json; charset=utf-8') => {
   res.writeHead(status, { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
@@ -50,22 +54,9 @@ async function bodyOf(req) {
   catch { throw Object.assign(new Error('request body must be valid JSON'), { status: 400 }); }
 }
 function authorizeLocalRequest(req) {
-  let requestUrl;
-  try { requestUrl = new URL(`http://${req.headers.host || ''}`); }
-  catch { throw Object.assign(new Error('invalid Host header'), { status: 403 }); }
-  const allowedHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
-  if (!allowedHosts.has(requestUrl.hostname.toLowerCase()) || Number(requestUrl.port || 80) !== PORT) {
-    throw Object.assign(new Error('loopback requests must use the configured local host and port'), { status: 403 });
-  }
-  const origin = req.headers.origin;
-  if (origin) {
-    let originUrl;
-    try { originUrl = new URL(origin); }
-    catch { throw Object.assign(new Error('invalid request origin'), { status: 403 }); }
-    if (!allowedHosts.has(originUrl.hostname.toLowerCase()) || originUrl.host.toLowerCase() !== requestUrl.host.toLowerCase()) {
-      throw Object.assign(new Error('cross-origin requests are not allowed'), { status: 403 });
-    }
-  }
+  authorizeIncomingRequest({ host: req.headers.host, origin: req.headers.origin,
+    method: req.method || 'GET', remoteAddress: req.socket.remoteAddress, port: PORT,
+    publicOrigin: PUBLIC_ORIGIN, rawHeaders: req.rawHeaders });
 }
 function authorizeApiRequest(req) {
   const method = req.method || 'GET';

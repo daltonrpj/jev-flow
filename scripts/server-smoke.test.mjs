@@ -41,6 +41,7 @@ before(async () => {
   isolatedEnv = { ...process.env, HOST: '127.0.0.1', PORT: String(port), JEVFLOW_DATA_DIR: dataDirectory,
     TYPESAFE_API_KEY: '', OPENJEV_API_KEY: '', OPENAI_API_KEY: '', GEMINI_API_KEY: '',
     JEVFLOW_LLM_API_KEY: '', JEVFLOW_LLM_BASE_URL: '', JEVFLOW_LLM_MODEL: '' };
+  delete isolatedEnv.JEVFLOW_PUBLIC_ORIGIN;
   child = spawn(process.execPath, ['server.mjs'], { cwd: root, env: isolatedEnv, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
   child.stdout.on('data', chunk => { output += chunk; });

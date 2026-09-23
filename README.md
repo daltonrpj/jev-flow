@@ -25,7 +25,7 @@ TYPESAFE_API_KEY=... JEVFLOW_LLM_API_KEY=... JEVFLOW_LLM_MODEL=your-model npm st
 
 `TYPESAFE_API_KEY` calls TypeSafe System One for real typed judgments. `JEVFLOW_LLM_API_KEY` or `OPENAI_API_KEY` calls the default OpenAI-compatible endpoint. For Gemini, explicitly pair `GEMINI_API_KEY` with `JEVFLOW_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`. Endpoint and key are never inferred from whichever provider key happens to be present. Missing providers stay unavailable; fixtures and local rules are not presented as remote model answers.
 
-The application intentionally binds only to loopback. It refuses non-loopback `HOST` values because Studio pages can render private user flows and the app does not yet implement browser-session authentication. The GitHub Pages site is a static guide; it does not expose the Studio API.
+The application intentionally binds only to loopback. Without `JEVFLOW_PUBLIC_ORIGIN`, it accepts local Host/Origin pairs and is not a remotely hosted Studio. For a **single-tenant Ubuntu/Nginx VPS**, set an exact HTTPS `JEVFLOW_PUBLIC_ORIGIN`, keep `HOST=127.0.0.1`, and put HTTP Basic Auth on `/jev` and `/api` at Nginx. The guide at `/` can remain public. The app requires the configured Host/Origin and a loopback socket peer; it never treats forwarded headers as proof of origin. See the [Hostinger deployment runbook](docs/deploy-hostinger.md) and [security boundary](docs/security.md). GitHub Pages remains a static guide with no Studio API.
 
 ## The catalogue
 
