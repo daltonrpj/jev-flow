@@ -1,10 +1,10 @@
 # Jev Flow
 
-Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, decision Labs, local examples, tests, and an English narrated walkthrough. It does not require another application or a hosted product website.
+Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, decision Labs, local examples, tests, and an English narrated walkthrough. A static product guide is prepared for [GitHub Pages](https://daltonrpj.github.io/jev-flow/) with real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. GitHub Pages does not host the server or execute a model call.
 
 [![A short animated preview of the real Jev Flow application](media/jev-flow-walkthrough-teaser.gif)](media/jev-flow-walkthrough.webm)
 
-The GIF is a short preview. [Watch or download the full WebM](media/jev-flow-walkthrough.webm), [read the English captions](media/jev-flow-walkthrough.vtt), or [inspect the transcript and demo provenance](media/jev-flow-walkthrough-transcript.md). Repository Markdown links to the video; it does not claim to provide an inline WebM player. The recording uses synthetic fixtures and local rules. It does not claim a live remote Jev or LLM run.
+The GIF is a short preview. [Download the full WebM](media/jev-flow-walkthrough.webm), [read the English captions](media/jev-flow-walkthrough.vtt), or [inspect the transcript and demo provenance](media/jev-flow-walkthrough-transcript.md). The [Pages guide](https://daltonrpj.github.io/jev-flow/#watch) provides a real video player when published; repository Markdown links to the file. The recording uses synthetic fixtures and local rules. It does not claim a live remote Jev or LLM run.
 
 ## Run locally
 
@@ -77,10 +77,12 @@ npm test
 npm run catalog:certify -- --check
 ```
 
-After changing catalog source, run `npm run catalog:certify` to regenerate the manifest and root certificate. The repository CI runs tests and verifies the certificate without provider calls or page deployment.
+After changing catalog source, run `npm run catalog:certify` to regenerate the manifest and root certificate. The application CI runs tests and verifies the certificate without provider calls or deployment. A separate Pages workflow runs the same offline checks, builds the public guide from an explicit asset allowlist, and publishes only `site/dist`.
 
 ## Deployment and media
 
-The server binds to loopback by default. A single-tenant Ubuntu/Nginx installation may set an exact HTTPS `JEVFLOW_PUBLIC_ORIGIN` while keeping Node bound to `127.0.0.1`; Nginx must protect the **entire app**, including `/`, APIs, examples, docs, and media, with HTTP Basic Auth. The server checks the exact Host/Origin and loopback socket peer and ignores forwarded headers as authorization evidence. See the [deployment runbook](docs/deploy-hostinger.md). Do not expose the Node port publicly.
+The public Pages guide is a separate static brochure. It contains only its source, six real screenshots, the walkthrough and text sidecars, generic examples, and the catalog certificate. It has no API, provider key, user data, or live application session.
+
+The Node server binds to loopback by default. A single-tenant Ubuntu/Nginx installation may set an exact HTTPS `JEVFLOW_PUBLIC_ORIGIN` while keeping Node bound to `127.0.0.1`; Nginx must protect the **entire app**, including `/`, APIs, examples, docs, and media, with HTTP Basic Auth. The server checks the exact Host/Origin and loopback socket peer and ignores forwarded headers as authorization evidence. See the [deployment runbook](docs/deploy-hostinger.md). Do not expose the Node port publicly.
 
 The walkthrough media and capture notes are in [`media/README.md`](media/README.md). The optional fixed-route Gemini TTS helper is documented in [`docs/walkthrough-tts.md`](docs/walkthrough-tts.md); running it requires an operator-supplied key and may incur a charge. Tests use injected transports and make no paid provider calls.

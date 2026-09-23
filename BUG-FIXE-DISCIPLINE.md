@@ -79,3 +79,19 @@
 - **Cause:** the regex did not require a multiline location opening, so it selected the wrong block.
 - **Fix:** require `location / {` followed immediately by a newline before reading the HTTPS block.
 - **Regression checks:** the focused repository and server smoke passed 7/7; the complete suite passed 62/62.
+
+## 2026-09-23 — public guide copy lagged behind the completed walkthrough
+
+- **Input:** open the earlier static guide after the final WebM, English VTT, transcript, and six real application captures were present in `media/`.
+- **State:** its copy still described the narration script as ready, the video as pending, or the verified asset as missing. That contradicted the repository's completed media and prevented a truthful public presentation.
+- **Cause:** site content and its fallback text were not updated when the verified media was completed; the later app-only migration removed the brochure instead of refreshing that presentation boundary.
+- **Fix:** restore a separate static guide with the real WebM player, poster, transcript/VTT links, six provenance-labeled captures, pre-run Arena labeling, and the generated-configuration limit beside 388,080. Publish only explicit public files from `site:build`; keep the Node app protected separately.
+- **Regression checks:** repository contract rejects the stale phrases in HTML/CSS/JS, checks video/player/caption behavior and image/link sources; isolated build tests prove non-allowlisted server/data/secret files cannot enter `site/dist`. `npm test` passed 65/65, `npm run catalog:certify -- --check` passed at 388,080, and `npm run site:build` produced only 18 allowlisted files at that point.
+
+## 2026-09-23 — guide install section overflowed on narrow screens
+
+- **Input:** open the rebuilt static guide at a 390×844 mobile viewport and inspect document width.
+- **State:** `document.documentElement.scrollWidth` was 495 px for a 390 px viewport; the install grid inherited the intrinsic width of its command block and cut content off-screen.
+- **Cause:** the single-column grid retained an automatic minimum track size, and the `pre` command block preserved an unbreakable clone URL.
+- **Fix:** allow the install grid children and column to shrink to zero, then wrap commands at narrow phone widths; add the project favicon so the guide does not request a missing `/favicon.ico`.
+- **Regression checks:** Edge review at 320, 390, 520 and 1440 px measured no horizontal overflow; all six screenshots and the favicon loaded without failed requests, and the WebM played and advanced at 1920×1080 for 193.913 seconds. `npm test` passed 65/65, `npm run catalog:certify -- --check` certified 388,080 unique configurations, `npm run site:build` emitted 19 allowlisted files, and `git diff --check` passed.

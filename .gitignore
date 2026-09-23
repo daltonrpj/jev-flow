@@ -15,5 +15,6 @@ playwright-report/
 test-results/
 media/generated-*
 media/tmp/
+site/dist/
 .DS_Store
 Thumbs.db

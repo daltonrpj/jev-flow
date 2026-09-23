@@ -1,6 +1,6 @@
 # Jev Flow quickstart
 
-Jev Flow runs as a local Node.js app. Node.js 20 or later is required; Python is optional for Laya.
+Jev Flow runs as a local Node.js app. Node.js 20 or later is required; Python is optional for Laya. A [public guide prepared for GitHub Pages](https://daltonrpj.github.io/jev-flow/) is a separate static brochure with real captures and a playable walkthrough; it does not run the application or its APIs.
 
 ```sh
 git clone https://github.com/daltonrpj/jev-flow.git
@@ -30,4 +30,4 @@ npm test
 npm run catalog:certify
 ```
 
-The full walkthrough, English captions, transcript, and real application screenshots are in [`media/`](../media/README.md). The animated GIF in the README links to the full WebM. GitHub's Markdown view does not run this repository's Node server or embed a WebM player; start the local process to use the app.
+The full walkthrough, English captions, transcript, and real application screenshots are in [`media/`](../media/README.md). The animated GIF in the README links to the full WebM; the separate public guide contains a video player. GitHub's Markdown view and GitHub Pages do not run this repository's Node server; start the local process to use the app.

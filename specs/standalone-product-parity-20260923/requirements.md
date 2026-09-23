@@ -2,17 +2,18 @@
 
 ## Scope
 
-Jev Flow is a standalone Node application with Studio, Compendium, Arena, Carrinho, and Labs. This revision removes the separate static site and publication workflow. `/` opens the Studio; examples, media and the catalog certificate live at repository root paths.
+Jev Flow is a standalone Node application with Studio, Compendium, Arena, Carrinho, and Labs. The Node application's `/` opens the Studio. A separate static, public GitHub Pages guide presents the product but does not run the application, APIs, or model calls; examples, media, and the catalog certificate remain at repository root paths.
 
 ## Acceptance
 
-- **R1 — Product map:** README and local quickstart link the five working surfaces. The root route redirects to Studio. No separate site or Pages workflow remains.
+- **R1 — Product map:** README and local quickstart link the five working surfaces. The Node root route redirects to Studio. The public Pages guide links back to local setup and uses relative paths for project-subpath hosting.
 - **R2 — Honest execution:** UI and docs distinguish deterministic fixtures, local adapters, and live remote providers. Missing credentials and invalid answers fail visibly. Measured latency, reported usage, and cost provenance retain unknown values where evidence is absent.
 - **R3 — Catalog claim:** 388,080 is the certified count of valid, unique, lazily generated configurations for a fingerprinted catalog source. It is not an executed-run count or a quality metric.
 - **R4 — Isolation and offline regression:** Tests run from the standalone checkout without importing another workspace, a credential, or a paid network call. Cover each public surface and a representative provenance or schema failure.
 - **R5 — Walkthrough media:** The published WebM demonstrates the standalone app in English narration with matching English captions and a source transcript. Narration uses exactly OpenRouter `audio/speech`, model `google/gemini-3.1-flash-tts-preview`, voice `Charon`, and a process environment `OPENROUTER_API_KEY`; there is no model, provider, or voice fallback. Automated helper tests use an injected fetch and make no network request. Media verification checks non-empty video, a playable browser stream, non-silent narration, 1080p metadata, and 20 non-overlapping VTT cues. Real stills for all five surfaces and a short animated teaser accompany the full WebM under `media/`. README Markdown links the GIF to the WebM and makes no inline player claim. The app scenes are labeled fixtures/local rules and do not claim live Jev or LLM inference.
 - **R6 — Public boundary:** No private workspace imports, credentials, environment files, user data, or model weights enter this repository. Generic examples stay editable and their synthetic fixture answers are identified as such.
-- **R7 — App-only deployment:** Nginx authenticates every application path, including root, APIs, examples, media and docs, and proxies to loopback Node. CI runs tests and checks the catalog certificate without deploying a site.
+- **R7 — Separate deployment boundaries:** Nginx authenticates every Node application path, including root, APIs, examples, media and docs, and proxies to loopback Node. The static Pages workflow runs offline tests and catalog certification, then uploads only `site/dist` built from an explicit public allowlist. App CI remains separate.
+- **R8 — Honest public presentation:** The guide uses the real six application captures, real WebM with poster and links to its VTT/transcript, and English-first source copy. Burned-in captions are not duplicated with an active VTT track. Its Arena capture is labeled pre-run/unavailable; 388,080 means certified generated configurations rather than executed runs. The public HTML/CSS/JS contain no stale video-pending copy, invented model outcomes, prices, winners, or live-service promises.
 
 ## Exclusions
 

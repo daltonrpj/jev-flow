@@ -26,9 +26,9 @@ test('five root examples validate, contain fixtures, and cannot trigger external
   }
 });
 
-test('app-only checkout retains the real walkthrough, English captions and readable source links', () => {
-  assert.equal(existsSync(join(root, 'site')), false);
-  assert.equal(existsSync(join(root, '.github', 'workflows', 'pages.yml')), false);
+test('public guide and protected app retain the real walkthrough, English captions and readable source links', () => {
+  assert.equal(existsSync(join(root, 'site', 'index.html')), true);
+  assert.equal(existsSync(join(root, '.github', 'workflows', 'pages.yml')), true);
   assert.equal(existsSync(join(root, '.github', 'workflows', 'ci.yml')), true);
   for (const name of [
     'studio-screenshot.png', 'compendium-screenshot.png', 'arena-screenshot.png',
@@ -59,10 +59,43 @@ test('app-only checkout retains the real walkthrough, English captions and reada
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   assert.match(readme, /media\/jev-flow-walkthrough\.webm/u);
   assert.match(readme, /media\/jev-flow-walkthrough-teaser\.gif/u);
-  assert.doesNotMatch(readme, /site\/|GitHub Pages/u);
+  assert.match(readme, /GitHub Pages/u);
+  assert.match(readme, /https:\/\/daltonrpj\.github\.io\/jev-flow\//u);
 });
 
-test('single-tenant proxy protects root and media and CI has no publication job', () => {
+test('static guide uses real relative media, labels pre-run evidence, and never enables duplicate captions', () => {
+  const html = readFileSync(join(root, 'site', 'index.html'), 'utf8');
+  const css = readFileSync(join(root, 'site', 'styles.css'), 'utf8');
+  const js = readFileSync(join(root, 'site', 'main.js'), 'utf8');
+  assert.match(html, /The decision[\s\S]*?boundary[\s\S]*?is visible/u);
+  assert.match(html, /<video controls playsinline preload="none" poster="\.\/media\/studio-screenshot\.png"/u);
+  assert.match(html, /<source src="\.\/media\/jev-flow-walkthrough\.webm" type="video\/webm"/u);
+  assert.doesNotMatch(html, /<track\b/iu);
+  assert.match(html, /href="\.\/media\/jev-flow-walkthrough\.vtt"/u);
+  assert.match(html, /href="\.\/media\/jev-flow-walkthrough-transcript\.md"/u);
+  assert.match(html, /id="watch"/u);
+  assert.match(html, /id="install"/u);
+  assert.match(html, /href="\.\/favicon\.svg"/u);
+  assert.match(html, /ARENA \/ PRE-RUN[\s\S]*?TYPESAFE UNAVAILABLE/u);
+  assert.match(html, /388,080[\s\S]*?not a count of authored flows, executed model runs/u);
+  assert.match(css, /\.install-copy,\.install-workbench\{min-width:0\}/u);
+  assert.match(css, /\.install\{grid-template-columns:minmax\(0,1fr\)\}/u);
+  assert.match(css, /\.install-workbench pre\{white-space:pre-wrap;overflow-wrap:anywhere\}/u);
+  for (const name of ['studio', 'compendium', 'arena', 'carrinho', 'labs', 'chess']) {
+    assert.match(html, new RegExp(`src="\\./media/${name}-screenshot\\.png"`, 'u'));
+  }
+  for (const text of [html, css, js]) {
+    assert.doesNotMatch(text, /English narration script is ready|video pending|verified asset not included/iu);
+  }
+  const links = [...html.matchAll(/(?:href|src)="\.\/([^"#?]+)"/gu)].map(match => match[1]);
+  for (const link of links) {
+    const source = ['styles.css', 'main.js', 'favicon.svg'].includes(link) ? join(root, 'site', link) : join(root, link);
+    assert.equal(existsSync(source), true, link);
+  }
+  assert.doesNotMatch(html, /https?:\/\/[^"\s]+\.(?:png|jpe?g|gif|svg|webp|css|js)/iu);
+});
+
+test('single-tenant proxy protects app root and media; CI and Pages jobs stay separate', () => {
   const nginx = readFileSync(join(root, 'deploy', 'nginx-jev-flow.conf'), 'utf8');
   const rootLocation = /location \/ \{\r?\n([\s\S]*?)\r?\n    \}/u.exec(nginx)?.[1] || '';
   assert.match(rootLocation, /auth_basic "JEV Flow"/u);
@@ -72,6 +105,12 @@ test('single-tenant proxy protects root and media and CI has no publication job'
   assert.match(ci, /npm test/u);
   assert.match(ci, /catalog:certify -- --check/u);
   assert.doesNotMatch(ci, /deploy-pages|upload-pages|pages: write/u);
+  const pages = readFileSync(join(root, '.github', 'workflows', 'pages.yml'), 'utf8');
+  assert.match(pages, /npm test/u);
+  assert.match(pages, /catalog:certify -- --check/u);
+  assert.match(pages, /npm run site:build/u);
+  assert.match(pages, /upload-pages-artifact@v3[\s\S]*?path: site\/dist/u);
+  assert.match(pages, /deploy-pages@v4/u);
 });
 
 test('root catalog certificate matches the generator and manifest, including across LF checkouts', () => {
