@@ -29,7 +29,6 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join as joinPath } from 'node:path';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
-const SITE = join(ROOT, 'site');
 const LIMIT_BODY = 1_000_000;
 const labsWindow = { startedAt: Date.now(), used: 0, units: 120 };
 const PORT = Number(process.env.PORT ?? 8723);
@@ -159,7 +158,7 @@ async function translate(texts, to, from = 'en') {
 }
 
 async function servePage(pathname, query, req, res) {
-  if (pathname === '/') return send(res, 200, await readFile(join(SITE, 'index.html'), 'utf8'), 'text/html; charset=utf-8');
+  if (pathname === '/') { res.writeHead(302, { location: '/jev/flows', 'cache-control': 'no-store' }); return res.end(); }
   if (pathname === '/jev' || pathname === '/jev/') { res.writeHead(302, { location: '/jev/flows' }); return res.end(); }
   if (pathname === '/jev/flows') return send(res, 200, await buildFlowsIndexPage({ locale: query.get('lang') }), 'text/html; charset=utf-8');
   if (pathname === '/jev/flows/compendium') return send(res, 200, await buildCompendiumPage({ locale: query.get('lang') }), 'text/html; charset=utf-8');
@@ -182,17 +181,24 @@ async function servePage(pathname, query, req, res) {
   if (pathname === '/jev/labs/assets/engine.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-engine.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
   if (pathname === '/jev/labs/assets/chess.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-chess-engine.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
   if (pathname === '/jev/labs/assets/ui.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-ui.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
-  if (pathname === '/favicon.svg' || pathname === '/logo.svg') return send(res, 200, await readFile(join(SITE, 'assets', 'mark.svg'), 'utf8'), 'image/svg+xml');
-  if (pathname === '/docs/index.html') return send(res, 200, await readFile(join(SITE, 'docs', 'index.html'), 'utf8'), 'text/html; charset=utf-8');
-  const docs = pathname.match(/^\/docs\/(quickstart|architecture|security|examples)\.md$/u);
+  if (pathname === '/favicon.svg' || pathname === '/logo.svg') return send(res, 200, await readFile(join(ROOT, 'assets', 'mark.svg'), 'utf8'), 'image/svg+xml');
+  const docs = pathname.match(/^\/docs\/(quickstart|architecture|security|examples|deploy-hostinger|walkthrough-tts)\.md$/u);
   if (docs) return send(res, 200, await readFile(join(ROOT, 'docs', `${docs[1]}.md`), 'utf8'), 'text/markdown; charset=utf-8');
-  if (/^\/(?:assets|images|media|examples)\//u.test(pathname) || pathname.startsWith('/site/') || ['/styles.css', '/main.js', '/catalog-certification.json'].includes(pathname)) {
-    const target = resolve(SITE, `.${decodeURIComponent(pathname.startsWith('/site/') ? pathname.slice('/site'.length) : pathname)}`);
-    const relativeTarget = relative(resolve(SITE), target);
-    if (relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) throw Object.assign(new Error('path traversal'), { status: 400 });
+  if (pathname === '/catalog-certification.json') return json(res, JSON.parse(await readFile(join(ROOT, 'catalog-certification.json'), 'utf8')));
+  const publicFile = /^\/(assets|examples|media)\/(.+)$/u.exec(pathname);
+  if (publicFile) {
+    const [, directory, encodedName] = publicFile;
+    const base = resolve(ROOT, directory);
+    const target = resolve(base, decodeURIComponent(encodedName));
+    const relativeTarget = relative(base, target);
+    if (!relativeTarget || relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) throw Object.assign(new Error('path traversal'), { status: 400 });
+    const extension = extname(target).toLowerCase();
+    const allowed = { assets: ['.svg'], examples: ['.json'], media: ['.webm', '.vtt', '.md', '.png', '.gif'] }[directory];
+    if (!allowed.includes(extension)) throw Object.assign(new Error('asset type not available'), { status: 404 });
     if (!existsSync(target)) throw Object.assign(new Error('static asset not found'), { status: 404 });
-    const type = { '.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webm':'video/webm','.vtt':'text/vtt; charset=utf-8','.md':'text/markdown; charset=utf-8','.mp4':'video/mp4' }[extname(target)] || 'application/octet-stream';
+    const type = { '.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.gif':'image/gif','.webm':'video/webm','.vtt':'text/vtt; charset=utf-8','.md':'text/markdown; charset=utf-8' }[extension];
     const file = await stat(target);
+    if (!file.isFile()) throw Object.assign(new Error('static asset not found'), { status: 404 });
     if (req.method === 'GET' || req.method === 'HEAD') return serveStatic(req, res, target, file.size, type);
     return send(res, 405, { error: 'method not allowed' });
   }

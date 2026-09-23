@@ -65,17 +65,25 @@ after(async () => {
   }
 });
 
-test('standalone server serves its guide, protects local mutations and fulfills Studio contracts', async () => {
+test('standalone server opens the Studio, protects local mutations and fulfills runtime contracts', async () => {
   const remoteAttempt = spawnSync(process.execPath, ['server.mjs'], {
     cwd: root, encoding: 'utf8', timeout: 10_000,
     env: { ...isolatedEnv, HOST: '0.0.0.0', PORT: '18723', JEVFLOW_SERVER_TOKEN: 'test-only-token' },
   });
   assert.notEqual(remoteAttempt.status, 0, 'private Studio pages must not be exposed on a remote bind');
   assert.match(remoteAttempt.stderr || remoteAttempt.stdout, /Refusing non-loopback bind/u);
-  for (const path of ['/', '/styles.css', '/main.js', '/assets/mark.svg', '/examples/support-triage.flow.json', '/catalog-certification.json', '/docs/quickstart.md']) {
+  const rootResponse = await fetch(`${baseUrl}/`, { redirect: 'manual' });
+  assert.equal(rootResponse.status, 302);
+  assert.equal(rootResponse.headers.get('location'), '/jev/flows');
+  for (const path of ['/assets/mark.svg', '/examples/support-triage.flow.json', '/catalog-certification.json', '/docs/quickstart.md', '/media/studio-screenshot.png']) {
     const response = await fetch(`${baseUrl}${path}`);
     assert.equal(response.status, 200, path);
   }
+  assert.equal((await fetch(`${baseUrl}/site/index.html`)).status, 404);
+  assert.equal((await fetch(`${baseUrl}/media/..%2Fserver.mjs`)).status, 400);
+  assert.equal((await fetch(`${baseUrl}/assets/.env`)).status, 404);
+  const certificate = await (await fetch(`${baseUrl}/catalog-certification.json`)).json();
+  assert.equal(certificate.validCount, 388080);
   const studioResponse = await fetch(`${baseUrl}/jev/flows?lang=en`);
   assert.equal(studioResponse.status, 200);
   const studioHtml = await studioResponse.text();
@@ -106,7 +114,7 @@ test('standalone server serves its guide, protects local mutations and fulfills 
   const media = await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { method: 'HEAD' });
   assert.equal(media.status, 200, 'the final walkthrough must be included in the standalone checkout');
   assert.match(media.headers.get('content-type') || '', /^video\/webm/u);
-  const videoBytes = readFileSync(join(root, 'site', 'media', 'jev-flow-walkthrough.webm'));
+  const videoBytes = readFileSync(join(root, 'media', 'jev-flow-walkthrough.webm'));
   const range = await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { headers: { range: 'bytes=1000-1099' } });
   assert.equal(range.status, 206, 'video seek requests should return a partial response');
   assert.equal(range.headers.get('accept-ranges'), 'bytes');
@@ -137,7 +145,7 @@ test('standalone server serves its guide, protects local mutations and fulfills 
   assert.equal(stats.total, 388080);
   assert.equal((await fetch(`${baseUrl}/jev/flows/compendium?lang=en`)).status, 200);
 
-  const fixture = JSON.parse(readFileSync(join(root, 'site', 'examples', 'spam-screening.flow.json'), 'utf8'));
+  const fixture = JSON.parse(readFileSync(join(root, 'examples', 'spam-screening.flow.json'), 'utf8'));
   fixture.id = 'smoke-flow';
   fixture.name = 'HTTP smoke flow';
   const malicious = await fetch(`${baseUrl}/api/jev/flows`, {
@@ -228,7 +236,10 @@ test('IPv6 loopback requests use a valid bracketed authority', async t => {
       await new Promise(resolve => setTimeout(resolve, 125));
     }
     assert.equal(response?.status, 200);
-    assert.equal((await (await fetch(`${ipv6Base}/`)).text()).includes('JEV Flow'), true);
+    const rootPage = await fetch(`${ipv6Base}/`, { redirect: 'manual' });
+    assert.equal(rootPage.status, 302);
+    assert.equal(rootPage.headers.get('location'), '/jev/flows');
+    assert.equal((await fetch(`${ipv6Base}/jev/flows`)).status, 200);
   } finally {
     if (ipv6Child.exitCode === null) {
       ipv6Child.kill();

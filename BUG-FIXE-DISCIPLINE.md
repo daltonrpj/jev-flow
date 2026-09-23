@@ -6,7 +6,7 @@
 - **State:** `core.autocrlf=true`; `compendium-expanded.mjs` contained both CRLF and LF, and `node-catalog.mjs` contained both CRLF and LF. The original working-tree fingerprint was `7aae809d65fdc4e2f6b135fb17f53a02f8b6a55774c658f886efc2170ac1a73d`; LF-normalized source produced `eb67c5d5014489042e5501cbaa2c3067ce7f875b9e302f93800f428c798bce26`.
 - **Cause:** the source fingerprint hashed raw bytes, so Git line-ending normalization changed the digest even when the code was identical.
 - **Fix:** decode the catalog modules as UTF-8 and normalize CRLF and lone CR to LF before hashing. Keep relative source labels in the digest.
-- **Regression checks:** certify the catalog again, assert equal fingerprints for the current checkout, an alternate source path, and a synthetic LF-only checkout; run the complete `npm test` suite and the GitHub Pages certificate check.
+- **Regression checks:** certify the catalog again, assert equal fingerprints for the current checkout, an alternate source path, and a synthetic LF-only checkout; run the complete `npm test` suite and the CI read-only certificate check.
 
 ## 2026-09-23 — Studio index inline script had a syntax error
 
@@ -63,3 +63,19 @@
 - **Cause:** the VTT sidecar was marked default despite the permanently visible burned-in captions.
 - **Fix:** keep burned-in subtitles visible and make the sidecar VTT an optional track that the viewer can select from player controls.
 - **Regression checks:** site tests reject a default VTT track; browser verification confirms the track starts disabled and still loads all 20 cues when selected.
+
+## 2026-09-23 — app-only migration retained the old public-root proxy policy
+
+- **Input:** inspect the old Nginx `location /` and local-server root route while preparing to remove the separate guide. The existing vhost used `auth_basic off` and served `site/` directly.
+- **State:** `/jev` and `/api` required Basic Auth, but root and static files were intentionally public. After moving media and examples to root paths, that policy would expose those application assets without authentication.
+- **Cause:** the proxy rule was scoped to the earlier site/application split and did not match the new app-only boundary.
+- **Fix:** redirect local `/` to Studio, proxy every application path through Nginx `location /` with Basic Auth, retain a public `404` only for the non-disclosing `/api/health` route, and serve assets from narrow root-directory allowlists.
+- **Regression checks:** repository contract reads the final Nginx block and verifies the root auth/proxy; HTTP smoke checks the root redirect, new example/media/certificate paths and blocked traversal; `npm test` passed 62/62 and the catalog recertified 388,080 valid unique configurations.
+
+## 2026-09-23 — Nginx contract test matched the HTTP redirect block
+
+- **Input:** run `node --test scripts/repository-contract.test.mjs` after adding the app-only proxy assertion.
+- **State:** the test failed although the HTTPS `location /` contained `auth_basic`, because its regex started at the inline HTTP `location / { return 301 ... }` and crossed into later blocks.
+- **Cause:** the regex did not require a multiline location opening, so it selected the wrong block.
+- **Fix:** require `location / {` followed immediately by a newline before reading the HTTPS block.
+- **Regression checks:** the focused repository and server smoke passed 7/7; the complete suite passed 62/62.

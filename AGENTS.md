@@ -13,6 +13,6 @@ This repository is a standalone product. Keep its runtime, tests, documentation,
 ## Changes and verification
 
 - Add focused regression tests for changed behavior. Run `npm test` and `npm run catalog:certify` when catalog sources change.
-- Keep public docs in English first and make navigation work from both the local `/` guide and a GitHub Pages project subpath.
-- The walkthrough media is published only after its capture, narration, captions, and provenance have been verified. Documentation and tests must work while the media files are absent.
+- Keep documentation English first. `/` redirects to the local Studio; the repository has no separate static website or Pages deployment.
+- Keep the verified walkthrough, caption sidecar, transcript, GIF teaser, and real screenshots under `media/`. A GIF preview links to the full WebM; do not claim an inline video player in repository Markdown.
 - Do not trigger paid or external provider requests from tests. Use injected clients or fixtures for tests, and require an explicit operator action for live calls.

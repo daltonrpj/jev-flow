@@ -67,8 +67,8 @@ test('HTTPS reverse proxy mode requires canonical origin, exact Host/Origin and 
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.equal(ready, true, 'proxy-mode server did not start: ' + output);
-    assert.equal(await status(base, '/', { headers: { host: publicHost } }), 200);
-    assert.equal(await status(base, '/styles.css', { headers: { host: publicHost } }), 200);
+    assert.equal(await status(base, '/', { headers: { host: publicHost } }), 302);
+    assert.equal(await status(base, '/assets/mark.svg', { headers: { host: publicHost } }), 200);
     assert.equal(await status(base, '/jev/flows', { headers: { host: publicHost } }), 200);
     assert.equal(await status(base, '/api/health', { headers: {
       host: 'evil.example.org', 'x-forwarded-host': publicHost, 'x-forwarded-proto': 'https'

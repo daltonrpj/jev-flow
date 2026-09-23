@@ -9,7 +9,7 @@ npm ci
 npm start
 ```
 
-Open `http://127.0.0.1:8723/jev/flows`. The landing page at `/` is a guide; the Studio and API run in this local process. Fixtures and deterministic previews work without provider credentials. Add a credential in the Studio only for a live call. UI-entered keys stay in memory until the process stops.
+Open `http://127.0.0.1:8723/`. It redirects to the Studio at `/jev/flows`; all product pages and APIs run in this local process. Fixtures and deterministic previews work without provider credentials. Add a credential in the Studio only for a live call. UI-entered keys stay in memory until the process stops.
 
 | Open locally | Use it for |
 | --- | --- |
@@ -19,7 +19,7 @@ Open `http://127.0.0.1:8723/jev/flows`. The landing page at `/` is a guide; the 
 | `http://127.0.0.1:8723/jev/carrinho` | Run the two-track driving simulation and inspect decisions. |
 | `http://127.0.0.1:8723/jev/labs` | Try decision exercises, chess, and Blast Garden. |
 
-The first run needs no API key. Import a generic flow from `site/examples/`, edit its input schema and policy gates, then use its synthetic fixture to inspect the route. To observe a real model answer, configure the intended provider and choose a live run explicitly. TypeSafe needs `TYPESAFE_API_KEY`; LLM calls need an explicitly configured key, endpoint, and model; Laya is an optional local Python adapter with separately installed weights. A missing provider stays unavailable. See [architecture](architecture.md) for source and cost labels and [examples](examples.md) for the editable templates.
+The first run needs no API key. Import a generic flow from `examples/`, edit its input schema and policy gates, then use its synthetic fixture to inspect the route. To observe a real model answer, configure the intended provider and choose a live run explicitly. TypeSafe needs `TYPESAFE_API_KEY`; LLM calls need an explicitly configured key, endpoint, and model; Laya is an optional local Python adapter with separately installed weights. A missing provider stays unavailable. See [architecture](architecture.md) for source and cost labels and [examples](examples.md) for the editable templates.
 
 Flow files, run history, schedules, rulesets, and provider usage records go to an operating-system Jev Flow data directory outside the checkout. `JEVFLOW_DATA_DIR` may explicitly choose a different directory. The app does not import data from other applications.
 
@@ -30,4 +30,4 @@ npm test
 npm run catalog:certify
 ```
 
-GitHub Pages hosts only the static guide in `site/`; it does not host the Node server, provider credentials, flows, or API.
+The full walkthrough, English captions, transcript, and real application screenshots are in [`media/`](../media/README.md). The animated GIF in the README links to the full WebM. GitHub's Markdown view does not run this repository's Node server or embed a WebM player; start the local process to use the app.

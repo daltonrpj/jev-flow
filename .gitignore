@@ -13,7 +13,7 @@ runtime-data/
 node_modules/
 playwright-report/
 test-results/
-site/media/generated-*
-site/media/tmp/
+media/generated-*
+media/tmp/
 .DS_Store
 Thumbs.db

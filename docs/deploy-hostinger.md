@@ -1,6 +1,6 @@
 # Hostinger Ubuntu deployment
 
-This runbook deploys the standalone Jev Flow repository as a single-tenant service. The public guide is served from `site/`; all `/jev` pages and `/api` routes are protected by Nginx HTTP Basic Auth over HTTPS. Node remains bound to `127.0.0.1:8723`. User data, auth hashes and provider keys stay outside the release checkout.
+This runbook deploys the standalone Jev Flow application as a single-tenant service. Nginx protects **every application path**, including `/`, `/jev`, `/api`, docs, examples and media, with HTTP Basic Auth over HTTPS. Node remains bound to `127.0.0.1:8723`. User data, auth hashes and provider keys stay outside the release checkout.
 
 Replace `flow.example.org` with the exact DNS name selected for Jev Flow. Use a canonical origin such as `https://flow.example.org`, without a trailing slash, path, query, fragment or credentials. The initial service is for one trusted operator: provider connections and flows are shared by the whole process.
 
@@ -89,7 +89,7 @@ sudo find "$release_stage" -type f -exec chmod 0644 {} +
 sudo mv -T "$release_stage" "$release_path"
 ```
 
-The release is assembled under a hidden staging name and atomically renamed only after it is complete. Versioned release paths are immutable: if the exact SHA already exists, verify and reuse it rather than copying over it. The release is public application source; these read permissions let Nginx serve only the public `site/` directory. No release file contains provider keys or user data. Leave `/var/lib/jev-flow` separate.
+The release is assembled under a hidden staging name and atomically renamed only after it is complete. Versioned release paths are immutable: if the exact SHA already exists, verify and reuse it rather than copying over it. Nginx proxies to Node and does not read release files directly. No release file contains provider keys or user data. Leave `/var/lib/jev-flow` separate.
 
 The source checkout and tested release are prepared for both first install and updates. Sections 3 and 4 create persistent credentials and the domain's TLS/Nginx setup; run them only on the first install. For an update, leave `/etc/jev-flow`, its Basic Auth database, certificate and enabled Nginx site in place, then continue at section 5.
 
@@ -157,7 +157,7 @@ sudo sed 's/__DOMAIN__/flow.example.org/g' deploy/nginx-jev-flow.conf | sudo tee
 sudo ln -s /etc/nginx/sites-available/jev-flow /etc/nginx/sites-enabled/jev-flow
 ```
 
-If these symlinks or files already exist, inspect them and preserve the active configuration rather than replacing them blindly. The final vhost serves `site/` directly, redirects HTTP to HTTPS, and proxies only `/jev` and `/api`. `/api/health` intentionally returns 404 on the public domain; monitor it through the local loopback socket. For a code update, retain the working certificate, enabled site and ACME renewal setup; do not repeat certificate issuance or replace the site's symlink.
+If these symlinks or files already exist, inspect them and preserve the active configuration rather than replacing them blindly. The final vhost redirects HTTP to HTTPS and proxies all authenticated application paths to Node. `/api/health` intentionally returns 404 on the public domain; monitor it through the local loopback socket. For a code update, retain the working certificate, enabled vhost and ACME renewal setup; do not repeat certificate issuance or replace its symlink.
 
 ## 5. Switch the release and start the service
 
@@ -236,12 +236,12 @@ trap - ERR
 
 The recovery trap remains active through the local health check. If a command fails during backup, the previous release remains selected and a service that was active before the update is restarted. Once the local health check succeeds, the public checks in section 6 determine whether to keep the new release or use the manual rollback in section 7.
 
-The service uses `HOST=127.0.0.1`, `PORT=8723`, `JEVFLOW_PUBLIC_ORIGIN` from `/etc/jev-flow/jev-flow.env`, and `JEVFLOW_DATA_DIR=/var/lib/jev-flow`. Nginx protects exact `/jev`, all `/jev/…`, exact `/api`, and all `/api/…` with the same `htpasswd` database; the guide root and static docs stay public. Forwarded headers and Basic credentials are stripped before proxying. Public mutations still require JSON and the exact HTTPS Origin.
+The service uses `HOST=127.0.0.1`, `PORT=8723`, `JEVFLOW_PUBLIC_ORIGIN` from `/etc/jev-flow/jev-flow.env`, and `JEVFLOW_DATA_DIR=/var/lib/jev-flow`. Nginx protects `/`, every app and API path, docs, examples and media with the same `htpasswd` database. Forwarded headers and Basic credentials are stripped before proxying. Mutations still require JSON and the exact HTTPS Origin.
 
-Check that the static release is readable by Nginx and that Node listens only on loopback:
+Check that the release contains the app and that Node listens only on loopback:
 
 ```sh
-sudo -u www-data test -r /opt/jev-flow/current/site/index.html
+sudo test -r /opt/jev-flow/current/server.mjs
 sudo ss -ltnp | grep ':8723'
 curl -i -H 'Host: flow.example.org' http://127.0.0.1:8723/api/health
 ```
@@ -264,11 +264,13 @@ Run these from a machine outside the VPS after DNS and the certificate are activ
 
 ```sh
 curl -I http://flow.example.org/                       # 301 to HTTPS
-curl -I https://flow.example.org/                      # 200, public guide
+curl -I https://flow.example.org/                      # 401 without Basic Auth
 curl -i https://flow.example.org/jev/flows             # 401 without Basic Auth
 curl -i https://flow.example.org/api/jev/flows         # 401 without Basic Auth
+curl -i https://flow.example.org/media/jev-flow-walkthrough.webm # 401 without Basic Auth
 curl -i https://flow.example.org/api/health             # 404 without auth
 curl -i --user operator https://flow.example.org/api/health # still 404 with auth
+curl -I --user operator https://flow.example.org/       # 302 to /jev/flows
 curl -i --user operator https://flow.example.org/jev/flows  # prompts for password; 200
 curl -i --user operator https://flow.example.org/api/jev/flows # prompts for password; 200
 ```
