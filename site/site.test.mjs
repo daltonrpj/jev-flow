@@ -41,7 +41,7 @@ test('site assets and public guide links are local and present', () => {
     'styles.css', 'main.js', 'assets/favicon.svg', 'assets/mark.svg', 'assets/editor-preview.svg',
     'assets/architecture.svg', 'assets/video-poster.svg',
     'docs/index.html', 'docs/quickstart.md', 'docs/examples.md', 'docs/architecture.md', 'docs/project.md',
-    'media/README.md', 'media/studio-screenshot.png'
+    'media/README.md', 'media/studio-screenshot.png', 'media/jev-flow-walkthrough-transcript.md'
   ]) assert.equal(existsSync(join(root, path)), true, path);
   assert.doesNotMatch(html, /<(?:img|script|link)[^>]+(?:src|href)="https?:\/\//i);
   assert.match(html, /media\/studio-screenshot\.png/);
@@ -52,6 +52,7 @@ test('site assets and public guide links are local and present', () => {
   assert.match(html, /id="studio"/);
   assert.match(html, /jev-flow-walkthrough\.webm/);
   assert.match(script, /jev-flow-walkthrough\.vtt/);
+  assert.match(html, /Read the narration script/);
   assert.match(html, /id="language"/);
 });
 
