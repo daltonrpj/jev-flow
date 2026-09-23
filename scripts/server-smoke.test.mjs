@@ -103,7 +103,29 @@ test('standalone server serves its guide, protects local mutations and fulfills 
     if (previousDataDir === undefined) delete process.env.JEVFLOW_DATA_DIR;
     else process.env.JEVFLOW_DATA_DIR = previousDataDir;
   }
-  assert.equal((await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { method: 'HEAD' })).status, 404);
+  const media = await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { method: 'HEAD' });
+  assert.equal(media.status, 200, 'the final walkthrough must be included in the standalone checkout');
+  assert.match(media.headers.get('content-type') || '', /^video\/webm/u);
+  const videoBytes = readFileSync(join(root, 'site', 'media', 'jev-flow-walkthrough.webm'));
+  const range = await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { headers: { range: 'bytes=1000-1099' } });
+  assert.equal(range.status, 206, 'video seek requests should return a partial response');
+  assert.equal(range.headers.get('accept-ranges'), 'bytes');
+  assert.equal(range.headers.get('content-range'), `bytes 1000-1099/${videoBytes.length}`);
+  assert.equal(range.headers.get('content-length'), '100');
+  assert.deepEqual(Buffer.from(await range.arrayBuffer()), videoBytes.subarray(1000, 1100));
+  const suffix = await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { headers: { range: 'bytes=-64' } });
+  assert.equal(suffix.status, 206);
+  assert.equal(suffix.headers.get('content-range'), `bytes ${videoBytes.length - 64}-${videoBytes.length - 1}/${videoBytes.length}`);
+  assert.deepEqual(Buffer.from(await suffix.arrayBuffer()), videoBytes.subarray(-64));
+  const invalidRange = await fetch(`${baseUrl}/media/jev-flow-walkthrough.webm`, { headers: { range: `bytes=${videoBytes.length}-` } });
+  assert.equal(invalidRange.status, 416);
+  assert.equal(invalidRange.headers.get('content-range'), `bytes */${videoBytes.length}`);
+  const transcript = await fetch(`${baseUrl}/media/jev-flow-walkthrough-transcript.md`, { method: 'HEAD' });
+  assert.equal(transcript.status, 200);
+  assert.match(transcript.headers.get('content-type') || '', /^text\/markdown(?:;|$)/u);
+  const captions = await fetch(`${baseUrl}/media/jev-flow-walkthrough.vtt`, { method: 'HEAD' });
+  assert.equal(captions.status, 200);
+  assert.match(captions.headers.get('content-type') || '', /^text\/vtt/u);
   assert.equal((await fetch(`${baseUrl}/api/health`)).status, 200);
   const languageResponse = await fetch(`${baseUrl}/api/translate/languages`);
   const languageBody = await languageResponse.json();
@@ -158,6 +180,31 @@ test('standalone server serves its guide, protects local mutations and fulfills 
   });
   assert.equal(installAgain.status, 409);
   assert.equal((await fetch(`${baseUrl}/api/jev/flows/missing-flow`)).status, 404);
+});
+
+test('all five product surfaces and read-only status contracts work without provider keys', async () => {
+  for (const path of ['/jev/flows', '/jev/flows/compendium', '/jev/battle', '/jev/carrinho', '/jev/labs']) {
+    const response = await fetch(`${baseUrl}${path}`);
+    assert.equal(response.status, 200, path);
+    assert.match(response.headers.get('content-type') || '', /^text\/html/u, path);
+  }
+  for (const [path, expectedSource] of [
+    ['/jev/labs/assets/ui.mjs', "from '/jev/labs/assets/engine.mjs'"],
+    ['/jev/labs/assets/engine.mjs', 'export function spamPolicy'],
+    ['/jev/labs/assets/chess.mjs', 'export function createChessGame'],
+  ]) {
+    const response = await fetch(`${baseUrl}${path}`);
+    assert.equal(response.status, 200, path);
+    assert.match(response.headers.get('content-type') || '', /^text\/javascript/u, path);
+    assert.ok((await response.text()).includes(expectedSource), path);
+  }
+  const labs = await (await fetch(`${baseUrl}/api/jev/labs/status`)).json();
+  assert.equal(labs.jevConfigured, false);
+  assert.equal(labs.llmConfigured, false);
+  const tests = await (await fetch(`${baseUrl}/api/jev/battle/tests`)).json();
+  assert.ok(Array.isArray(tests) && tests.length > 0);
+  const catalog = await (await fetch(`${baseUrl}/api/jev/flows/compendium/stats`)).json();
+  assert.equal(catalog.total, 388080);
 });
 
 test('IPv6 loopback requests use a valid bracketed authority', async t => {

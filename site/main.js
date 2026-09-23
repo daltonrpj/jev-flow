@@ -11,7 +11,7 @@ const EXAMPLES = Object.freeze({
 const pt = Object.freeze({
   skip: "Pular para o conteúdo",
   announcement: "Código aberto · execução local · funcionamento inspecionável",
-  navHow: "Como funciona", navExamples: "Exemplos", navModes: "Modos", navInstall: "Instalar",
+  navHow: "Como funciona", navExamples: "Exemplos", navModes: "Modos", navInstall: "Instalar", navDocs: "Documentação",
   languageLabel: "Idioma", openApp: "Executar localmente",
   heroEyebrow: "Um estúdio para fluxos de IA tipada",
   heroTitle: "Deixe a IA julgar.<br><em>Deixe o código decidir.</em>",
@@ -66,10 +66,10 @@ const pt = Object.freeze({
   terminalNote: "O guia estático é público. O aplicativo local guarda dados fora deste checkout e não exige chave de provedor para prévias determinísticas.",
   localUrlLabel: "Depois de iniciar o aplicativo, abra a rota local do Studio:",
   videoEyebrow: "GUIA EM VÍDEO", videoTitle: "Veja um fluxo desde o primeiro input até o caminho final.",
-  videoBody: "O roteiro em inglês está pronto. O vídeo final mostrará instalação local, julgamento tipado, prévia identificada como fixture, chamada real explícita e logs. A gravação e as legendas sincronizadas com Gemini TTS ainda estão pendentes.",
-  videoPending: "O vídeo verificado ainda não foi incluído. O player aparece somente quando o arquivo estiver presente.",
+  videoBody: "O vídeo em inglês percorre a instalação local, fluxos tipados, uma fixture identificada, Compendium, Arena, simulação de direção e Labs. Ele não faz chamadas remotas; provedores reais exigem configuração explícita.",
+  videoPending: "Os arquivos do walkthrough ainda não estão disponíveis. O pôster permanece até que vídeo, legendas e transcrição estejam presentes.",
   transcriptLink: "Ler o roteiro da narração ↗",
-  videoFrameNote: "Gravação Gemini TTS pendente · arquivo esperado: site/media/jev-flow-walkthrough.webm",
+  videoFrameNote: "Narração em inglês · Gemini 3.1 Flash TTS Preview · demonstração determinística",
   faqEyebrow: "BOAS PERGUNTAS", faqTitle: "O que um fluxo pode e não pode provar.",
   faq1Q: "A prévia chama o Jev?", faq1A: "Não. A prévia usa fixtures determinísticas e demonstra apenas como o fluxo trata as respostas fornecidas.",
   faq2Q: "Os 388.080 fluxos foram escritos manualmente?", faq2A: "Não. O catálogo-fonte combina seis dimensões sob demanda. A contagem do standalone só aparece como verificada após esta cópia passar por uma certificação nova de configurações válidas, IDs e chaves únicos.",
@@ -91,8 +91,8 @@ const message = Object.freeze({
     pending: "Pending", pendingBody: "Run the isolated catalog certificate before publishing a verified count.",
     verified: "Verified generated configurations", certified: "Certificate: {date}. Valid flows, unique keys/IDs, and source fingerprint matched.",
     fingerprintPending: "Not certified here",
-    mediaReady: "Verified local video and captions are available. Playback is optional.",
-    mediaPending: "The verified video asset is not included yet. The player appears only after the file is present."
+    mediaReady: "The walkthrough video, English captions, and transcript are available. Playback is optional.",
+    mediaPending: "The walkthrough files are not available yet. The sample poster stays in place until video, captions, and transcript are present."
   },
   "pt-BR": {
     loading: "Carregando exemplo…", loaded: "Exemplo carregado. Edite o JSON e depois inspecione ou baixe.",
@@ -105,15 +105,15 @@ const message = Object.freeze({
     pending: "Pendente", pendingBody: "Execute a certificação isolada do catálogo antes de publicar uma contagem verificada.",
     verified: "Configurações geradas verificadas", certified: "Certificação: {date}. Fluxos válidos, chaves/IDs únicos e fingerprint da fonte conferiram.",
     fingerprintPending: "Não certificado aqui",
-    mediaReady: "Vídeo e legendas locais verificados estão disponíveis. A reprodução é opcional.",
-    mediaPending: "O vídeo verificado ainda não foi incluído. O player aparece somente quando o arquivo estiver presente."
+    mediaReady: "O vídeo, as legendas em inglês e a transcrição do walkthrough estão disponíveis. A reprodução é opcional.",
+    mediaPending: "Os arquivos do walkthrough ainda não estão disponíveis. O pôster permanece até que vídeo, legendas e transcrição estejam presentes."
   }
 });
 const attributeCopy = Object.freeze({
   en: {
     heroImage: "Illustrative JEV Flow editor diagram showing Input, typed Jev judgment, a deterministic policy branch, and review outcome.",
     architectureImage: "Input state flows to a typed JEV judgment, schema validation, code-owned policy, then an explicit result and audit log.",
-    videoPoster: "Illustrative outline of the planned JEV Flow walkthrough",
+    videoPoster: "Jev Flow standalone application walkthrough",
     videoLabel: "English JEV Flow walkthrough", brand: "JEV Flow home", nav: "Primary navigation", select: "Site language"
   },
   "pt-BR": {
@@ -291,7 +291,7 @@ async function loadMedia() {
     track.srclang = "en";
     track.label = "English captions";
     track.src = captionsPath;
-    track.default = true;
+    track.default = false;
     const player = document.getElementById("walkthrough-video");
     player.append(source, track);
     player.load();

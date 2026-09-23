@@ -15,6 +15,25 @@ npm start
 
 Open `http://127.0.0.1:8723/jev/flows`. User flows, execution history, rulesets and provider usage logs are stored under the operating system's Jev Flow data directory, outside this repository. Set `JEVFLOW_DATA_DIR` to move that directory.
 
+## What runs here
+
+| Surface | Local route | What you can inspect | Limit |
+| --- | --- | --- | --- |
+| Studio | `/jev/flows` | Editable typed flows, schemas, fixture preview, run traces and explicit live execution | A fixture proves routing for supplied answers, not provider accuracy. |
+| Compendium | `/jev/flows/compendium` | Search, preview, test and install generated flow configurations | 388,080 counts certified configurations, not live model runs. |
+| Battle Arena | `/jev/battle` | Jev and LLM answers, source, measured latency and usage where available | Comparisons depend on compatible tasks and observed provider responses. |
+| Self-Driving Cart | `/jev/carrinho` | Two simulated tracks, decisions, safety interventions and source labels | Track physics and fallback decisions are a simulation, not a driving safety claim. |
+| Labs | `/jev/labs` | Typed decision exercises, chess and Blast Garden | Local game rules are deterministic; model decisions require a selected provider. |
+
+The public guide at `/` documents these surfaces. It cannot execute the Studio from GitHub Pages. See the [quickstart](docs/quickstart.md), [architecture](docs/architecture.md), [examples](docs/examples.md), and [walkthrough narration helper](docs/walkthrough-tts.md).
+
+| Execution source | What it means | Cost display |
+| --- | --- | --- |
+| Fixture or preview | Synthetic answers supplied for deterministic testing; no provider request | No remote-provider cost. |
+| Local adapter | A compatible local model and checkpoint actually ran | Provider billing does not apply; compute cost is not inferred. |
+| Remote provider | An explicitly configured provider returned a validated answer | Report provider usage and price-backed cost only when available; otherwise show unknown. |
+| Unavailable or invalid | Missing key, failed transport, or malformed response | Keep the error visible and cost unknown. |
+
 ## Connect real providers
 
 Set keys in the server process environment, or use the in-app connection form. Keys entered in the UI are kept in server memory and are cleared when the process restarts. They are never written into a project file.
@@ -53,4 +72,8 @@ Jev Flow links to the upstream Laya project; it does not bundle model weights or
 npm test
 ```
 
-See [`docs/quickstart.md`](docs/quickstart.md), [`docs/architecture.md`](docs/architecture.md), [`docs/security.md`](docs/security.md), and [`docs/examples.md`](docs/examples.md).
+The optional narration CLI is documented in [`docs/walkthrough-tts.md`](docs/walkthrough-tts.md). It requires an explicit operator run; tests never call a paid provider.
+
+## Walkthrough
+
+Watch the [English Jev Flow walkthrough](site/media/jev-flow-walkthrough.webm), use the [English captions](site/media/jev-flow-walkthrough.vtt), or read the [narration and demo provenance](site/media/jev-flow-walkthrough-transcript.md). It shows the standalone application using labeled fixtures and local game rules; it does not claim a live remote model call.

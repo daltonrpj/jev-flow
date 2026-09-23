@@ -11,6 +11,16 @@ npm start
 
 Open `http://127.0.0.1:8723/jev/flows`. The landing page at `/` is a guide; the Studio and API run in this local process. Fixtures and deterministic previews work without provider credentials. Add a credential in the Studio only for a live call. UI-entered keys stay in memory until the process stops.
 
+| Open locally | Use it for |
+| --- | --- |
+| `http://127.0.0.1:8723/jev/flows` | Design, preview, validate, and run typed flows. |
+| `http://127.0.0.1:8723/jev/flows/compendium` | Search, test, and install lazily generated configurations. |
+| `http://127.0.0.1:8723/jev/battle` | Inspect Jev and LLM responses with explicit provider selection. |
+| `http://127.0.0.1:8723/jev/carrinho` | Run the two-track driving simulation and inspect decisions. |
+| `http://127.0.0.1:8723/jev/labs` | Try decision exercises, chess, and Blast Garden. |
+
+The first run needs no API key. Import a generic flow from `site/examples/`, edit its input schema and policy gates, then use its synthetic fixture to inspect the route. To observe a real model answer, configure the intended provider and choose a live run explicitly. TypeSafe needs `TYPESAFE_API_KEY`; LLM calls need an explicitly configured key, endpoint, and model; Laya is an optional local Python adapter with separately installed weights. A missing provider stays unavailable. See [architecture](architecture.md) for source and cost labels and [examples](examples.md) for the editable templates.
+
 Flow files, run history, schedules, rulesets, and provider usage records go to an operating-system Jev Flow data directory outside the checkout. `JEVFLOW_DATA_DIR` may explicitly choose a different directory. The app does not import data from other applications.
 
 Run the test suite and refresh the Compendium certificate after editing its source:

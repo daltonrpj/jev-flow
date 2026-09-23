@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, existsSync, copyFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, copyFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join, dirname, sep } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -41,7 +41,8 @@ test('site assets and public guide links are local and present', () => {
     'styles.css', 'main.js', 'assets/favicon.svg', 'assets/mark.svg', 'assets/editor-preview.svg',
     'assets/architecture.svg', 'assets/video-poster.svg',
     'docs/index.html', 'docs/quickstart.md', 'docs/examples.md', 'docs/architecture.md', 'docs/project.md',
-    'media/README.md', 'media/studio-screenshot.png', 'media/jev-flow-walkthrough-transcript.md'
+    'media/README.md', 'media/studio-screenshot.png', 'media/jev-flow-walkthrough-transcript.md',
+    'media/jev-flow-walkthrough.webm', 'media/jev-flow-walkthrough.vtt'
   ]) assert.equal(existsSync(join(root, path)), true, path);
   assert.doesNotMatch(html, /<(?:img|script|link)[^>]+(?:src|href)="https?:\/\//i);
   assert.match(html, /media\/studio-screenshot\.png/);
@@ -50,10 +51,40 @@ test('site assets and public guide links are local and present', () => {
   assert.match(quickstart, /git clone https:\/\/github\.com\/daltonrpj\/jev-flow\.git/);
   assert.doesNotMatch(quickstart, /standalone-repository-url/);
   assert.match(html, /id="studio"/);
-  assert.match(html, /jev-flow-walkthrough\.webm/);
+  assert.match(script, /jev-flow-walkthrough\.webm/);
   assert.match(script, /jev-flow-walkthrough\.vtt/);
+  assert.match(script, /track\.default\s*=\s*false/u, 'the WebM already has English captions, so the VTT track must be opt-in to avoid duplicate captions');
   assert.match(html, /Read the narration script/);
   assert.match(html, /id="language"/);
+  const walkthroughVideo = statSync(join(root, 'media', 'jev-flow-walkthrough.webm'));
+  assert.ok(walkthroughVideo.size > 100_000, 'published walkthrough must not be an empty placeholder');
+  const captions = readFileSync(join(root, 'media', 'jev-flow-walkthrough.vtt'), 'utf8');
+  assert.match(captions, /^WEBVTT\r?\n/u);
+  assert.match(captions, /Gemini|Welcome to Jev Flow/u);
+  assert.doesNotMatch(captions, /\[music\]|\[unintelligible\]/iu);
+  const cues = captions.trim().split(/\r?\n\s*\r?\n/u).slice(1).map(block => {
+    const lines = block.split(/\r?\n/u);
+    assert.match(lines[1], /^(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})$/u);
+    const [, from, to] = lines[1].match(/^(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})$/u);
+    const seconds = time => {
+      const [hours, minutes, rest] = time.split(':');
+      return Number(hours) * 3600 + Number(minutes) * 60 + Number(rest);
+    };
+    const textLines = lines.slice(2);
+    assert.ok(textLines.length > 0 && textLines.length <= 2, 'captions should fit in at most two lines');
+    assert.ok(textLines.every(line => line.length <= 70), 'caption lines should remain readable');
+    return { start: seconds(from), end: seconds(to), text: textLines.join(' ') };
+  });
+  assert.equal(cues.length, 20, 'the full English walkthrough should have one caption per scene');
+  for (let index = 0; index < cues.length; index += 1) {
+    assert.ok(cues[index].end > cues[index].start, `cue ${index + 1} should have a positive duration`);
+    if (index > 0) assert.ok(cues[index].start >= cues[index - 1].end, `cue ${index + 1} should not overlap`);
+  }
+  assert.match(cues.map(cue => cue.text).join(' '), /Compendium|Battle Arena|Self-Driving Cart|Labs/u);
+  const docs = readFileSync(join(root, 'docs', 'index.html'), 'utf8');
+  for (const route of ['/jev/flows', '/jev/flows/compendium', '/jev/battle', '/jev/carrinho', '/jev/labs']) {
+    assert.ok(docs.includes(`href="http://127.0.0.1:8723${route}"`), route);
+  }
 });
 
 test('public catalog certificate matches the landing page schema', () => {

@@ -1,0 +1,101 @@
+WEBVTT
+
+1
+00:00:01.119 --> 00:00:09.659
+Welcome to Jev Flow: a standalone, open-source studio for building
+typed AI workflows with clear, code-owned outcomes.
+
+2
+00:00:11.077 --> 00:00:18.897
+A model returns structured evidence; your flow validates it, applies
+explicit rules, and chooses the next step.
+
+3
+00:00:20.301 --> 00:00:28.401
+Clone the repository, install Node dependencies, and start the local
+server. No provider key is needed to explore fixtures.
+
+4
+00:00:29.897 --> 00:00:37.677
+Open the Studio to inspect a flow as connected, editable steps. Each
+node has a visible input and output.
+
+5
+00:00:39.119 --> 00:00:46.939
+Ask bounded Choice, Noul, or Score questions, then validate the answer
+against its declared type before routing.
+
+6
+00:00:54.185 --> 00:01:01.965
+The preview uses labeled synthetic answers, so you can reproduce
+branches without calling a model or triggering external actions.
+
+7
+00:01:03.395 --> 00:01:12.135
+For live runs, connect a supported provider explicitly. The trace
+identifies source and model, and reports measured latency.
+
+8
+00:01:13.552 --> 00:01:23.052
+If credentials are missing or output is invalid, the run stays
+unavailable or fails validation. Unknown costs stay unknown.
+
+9
+00:01:24.475 --> 00:01:35.375
+The Compendium generates 388,080 certified configurations on demand
+from reusable patterns, domains, variants, and thresholds.
+
+10
+00:01:36.799 --> 00:01:45.939
+Search, inspect, and install a configuration as a starting point; this
+count is not 388,080 model executions.
+
+11
+00:01:47.358 --> 00:01:54.498
+The Battle Arena puts Jev and a configured language model side by
+side, with separate answers and provenance.
+
+12
+00:01:55.918 --> 00:02:04.458
+Compare like-for-like results using observed latency and
+provider-reported usage; inconclusive data does not produce a winner.
+
+13
+00:02:05.875 --> 00:02:13.535
+The Self-Driving Cart is a sandbox for testing lane choices, speed
+control, hazards, and safety interventions.
+
+14
+00:02:14.959 --> 00:02:22.499
+Adjust the course and decision interval, then review distance, action
+traces, latency, and available cost.
+
+15
+00:02:23.917 --> 00:02:29.417
+The simulation is an engineering exercise, not proof of real-world
+vehicle safety.
+
+16
+00:02:31.024 --> 00:02:38.404
+Labs include spam screening, evidence review, chess, Blast Garden, and
+rescue exercises.
+
+17
+00:02:39.989 --> 00:02:45.409
+In game modes, the local rules engine validates proposed moves before
+they take effect.
+
+18
+00:02:46.827 --> 00:02:54.007
+Use examples to shape your own inputs, schemas, thresholds, fallbacks,
+and human-review branches.
+
+19
+00:02:55.412 --> 00:03:03.432
+Jev interprets bounded questions. Your code owns validation, policy,
+and every consequential action.
+
+20
+00:03:04.865 --> 00:03:12.805
+Run locally, inspect every source, and build workflows you can test
+and explain. This is Jev Flow.

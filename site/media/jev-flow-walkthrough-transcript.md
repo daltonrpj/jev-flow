@@ -1,37 +1,91 @@
-# Jev Flow walkthrough narration
+# Jev Flow: product walkthrough
 
-**Language:** English
+**Spoken language:** English (United States)
 
-**Target voice:** Gemini TTS (recording pending)
+**Voice generation:** Gemini 3.1 Flash TTS Preview (`google/gemini-3.1-flash-tts-preview`), voice `Charon`, requested through OpenRouter's `audio/speech` endpoint. The speech was returned as 24 kHz mono PCM and assembled without another voice or model fallback.
 
-**Target duration:** about two minutes; timings below are scene guides, not captions.
+**Captions:** English; synchronized to the rendered narration and available as WebVTT.
 
-**Status:** narration draft. Do not describe a fixture as a live provider response.
+**Demo provenance:** All visible sample judgments are deterministic fixtures or local rules. This recording does not claim that a remote Jev or LLM call was made. Live providers require explicit configuration by the user.
 
-## 00:00 — What Jev Flow does
+## Narration
 
-Jev Flow is a local studio for workflows that combine typed AI judgments with deterministic code. The model answers a bounded question. Your flow validates that answer, applies policy, and controls what happens next.
+### 1. Welcome
 
-## 00:17 — Start locally
+Welcome to Jev Flow: a standalone, open-source studio for building typed AI workflows with clear, code-owned outcomes.
 
-Clone the open-source project, install its Node dependencies, and start the app on your own machine. The website is a guide; the Studio and its API run locally. You can explore without provider credentials. Keys entered in the Studio stay in server memory and are cleared when it stops.
+### 2. The model and the workflow
 
-## 00:34 — Build and preview a flow
+A model returns structured evidence; your flow validates it, applies explicit rules, and chooses the next step.
 
-This support example begins with synthetic input, asks a typed question, checks the answer, and routes uncertain cases to review. A fixture preview is deterministic. It tests your workflow logic; it is not a call to Jev. Missing or malformed answers remain visible and cannot silently become a successful action.
+### 3. Install locally
 
-## 00:57 — Inspect a real judgment
+Clone the repository, install Node dependencies, and start the local server. No provider key is needed to explore fixtures.
 
-When you explicitly connect TypeSafe, the run shows the actual model and execution source. The flow checks the typed result before applying its threshold and branch. Latency and provider-reported usage are shown when available. If cost cannot be established, it stays unknown.
+### 4. Studio
 
-## 01:20 — Explore the Compendium
+Open the Studio to inspect a flow as connected, editable steps. Each node has a visible input and output.
 
-The standalone catalog certifies three hundred eighty-eight thousand and eighty valid configurations. They are generated from reusable dimensions, not separately authored files or individual model runs. Search the catalog, inspect a configuration, and install the pattern that fits your application.
+### 5. Typed questions
 
-## 01:39 — Compare and experiment
+Ask bounded Choice, Noul, or Score questions, then validate the answer against its declared type before routing.
 
-The Battle Arena can compare a real Jev judgment with a configured language model, while keeping each source, response, latency, and available cost explicit. The labs cover spam screening, evidence review, chess, and Blast Garden. In every case, code checks proposed actions before applying them; an illegal move is rejected.
+### 6. Deterministic preview
 
-## 02:03 — Make it yours
+The preview uses labeled synthetic answers, so you can reproduce branches without calling a model or triggering external actions.
 
-Use the examples as starting points, then change their schema, questions, thresholds, and review paths for your own needs. Jev helps interpret the input. Your code owns the decision boundary.
+### 7. Live provider runs
+
+For live runs, connect a supported provider explicitly. The trace identifies source and model, and reports measured latency.
+
+### 8. Fail visibly
+
+If credentials are missing or output is invalid, the run stays unavailable or fails validation. Unknown costs stay unknown.
+
+### 9. Compendium
+
+The Compendium generates 388,080 certified configurations on demand from reusable patterns, domains, variants, and thresholds.
+
+### 10. Reuse patterns
+
+Search, inspect, and install a configuration as a starting point; this count is not 388,080 model executions.
+
+### 11. Battle Arena
+
+The Battle Arena puts Jev and a configured language model side by side, with separate answers and provenance.
+
+### 12. Compare fairly
+
+Compare like-for-like results using observed latency and provider-reported usage; inconclusive data does not produce a winner.
+
+### 13. Self-Driving Cart
+
+The Self-Driving Cart is a sandbox for testing lane choices, speed control, hazards, and safety interventions.
+
+### 14. Read the telemetry
+
+Adjust the course and decision interval, then review distance, action traces, latency, and available cost.
+
+### 15. A bounded simulation
+
+The simulation is an engineering exercise, not proof of real-world vehicle safety.
+
+### 16. Labs
+
+Labs include spam screening, evidence review, chess, Blast Garden, and rescue exercises.
+
+### 17. Local rules
+
+In game modes, the local rules engine validates proposed moves before they take effect.
+
+### 18. Make it yours
+
+Use examples to shape your own inputs, schemas, thresholds, fallbacks, and human-review branches.
+
+### 19. Keep control explicit
+
+Jev interprets bounded questions. Your code owns validation, policy, and every consequential action.
+
+### 20. Close
+
+Run locally, inspect every source, and build workflows you can test and explain. This is Jev Flow.

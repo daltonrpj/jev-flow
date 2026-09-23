@@ -23,3 +23,43 @@
 - **Cause:** JSON encoding alone does not escape HTML's script terminator; the connection model and endpoint are untrusted strings.
 - **Fix:** serialize the connection object with the existing `serializeForInlineScript`, which escapes `<`, `>`, `&`, and JavaScript line separators.
 - **Regression checks:** server smoke renders the page with hostile model and API-base values and asserts neither value can terminate its script; the full suite parses the generated scripts.
+
+## 2026-09-23 — fixture capture waited for a non-matching exact status label
+
+- **Input:** open the standalone support-triage fixture, press its preview action, then wait for an exact visible `OPERATION COMPLETE` text node.
+- **State:** the flow completed all 8 of 8 steps and the result panel reported a deterministic simulated judgment with no input inference, but the headless capture timed out on its exact-text locator.
+- **Cause:** the translated success label shares its status row with mode and run details; it is not a standalone exact-text node.
+- **Fix:** wait for the visible `.evidence-summary` result panel, bring it into the viewport, and assert both the localized success label and the completed-step count.
+- **Regression checks:** the final headless walkthrough capture validates the result card before continuing; no provider call or external action is used.
+
+## 2026-09-23 — Labs modules were missing from the standalone HTTP server
+
+- **Input:** open `/jev/labs`, select Chess or Blast Garden, choose local code mode, and run a move.
+- **State:** the Labs document returned HTTP 200, but its UI module imports `/jev/labs/assets/engine.mjs` and `/jev/labs/assets/chess.mjs`; neither route was served. The browser therefore kept the original tab active and the game controls remained hidden.
+- **Cause:** only the UI module had an explicit Labs asset route; the engine imports fell through to the 404 handler.
+- **Fix:** map both import URLs to their standalone source modules and serve them as JavaScript.
+- **Regression checks:** the HTTP smoke now checks all three module routes, content type, and expected source; browser verification switches Chess and executes a local legal move.
+
+## 2026-09-23 — voice samples were not copied into the aligned WAV container
+
+- **Input:** package the twenty Gemini PCM scenes into a single time-aligned narration WAV and mux it with the app capture.
+- **State:** every source scene had non-silent PCM, but the aligned WAV payload was all zeroes; the initial WebM carried an effectively silent Opus track.
+- **Cause:** the assembler wrote a correct WAV header and data length but omitted copying the concatenated PCM bytes after the 44-byte header.
+- **Fix:** copy the concatenated samples into the WAV payload and make the packager reject a silent/corrupt source scene or aligned track.
+- **Regression checks:** recheck nonzero sample percentage on the aligned WAV and confirm the final WebM has a decoded Opus track with audible sample energy; inspect browser playback and matching VTT.
+
+## 2026-09-23 — standalone video could not seek and HEAD loaded the full file
+
+- **Input:** request `Range: bytes=1000-1099` and seek the 193.9-second local WebM to 100 seconds.
+- **State:** the server returned HTTP 200 without `Content-Range` or `Accept-Ranges`; the browser could play from the start but could not seek. Its static handler also called `readFile` for HEAD requests, loading the whole 17 MB asset just to check availability.
+- **Cause:** the static route ignored the request method and range header, and buffered files before responding.
+- **Fix:** stat assets for headers, stream videos, return 206 for satisfiable byte ranges and 416 for unsatisfiable ranges; HEAD sends headers only. Restrict byte-range handling to video responses.
+- **Regression checks:** HTTP smoke asserts exact single-range and suffix-range bytes, 206/416 headers, and then browser verification seeks and resumes playback.
+
+## 2026-09-23 — captions were doubled in browsers with the caption track enabled
+
+- **Input:** open the public player with its VTT track enabled while the WebM already contains burned-in English subtitles.
+- **State:** Edge showed the same line twice at the bottom of the frame because both subtitle layers rendered together.
+- **Cause:** the VTT sidecar was marked default despite the permanently visible burned-in captions.
+- **Fix:** keep burned-in subtitles visible and make the sidecar VTT an optional track that the viewer can select from player controls.
+- **Regression checks:** site tests reject a default VTT track; browser verification confirms the track starts disabled and still loads all 20 cues when selected.

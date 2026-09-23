@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, stat } from 'node:fs/promises';
+import { createReadStream, existsSync } from 'node:fs';
 import { extname, join, relative, resolve, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDemoPage, buildFlowsIndexPage, simulatePreviewFlow, simularBateria } from './services/jev-flow/demo-page.mjs';
@@ -44,6 +44,57 @@ const send = (res, status, data, type = 'application/json; charset=utf-8') => {
   res.writeHead(status, { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
   res.end(type.startsWith('application/json') ? JSON.stringify(data) : data);
 };
+function byteRange(value, size) {
+  const match = /^bytes=(\d*)-(\d*)$/u.exec(String(value || '').trim());
+  if (!match || (!match[1] && !match[2]) || size <= 0) return null;
+  let start;
+  let end;
+  if (!match[1]) {
+    const suffixLength = Number(match[2]);
+    if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) return null;
+    start = Math.max(0, size - suffixLength);
+    end = size - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Number(match[2]) : size - 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end)) return null;
+    end = Math.min(end, size - 1);
+  }
+  if (start >= size || end < start) return null;
+  return { start, end };
+}
+function serveStatic(req, res, pathname, size, type) {
+  const isVideo = type.startsWith('video/');
+  const headers = {
+    'content-type': type,
+    'content-length': String(size),
+    'cache-control': 'no-store',
+    'x-content-type-options': 'nosniff',
+  };
+  if (isVideo) headers['accept-ranges'] = 'bytes';
+  const rangeHeader = isVideo && req.method === 'GET' ? req.headers.range : undefined;
+  const range = rangeHeader ? byteRange(rangeHeader, size) : undefined;
+  if (rangeHeader && !range) {
+    res.writeHead(416, { ...headers, 'content-length': '0', 'content-range': `bytes */${size}` });
+    return res.end();
+  }
+  let status = 200;
+  let options;
+  if (range) {
+    status = 206;
+    options = { start: range.start, end: range.end };
+    headers['content-length'] = String(range.end - range.start + 1);
+    headers['content-range'] = `bytes ${range.start}-${range.end}/${size}`;
+  }
+  res.writeHead(status, headers);
+  if (req.method === 'HEAD' || size === 0) return res.end();
+  const stream = createReadStream(pathname, options);
+  stream.once('error', error => {
+    if (res.headersSent) res.destroy(error);
+    else send(res, 500, { error: 'static asset could not be read' });
+  });
+  return stream.pipe(res);
+}
 const json = (res, data, status = 200) => send(res, status, data);
 function errorBody(error) { return { error: String(error?.message || error).slice(0, 600), code: error?.code || 'REQUEST_FAILED' }; }
 async function bodyOf(req) {
@@ -107,7 +158,7 @@ async function translate(texts, to, from = 'en') {
   return parsed;
 }
 
-async function servePage(pathname, query, res) {
+async function servePage(pathname, query, req, res) {
   if (pathname === '/') return send(res, 200, await readFile(join(SITE, 'index.html'), 'utf8'), 'text/html; charset=utf-8');
   if (pathname === '/jev' || pathname === '/jev/') { res.writeHead(302, { location: '/jev/flows' }); return res.end(); }
   if (pathname === '/jev/flows') return send(res, 200, await buildFlowsIndexPage({ locale: query.get('lang') }), 'text/html; charset=utf-8');
@@ -128,6 +179,8 @@ async function servePage(pathname, query, res) {
     return send(res, 200, buildCarrinhoPage({ llmModels: models }), 'text/html; charset=utf-8');
   }
   if (pathname === '/jev/labs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-page.html'), 'utf8'), 'text/html; charset=utf-8');
+  if (pathname === '/jev/labs/assets/engine.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-engine.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
+  if (pathname === '/jev/labs/assets/chess.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-chess-engine.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
   if (pathname === '/jev/labs/assets/ui.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-ui.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
   if (pathname === '/favicon.svg' || pathname === '/logo.svg') return send(res, 200, await readFile(join(SITE, 'assets', 'mark.svg'), 'utf8'), 'image/svg+xml');
   if (pathname === '/docs/index.html') return send(res, 200, await readFile(join(SITE, 'docs', 'index.html'), 'utf8'), 'text/html; charset=utf-8');
@@ -138,9 +191,10 @@ async function servePage(pathname, query, res) {
     const relativeTarget = relative(resolve(SITE), target);
     if (relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) throw Object.assign(new Error('path traversal'), { status: 400 });
     if (!existsSync(target)) throw Object.assign(new Error('static asset not found'), { status: 404 });
-    const data = await readFile(target);
-    const type = { '.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webm':'video/webm','.vtt':'text/vtt; charset=utf-8','.mp4':'video/mp4' }[extname(target)] || 'application/octet-stream';
-    return send(res, 200, data, type);
+    const type = { '.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webm':'video/webm','.vtt':'text/vtt; charset=utf-8','.md':'text/markdown; charset=utf-8','.mp4':'video/mp4' }[extname(target)] || 'application/octet-stream';
+    const file = await stat(target);
+    if (req.method === 'GET' || req.method === 'HEAD') return serveStatic(req, res, target, file.size, type);
+    return send(res, 405, { error: 'method not allowed' });
   }
   if (pathname === '/api/jev/docs/laya') return send(res, 200, '<!doctype html><meta charset="utf-8"><title>Optional Laya setup</title><h1>Optional local Laya integration</h1><p>Install Python 3.11+ and the Laya package in a dedicated environment. The project never downloads weights or installs packages automatically.</p><pre>python -m pip install laya\npython scripts/laya_bridge.py --warmup</pre><p><a href="https://github.com/NandhaKishorM/laya/releases/latest" rel="noopener">Official Laya releases</a></p>', 'text/html; charset=utf-8');
   throw Object.assign(new Error('page not found'), { status: 404 });
@@ -187,7 +241,7 @@ async function route(req, res) {
       try { return json(res, JSON.parse(await readFile(join(JEV_DATA_DIR, 'flows', 'runs', runFile[1], runFile[2]), 'utf8'))); }
       catch { throw Object.assign(new Error('run not found'), { status: 404 }); }
     }
-    return servePage(p, url.searchParams, res);
+    return servePage(p, url.searchParams, req, res);
   }
   const body = await bodyOf(req);
   if (p === '/api/jev/connect' && method === 'POST') {
