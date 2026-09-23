@@ -95,3 +95,27 @@
 - **Cause:** the single-column grid retained an automatic minimum track size, and the `pre` command block preserved an unbreakable clone URL.
 - **Fix:** allow the install grid children and column to shrink to zero, then wrap commands at narrow phone widths; add the project favicon so the guide does not request a missing `/favicon.ico`.
 - **Regression checks:** Edge review at 320, 390, 520 and 1440 px measured no horizontal overflow; all six screenshots and the favicon loaded without failed requests, and the WebM played and advanced at 1920×1080 for 193.913 seconds. `npm test` passed 65/65, `npm run catalog:certify -- --check` certified 388,080 unique configurations, `npm run site:build` emitted 19 allowlisted files, and `git diff --check` passed.
+
+## 2026-09-23 — English guide embedded captioned Portuguese app frames
+
+- **Input:** open the six public screenshots while the guide source is English and load Compendium, Carrinho, Labs and Chess directly with `?lang=en`.
+- **State:** the four walkthrough stills included the video's burned-in English narration banner over Portuguese controls; Chess was a separate Portuguese app capture. The Studio demo also retained Portuguese node/edge labels and showed an estimated dollar amount in a deterministic fixture header. A newly captured Compendium English row briefly produced a broken translated word, and the Cart surfaced the raw Portuguese no-key error in its overlay.
+- **Cause:** video frames were reused as product screenshots; English locale support did not cover these local app surfaces or all Studio presentation strings. The Compendium text replacement matched substrings inside other words. The Studio logo path still pointed into the obsolete `site/assets` location, and the preview header displayed an estimate without a provider call.
+- **Fix:** add English-only presentation paths while retaining pt-BR defaults and unmodified inputs/schemas/fixtures; preserve whole-word catalog translation and localize the known Cart no-key label only in the UI. Hide estimated cost in simulated Studio header, fix its logo source, and capture all six pages directly in Edge with credentials removed and external browser requests blocked. Store route/state/dimensions/SHA-256 in a manifest and keep the walkthrough as a separate WebM.
+- **Regression checks:** Studio and UI locale tests cover English labels, fixture preservation, catalog row/focus, Cart fallback, Labs modules and Chess legal-state labels. The manifest test checks six PNG hashes and dimensions. Each final image was visually reviewed for English visible UI, no narration bar, and honest pre-run/fixture/local provenance. No provider call or external action was used.
+
+## 2026-09-23 — public Studio screenshot showed a redaction placeholder instead of its synthetic example
+
+- **Input:** load the shipped `support-triage` flow at `/jev/flows/support-triage/demo?lang=en` and capture its deterministic preview.
+- **State:** the first public screenshot still showed `[REDACTED:input-value]`, although the checked-in example contains the non-sensitive sentence `Example: I see a duplicate charge on my invoice.` The Arena capture also used the bright Race layout, which resembled an unstyled page at thumbnail size.
+- **Cause:** the generic public run projection correctly redacts every input but did not distinguish a byte-identical, shipped public fixture. The capture script used the default Race tab rather than the styled dark Single comparison panel.
+- **Fix:** disclose the fixture input only when the canonical whole-flow fingerprint equals the checked-in example and the preview has no caller-supplied answers; retain redaction for modified flows. Capture the Arena in Single comparison before either provider runs and label that state explicitly.
+- **Regression checks:** a new Studio test asserts the public example is visible and an edited same-ID input stays hidden; the six final PNGs were inspected for English text and no video caption overlay. Focused tests passed 14/14 and the offline suite passed 72/72; the screenshot manifest checks dimensions and SHA-256.
+
+## 2026-09-23 — German hero overflowed a narrow phone
+
+- **Input:** open the generated `/de/` guide at 320 px width.
+- **State:** the document was 460 px wide despite the 320 px viewport; other routes at the same width fit.
+- **Cause:** the German compound in the translated hero heading set the minimum content width of a one-column `1fr` grid, so the grid track expanded beyond the viewport.
+- **Fix:** use a zero-minimum grid track below 800 px and allow long hero/frame text to wrap.
+- **Regression checks:** browser review of all five language routes at 320, 390, 768 and 1440 px found no overflow; all six images decoded, the WebM player remained present, and the language selector preserved `#watch`.

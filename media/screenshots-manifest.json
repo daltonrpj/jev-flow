@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "capture": {
+    "application": "standalone Jev Flow running on loopback",
+    "browser": "Microsoft Edge via Playwright",
+    "viewport": { "width": 1920, "height": 1080, "deviceScaleFactor": 1 },
+    "locale": "en",
+    "network": "loopback only; external requests blocked; provider credentials removed from process environment",
+    "content": "synthetic fixture or local state only; no video caption overlay"
+  },
+  "screenshots": [
+    {
+      "file": "studio-screenshot.png",
+      "route": "/jev/flows/support-triage/demo?lang=en",
+      "state": "editable English support-triage example; deterministic synthetic fixture preview and trace",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "e603296d2ba8b0c89987052891b8d58bf612202b59e7d3300f85625e4a4730c0"
+    },
+    {
+      "file": "compendium-screenshot.png",
+      "route": "/jev/flows/compendium?lang=en",
+      "state": "first page of lazily generated certified configurations; browse only",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "f15b10cc915657ebf425c69fe03866d3933462a6961cc9b19db2a3f542db7e8d"
+    },
+    {
+      "file": "arena-screenshot.png",
+      "route": "/jev/battle",
+      "state": "single-comparison pre-run form with English synthetic preset; TypeSafe unavailable; empty answer panes; no comparison outcome",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "828ca251c8d6595ff7a8c45addacf8d5262282660650d4ae0ad268dc9408d575"
+    },
+    {
+      "file": "carrinho-screenshot.png",
+      "route": "/jev/carrinho?lang=en",
+      "state": "paused two-track synthetic course after two explicitly labeled local-reflex decisions; Jev unavailable; no LLM model",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "0985673d399904ba2e91aa8fc7a34ffba255b86627837418c5351cabbf5ce85d"
+    },
+    {
+      "file": "labs-screenshot.png",
+      "route": "/jev/labs?lang=en",
+      "state": "Blast Garden initial map with local-code engine selected, before a move",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "61f758d856ff192e2acd18f505970c27a87865ab86435c28e7a04a29c88b0488"
+    },
+    {
+      "file": "chess-screenshot.png",
+      "route": "/jev/labs?lang=en",
+      "state": "Chess initial board with white e2 pawn selected and code-computed legal destinations; no model run",
+      "width": 1920,
+      "height": 1492,
+      "sha256": "bd1f360f5bdeeb320e5147c65b98eeaef1e0bee6af4a3fe383ac76ec86ba42fb"
+    }
+  ]
+}

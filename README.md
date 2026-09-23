@@ -1,5 +1,7 @@
 # Jev Flow
 
+**Repository guide:** [English](README.md) · [Português (Brasil)](README.pt-BR.md). **Static guide, prepared for publication:** [English](https://daltonrpj.github.io/jev-flow/) · [Português](https://daltonrpj.github.io/jev-flow/pt-BR/) · [Español](https://daltonrpj.github.io/jev-flow/es/) · [Français](https://daltonrpj.github.io/jev-flow/fr/) · [Deutsch](https://daltonrpj.github.io/jev-flow/de/). The static URLs become available after GitHub Pages is enabled and deployed.
+
 Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, decision Labs, local examples, tests, and an English narrated walkthrough. A static product guide is prepared for [GitHub Pages](https://daltonrpj.github.io/jev-flow/) with real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. GitHub Pages does not host the server or execute a model call.
 
 [![A short animated preview of the real Jev Flow application](media/jev-flow-walkthrough-teaser.gif)](media/jev-flow-walkthrough.webm)
@@ -29,7 +31,7 @@ Open **http://127.0.0.1:8723/**. The root redirects to the Studio. You can impor
 
 ## Real application captures
 
-These captures show the local application with synthetic data or local rules; unavailable providers remain visibly unavailable. The Compendium, Arena, Cart, and Blast Garden stills come from the walkthrough. Studio and Chess are separate local-app captures. No credential or private input appears in them.
+These six independent captures show the local application in English with synthetic data or local rules; unavailable providers remain visibly unavailable. The walkthrough is a separate recording with burned-in captions. No credential or private input appears in the captures. Their routes, states, dimensions, and hashes are recorded in [`media/screenshots-manifest.json`](media/screenshots-manifest.json).
 
 **Studio —** a synthetic fixture exercises a flow and displays the resulting path.
 
@@ -39,7 +41,7 @@ These captures show the local application with synthetic data or local rules; un
 
 ![Compendium configuration browser](media/compendium-screenshot.png)
 
-**Battle Arena —** the 27-question comparison form before a provider run. Empty answer panes indicate that no response has been observed.
+**Battle Arena —** a single comparison form with an English synthetic preset before a provider run. Empty answer panes indicate that no response has been observed.
 
 ![Battle Arena before provider execution](media/arena-screenshot.png)
 
@@ -47,7 +49,7 @@ These captures show the local application with synthetic data or local rules; un
 
 ![Self-Driving Cart simulation and live stats](media/carrinho-screenshot.png)
 
-**Labs —** Blast Garden uses local game rules to validate the next action.
+**Labs —** Blast Garden shows the local game state and code engine before a move.
 
 ![Blast Garden inside Jev Labs](media/labs-screenshot.png)
 
@@ -75,6 +77,7 @@ The Compendium combines 22 patterns, 42 unique domains, 7 variants, 4 thresholds
 ```sh
 npm test
 npm run catalog:certify -- --check
+npm run site:build
 ```
 
 After changing catalog source, run `npm run catalog:certify` to regenerate the manifest and root certificate. The application CI runs tests and verifies the certificate without provider calls or deployment. A separate Pages workflow runs the same offline checks, builds the public guide from an explicit asset allowlist, and publishes only `site/dist`.

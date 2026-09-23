@@ -1,6 +1,7 @@
-import { copyFile, lstat, mkdir, readdir, realpath, rm } from 'node:fs/promises';
+import { copyFile, lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { localeNames, siteTranslations } from '../site/translations.mjs';
 
 const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const comparePath = value => process.platform === 'win32' ? value.toLowerCase() : value;
@@ -11,6 +12,36 @@ export const mediaFiles = Object.freeze([
   'jev-flow-walkthrough.webm', 'jev-flow-walkthrough.vtt',
   'jev-flow-walkthrough-transcript.md',
 ]);
+const invariantText = new Set([
+  'J', 'Jev Flow', '.', '·', '{ }', '?', '◇', '↗', '↳', '/', '27', '388,080',
+  '01', '02', '03', '04', '01 — 06', '02 — 06',
+  'English', 'Português (Brasil)', 'Español', 'Français', 'Deutsch',
+  'http://127.0.0.1:8723/jev/flows',
+  'git clone https://github.com/daltonrpj/jev-flow.git\ncd jev-flow\nnpm ci\nnpm start',
+]);
+const escapeHtml = value => String(value).replace(/[&<>"]/gu, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+export function renderSiteLocale(englishHtml, locale) {
+  if (!Object.hasOwn(localeNames, locale)) throw new Error(`Unsupported site locale: ${locale}`);
+  if (!englishHtml.includes('<html lang="en" data-site-root="./">')) throw new Error('English site source is not canonical');
+  const copy = siteTranslations[locale];
+  const translate = (raw, kind) => {
+    const key = raw.trim().replace(/\r\n/gu, '\n');
+    if (!key || invariantText.has(key) || /^\d+(?:[.,]\d+)?$/u.test(key)) return raw;
+    const translated = copy.get(key);
+    if (!translated) throw new Error(`Missing ${locale} ${kind} translation: ${key}`);
+    return raw.replace(raw.trim(), escapeHtml(translated));
+  };
+  let html = englishHtml.replace(/>([^<>]+)</gu, (match, raw) => `>${translate(raw, 'text')}<`);
+  html = html.replace(/\b(alt|aria-label)="([^"]*)"/gu,
+    (match, name, value) => `${name}="${translate(value, 'attribute')}"`);
+  html = html.replace(/(<meta name="description" content=")([^"]*)(")/u,
+    (match, before, value, after) => before + translate(value, 'description') + after);
+  html = html.replaceAll('="./', '="../');
+  html = html.replace('<html lang="en" data-site-root="../">', `<html lang="${locale}" data-site-root="../">`);
+  html = html.replace(`<option value="${locale}">`, `<option value="${locale}" selected>`);
+  return html;
+}
 
 async function assertRegularSource(source) {
   const info = await lstat(source);
@@ -33,6 +64,10 @@ export async function buildSite(root = defaultRoot) {
   ];
   // Validate every source before replacing a previous build.
   for (const [source] of paths) await assertRegularSource(source);
+  const englishHtml = await readFile(join(siteRoot, 'index.html'), 'utf8');
+  const localized = Object.keys(localeNames).map(locale => [
+    join(locale, 'index.html'), renderSiteLocale(englishHtml, locale),
+  ]);
   const realRoot = await realpath(projectRoot);
   const realSite = await realpath(siteRoot);
   if (comparePath(realSite) !== comparePath(join(realRoot, 'site'))) throw new Error('Site source escapes project root');
@@ -51,7 +86,15 @@ export async function buildSite(root = defaultRoot) {
     await mkdir(dirname(destination), { recursive: true });
     await copyFile(source, destination);
   }
-  return { output, files: paths.map(([, relative]) => relative.replaceAll('\\', '/')) };
+  for (const [relative, html] of localized) {
+    const destination = join(output, relative);
+    await mkdir(dirname(destination), { recursive: true });
+    await writeFile(destination, html, 'utf8');
+  }
+  return { output, files: [
+    ...paths.map(([, relative]) => relative.replaceAll('\\', '/')),
+    ...localized.map(([relative]) => relative.replaceAll('\\', '/')),
+  ] };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -4,16 +4,295 @@
 // ============================================================================
 import { catalogStats } from './compendium-catalog.mjs';
 
+// Only page copy is localized. Catalog names, descriptions and flows stay source data.
+const EN_COPY = [
+  ['Explore fluxos parametrizados por padrão, domínio, foco, orçamento, limiar e complexidade. Cada item é gerado sob demanda e validado antes de aparecer. <b>Testar</b> abre o testador do Jev Flow com entrada tipada, sem instalar nem chamar Jev.', 'Explore flows by pattern, domain, focus, budget, threshold and complexity. Each item is generated on demand and validated before it appears. <b>Test</b> opens the Jev Flow tester with typed input, without installing the flow or calling Jev.'],
+  ['O catálogo representa configurações geráveis, sem materializar centenas de milhares de arquivos. Julgamentos Jev são tipados; simulações mostram origem própria. Instalação em lote afeta apenas os itens desta página.', 'The catalog represents configurations that can be generated without creating hundreds of thousands of files. Jev judgments are typed; simulations show their own source. Bulk install affects only items on this page.'],
+  ['Instale uma configuração e edite-a no estúdio. Para importar, use um arquivo Flow JSON explícito.', 'Install a configuration and edit it in Studio. To import one, provide an explicit Flow JSON file.'],
+  ['Nenhuma configuração encontrada. Ajuste a busca ou os filtros.', 'No configurations found. Adjust your search or filters.'],
+  ['Não foi possível carregar o catálogo.', 'Could not load the catalog.'],
+  ['Não foi possível carregar as estatísticas: ', 'Could not load statistics: '],
+  ['todos os focos · escolha um domínio', 'all focuses · choose a domain'],
+  ['Buscar: suporte, jurídico, roteamento, guardrail…', 'Search: guardrail, ETL, quality, SaaS…'],
+  ['Instalar itens desta página', 'Install items on this page'],
+  ['JSON do fluxo selecionado', 'Selected flow JSON'],
+  ['Personalize um exemplo', 'Customize an example'],
+  ['Carregando configurações…', 'Loading configurations…'],
+  ['Falha ao instalar ', 'Failed to install '],
+  ['Falha ao validar ', 'Failed to validate '],
+  ['Falha ao abrir JSON: ', 'Failed to open JSON: '],
+  ['Fluxo instalado: ', 'Flow installed: '],
+  ['Abra o Studio para editá-lo.', 'Open Studio to edit it.'],
+  ['Fluxo válido: ', 'Valid flow: '],
+  ['Fluxo inválido: ', 'Invalid flow: '],
+  ['Estúdio de fluxos', 'Flow Studio'],
+  ['Abrir estúdio →', 'Open Studio →'],
+  ['todos os padrões', 'all patterns'],
+  ['todos os domínios', 'all domains'],
+  ['todas as variantes', 'all variants'],
+  ['todos os limiares', 'all thresholds'],
+  ['todas as complexidades', 'all complexity levels'],
+  ['todos os focos', 'all focuses'],
+  ['configurações geráveis', 'generatable configurations'],
+  ['domínios únicos', 'unique domains'],
+  ['focos por domínio', 'focuses per domain'],
+  ['▶ testar no Studio', '▶ test in Studio'],
+  ['← anteriores', '← previous'],
+  ['próximos →', 'next →'],
+  ['Tentar novamente', 'Try again'],
+  ['carregando…', 'loading…'],
+  ['consulta falhou', 'query failed'],
+  ['instalação falhou', 'installation failed'],
+  ['lote falhou', 'bulk install failed'],
+  ['validação falhou', 'validation failed'],
+  ['preview falhou', 'preview failed'],
+  ['✓ instalado', '✓ installed'],
+  ['⏳ instalando…', '⏳ installing…'],
+  ['já existentes', 'already present'],
+  [' instalados', ' installed'],
+  [' falhas.', ' failures.'],
+  ['✗ erro', '✗ error'],
+  ['Validando ', 'Validating '],
+  [' nós.', ' nodes.'],
+  ['0 resultados', '0 results'],
+  ['Padrões:', 'Patterns:'],
+  ['padrões', 'patterns'],
+  ['Descrição', 'Description'],
+  ['Fluxo', 'Flow'],
+  ['Nós', 'Nodes'],
+  ['Ações', 'Actions'],
+  ['Instalar', 'Install'],
+  ['Validar', 'Validate'],
+  ['CONFIGURAÇÕES', 'CONFIGURATIONS'],
+  ['orquestrações', 'orchestrations'],
+];
+
+const EN_CATALOG_NAMES = [
+  ['Triagem Inteligente', 'Intelligent Triage'],
+  ['Roteamento por Significado', 'Semantic Routing'],
+  ['Guardrail de Entrada', 'Input Guardrail'],
+  ['Decisão por Ensemble', 'Ensemble Decision'],
+  ['Extração com Validação', 'Validated Extraction'],
+  ['Sniff Test de Qualidade', 'Quality Sniff Test'],
+  ['Escala para Humano', 'Human Escalation'],
+  ['Supervisão Foreman', 'Foreman Supervision'],
+  ['Compactação com Julgamento', 'Judgment-Based Compaction'],
+  ['Detecção de Anomalia', 'Anomaly Detection'],
+  ['Verificação Cruzada', 'Cross-Check'],
+  ['Workflow de Aprovação', 'Approval Workflow'],
+  ['Revisão de Resumo Compactado', 'Compact Summary Review'],
+  ['Consolidação de Feedback', 'Feedback Consolidation'],
+  ['Enriquecimento de Dados', 'Data Enrichment'],
+  ['Notificação Escalonada', 'Escalated Notification'],
+  ['Triagem Dupla', 'Dual Triage'],
+  ['Validação de Formulário', 'Form Validation'],
+  ['Comparação Múltipla', 'Multiple Comparison'],
+  ['Guardrail Bidirecional', 'Bidirectional Guardrail'],
+  ['suporte ao cliente', 'customer support'],
+  ['recursos humanos', 'human resources'],
+  ['pesquisa acadêmica', 'academic research'],
+  ['TI e operações', 'IT and operations'],
+  ['saúde (administrativo)', 'healthcare administration'],
+  ['mercado imobiliário', 'real estate'],
+  ['construção civil', 'construction'],
+  ['agência digital', 'digital agency'],
+  ['setor público', 'public sector'],
+  ['ONG', 'NGO'],
+  ['design & produto', 'design and product'],
+  ['game development', 'game development'],
+  ['blockchain/Web3', 'blockchain/Web3'],
+  ['telecomunicações', 'telecommunications'],
+  ['moda & varejo', 'fashion and retail'],
+  ['indústria musical', 'music industry'],
+  ['culinária & food service', 'food and food service'],
+  ['planejamento de eventos', 'event planning'],
+  ['segurança da informação', 'information security'],
+  ['jurídico', 'legal'],
+  ['vendas', 'sales'],
+  ['financeiro', 'finance'],
+  ['educação', 'education'],
+  ['logística', 'logistics'],
+  ['logistica', 'logistics'],
+  ['seguros', 'insurance'],
+  ['agronegócio', 'agribusiness'],
+  ['restaurante', 'restaurant'],
+  ['contabilidade', 'accounting'],
+  ['jornalismo', 'journalism'],
+  ['academia', 'fitness center'],
+  ['consultoria', 'consulting'],
+  ['energia', 'energy'],
+  ['veterinária', 'veterinary care'],
+  ['aviação', 'aviation'],
+  ['automotivo', 'automotive'],
+  ['farmacêutica', 'pharmaceuticals'],
+  ['tradução', 'translation'],
+  ['rápido', 'fast'],
+  ['padrão', 'standard'],
+  ['rigoroso', 'rigorous'],
+  ['auditável', 'auditable'],
+  ['paralelo', 'parallel'],
+  ['conservador', 'conservative'],
+  ['permissivo', 'permissive'],
+  ['ultra-estrito', 'ultra-strict'],
+  ['estrito', 'strict'],
+  ['Visão geral', 'Overview'],
+  ['reembolso', 'refunds'],
+  ['duvida', 'questions'],
+  ['reclamacao', 'complaints'],
+  ['elogio', 'praise'],
+  ['civel', 'civil law'],
+  ['contratos', 'contracts'],
+  ['recursos', 'appeals'],
+  ['consultivo', 'advisory'],
+  ['reativacao', 'reactivation'],
+  ['proposta', 'proposal'],
+  ['cobranca', 'billing'],
+  ['conciliacao', 'reconciliation'],
+  ['pagamentos', 'payments'],
+  ['recrutamento', 'recruitment'],
+  ['ferias', 'leave'],
+  ['etica', 'ethics'],
+  ['desempenho', 'performance'],
+  ['crise', 'crisis'],
+  ['conteudo', 'content'],
+  ['metodologia', 'methodology'],
+  ['revisao', 'review'],
+  ['dados', 'data'],
+  ['resultados', 'results'],
+  ['acessos', 'access'],
+  ['infra', 'infrastructure'],
+  ['incidentes', 'incidents'],
+  ['agendamento', 'scheduling'],
+  ['triagem', 'triage'],
+  ['segunda opiniao', 'second opinion'],
+  ['correcao', 'correction'],
+  ['recuperacao', 'recovery'],
+  ['plagio', 'plagiarism'],
+  ['planejamento', 'planning'],
+  ['visitas', 'visits'],
+  ['propostas', 'proposals'],
+  ['vistorias', 'inspections'],
+  ['atrasos', 'delays'],
+  ['devolucoes', 'returns'],
+  ['rotas', 'routes'],
+  ['coletas', 'collections'],
+  ['avaliacoes', 'evaluations'],
+  ['cancelamentos', 'cancellations'],
+  ['fraude', 'fraud'],
+  ['trocas', 'exchanges'],
+  ['sinistros', 'claims'],
+  ['renovacao', 'renewals'],
+  ['cobertura', 'coverage'],
+  ['risco', 'risk'],
+  ['qualidade', 'quality'],
+  ['prazos', 'deadlines'],
+  ['seguranca', 'safety'],
+  ['medicao', 'measurement'],
+  ['pragas', 'pests'],
+  ['insumos', 'supplies'],
+  ['clima', 'weather'],
+  ['reservas', 'reservations'],
+  ['cardapio', 'menu'],
+  ['retencao', 'retention'],
+  ['produto', 'product'],
+  ['expansao', 'expansion'],
+  ['escopo', 'scope'],
+  ['conferencia', 'review meeting'],
+  ['obrigacoes', 'obligations'],
+  ['lancamentos', 'entries'],
+  ['certidoes', 'certificates'],
+  ['pauta', 'agenda'],
+  ['checagem', 'verification'],
+  ['exclusiva', 'exclusive'],
+  ['avaliacao', 'evaluation'],
+  ['saude', 'health'],
+  ['planos', 'plans'],
+  ['remoto', 'remote'],
+  ['protocolos', 'protocols'],
+  ['lai', 'information access'],
+  ['denuncias', 'reports'],
+  ['alvaras', 'permits'],
+  ['voluntarios', 'volunteers'],
+  ['doacoes', 'donations'],
+  ['relatorios', 'reports'],
+  ['casos', 'cases'],
+  ['diagnostico', 'diagnosis'],
+  ['contestacao', 'disputes'],
+  ['alinhamento', 'alignment'],
+  ['novo fluxo', 'new flow'],
+  ['usabilidade', 'usability'],
+  ['acessibilidade', 'accessibility'],
+  ['credito', 'credit'],
+  ['kyc', 'KYC'],
+  ['balanceamento', 'balancing'],
+  ['monetizacao', 'monetization'],
+  ['auditoria', 'audit'],
+  ['defi', 'DeFi'],
+  ['telemetria', 'telemetry'],
+  ['alertas', 'alerts'],
+  ['manutencao', 'maintenance'],
+  ['rede', 'network'],
+  ['suporte tecnico', 'technical support'],
+  ['geracao', 'generation'],
+  ['distribuicao', 'distribution'],
+  ['faturamento', 'invoicing'],
+  ['colecoes', 'collections'],
+  ['estoque', 'inventory'],
+  ['tendencias', 'trends'],
+  ['producao', 'production'],
+  ['receitas', 'recipes'],
+  ['fornecedores', 'suppliers'],
+  ['higiene', 'hygiene'],
+  ['consultas', 'appointments'],
+  ['cirurgias', 'surgeries'],
+  ['vacinas', 'vaccines'],
+  ['emergencias', 'emergencies'],
+  ['tripulacao', 'crew'],
+  ['rota', 'route'],
+  ['garantia', 'warranty'],
+  ['pesquisa clinica', 'clinical research'],
+  ['regulatorio', 'regulatory'],
+  ['cronograma', 'schedule'],
+  ['orcamento', 'budget'],
+  ['localizacao', 'location'],
+  ['prazo', 'deadline'],
+  ['especializada', 'specialized'],
+  ['vulnerabilidades', 'vulnerabilities'],
+  ['politicas', 'policies'],
+].sort((a, b) => b[0].length - a[0].length);
+
+function englishCatalogName(value) {
+  let name = String(value);
+  const replacements = [];
+  for (const [pt, en] of EN_CATALOG_NAMES) {
+    if (!name.includes(pt)) continue;
+    const marker = '\uE000' + replacements.length + '\uE001';
+    name = name.replaceAll(pt, marker);
+    replacements.push([marker, en]);
+  }
+  for (const [marker, en] of replacements) name = name.replaceAll(marker, en);
+  return name;
+}
+
+function englishCopy(page) {
+  return EN_COPY.reduce((html, [pt, en]) => html.replaceAll(pt, en), page)
+    .replaceAll("new Intl.NumberFormat('pt-BR')", "new Intl.NumberFormat('en-US')")
+    .replaceAll("+' de '+", "+' of '+");
+}
+
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export async function buildCompendiumPage({ locale } = {}) {
   const stats = catalogStats();
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
+  const en = locale === 'en';
+  const lang = en ? 'en' : 'pt-BR';
+  const langQuery = en ? '?lang=en' : '';
+  const page = `<!DOCTYPE html>
+<html lang="${lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jev Flow Compendium · ${new Intl.NumberFormat('pt-BR').format(stats.total)} orquestrações</title>
+<title>Jev Flow Compendium · ${new Intl.NumberFormat(lang).format(stats.total)} orquestrações</title>
 <link rel="icon" type="image/svg+xml" href="/logo.svg">
 <style>
 :root{--bg:#070710;--bg2:#0e0e1a;--bg3:#161624;--bdr:#1d1d2e;--bdr2:#27273a;--tx:#e4e4f1;--tx2:#7d7d96;--tx3:#5c5c72;--acc:#818cf8;--acc2:#c084fc;--ok:#4ade80}
@@ -58,24 +337,24 @@ pre{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:
 <body>
   <div class="head">
     <h1>📚 Jev Flow Compendium</h1>
-    <span class="badge">${new Intl.NumberFormat('pt-BR').format(stats.total)} CONFIGURAÇÕES</span>
-    <span style="margin-left:auto"><a href="/jev/labs">Labs</a> · <a href="/jev/battle">Arena</a> · <a href="/jev/flows">Estúdio de fluxos</a></span>
+    <span class="badge">${new Intl.NumberFormat(lang).format(stats.total)} CONFIGURAÇÕES</span>
+    <span style="margin-left:auto"><a href="/jev/labs${langQuery}">Labs</a> · <a href="/jev/battle${langQuery}">Arena</a> · <a href="/jev/flows${langQuery}">Estúdio de fluxos</a></span>
   </div>
   <p class="sub">Explore fluxos parametrizados por padrão, domínio, foco, orçamento, limiar e complexidade. Cada item é gerado sob demanda e validado antes de aparecer. <b>Testar</b> abre o testador do Jev Flow com entrada tipada, sem instalar nem chamar Jev.</p>
   <div class="stats" id="stats"></div>
   <div class="filters">
     <input class="search" id="f-search" placeholder="Buscar: suporte, jurídico, roteamento, guardrail…" aria-label="Buscar orquestrações" oninput="debounce()">
-    <select id="f-pattern" onchange="load(0)"><option value="">todos os padrões</option>${stats.patterns.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>
-    <select id="f-domain" onchange="updateFocus();load(0)"><option value="">todos os domínios</option>${stats.domains.map(d=>`<option value="${d.id}">${d.nome}</option>`).join('')}</select>
-    <select id="f-variant" onchange="load(0)"><option value="">todas as variantes</option>${stats.variants.map(v=>`<option value="${v.id}">${v.nome}</option>`).join('')}</select>
-    <select id="f-limiar" onchange="load(0)"><option value="">todos os limiares</option>${stats.limiares.map(l=>`<option value="${l.id}">${l.nome} (${l.valor})</option>`).join('')}</select>
+    <select id="f-pattern" onchange="load(0)"><option value="">todos os padrões</option>${stats.patterns.map(p=>`<option value="${p.id}">${en ? englishCatalogName(p.nome) : p.nome}</option>`).join('')}</select>
+    <select id="f-domain" onchange="updateFocus();load(0)"><option value="">todos os domínios</option>${stats.domains.map(d=>`<option value="${d.id}">${en ? englishCatalogName(d.nome) : d.nome}</option>`).join('')}</select>
+    <select id="f-variant" onchange="load(0)"><option value="">todas as variantes</option>${stats.variants.map(v=>`<option value="${v.id}">${en ? englishCatalogName(v.nome) : v.nome}</option>`).join('')}</select>
+    <select id="f-limiar" onchange="load(0)"><option value="">todos os limiares</option>${stats.limiares.map(l=>`<option value="${l.id}">${en ? englishCatalogName(l.nome) : l.nome} (${l.valor})</option>`).join('')}</select>
     <select id="f-complexity" onchange="load(0)"><option value="">todas as complexidades</option>${stats.complexities.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}</select>
     <select id="f-focus" onchange="load(0)" disabled><option value="">todos os focos · escolha um domínio</option></select>
   </div>
   <div class="card" style="background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:14px">
     <b style="font-size:12px">Personalize um exemplo</b>
     <span style="color:var(--tx3);font-size:11px;margin-left:8px">Instale uma configuração e edite-a no estúdio. Para importar, use um arquivo Flow JSON explícito.</span>
-    <a href="/jev/flows" style="display:inline-block;margin-left:10px">Abrir estúdio →</a>
+    <a href="/jev/flows${langQuery}" style="display:inline-block;margin-left:10px">Abrir estúdio →</a>
   </div>
   <div id="actionOut" class="action-out" role="status" aria-live="polite"></div>
   <table>
@@ -89,16 +368,64 @@ pre{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:
     <span style="margin-left:auto"><button id="bulkBtn" onclick="bulk(event)">Instalar itens desta página</button></span>
   </div>
   <details id="prevBox" style="display:none"><summary>JSON do fluxo selecionado</summary><pre id="prev"></pre></details>
-  <p class="note">Padrões: ${stats.patterns.map(p=>p.nome).join(' · ')}. O catálogo representa configurações geráveis, sem materializar centenas de milhares de arquivos. Julgamentos Jev são tipados; simulações mostram origem própria. Instalação em lote afeta apenas os itens desta página.</p>
+  <p class="note">Padrões: ${stats.patterns.map(p=>en ? englishCatalogName(p.nome) : p.nome).join(' · ')}. O catálogo representa configurações geráveis, sem materializar centenas de milhares de arquivos. Julgamentos Jev são tipados; simulações mostram origem própria. Instalação em lote afeta apenas os itens desta página.</p>
 <script>
+const CATALOG_NAMES=${JSON.stringify(EN_CATALOG_NAMES)};
+function catalogName(value){
+  let name=String(value??'');
+  if(document.documentElement.lang!=='en')return name;
+  const replacements=[];
+  for(const [pt,en] of CATALOG_NAMES){
+    if(!name.includes(pt))continue;
+    const marker='\uE000'+replacements.length+'\uE001';
+    name=name.replaceAll(pt,marker);
+    replacements.push([marker,en]);
+  }
+  for(const [marker,en] of replacements)name=name.replaceAll(marker,en);
+  return name;
+}
+const CATALOG_DESCRIPTIONS={
+  triagem:'Classifies {context} input by category and urgency, routing high-urgency cases.',
+  roteamento:'Routes {context} input to the right team by meaning.',
+  guardrail:'Sends suspected spam, injection and abuse in {context} for review; allows safe input above a minimum confidence.',
+  'ensemble-decisao':'Three independent criteria for {context} make judgments; the ensemble decides by vote.',
+  'extracao-campos':'Extracts required fields from {context} and validates that they are complete.',
+  'sniff-qualidade':'Four quality criteria must exceed the threshold; {context} text passes or is returned.',
+  'escala-humana':'Escalates {context} to a person when explicit evidence or safety is missing under the demo rule exceptions.',
+  'supervisao-foreman':'Supervises work in {context}: continue, verify or stop.',
+  'compactacao-julgamento':'Truncates {context} material and judges whether the retained excerpt is enough for the next step.',
+  'deteccao-anomalia':'Detects anomalies and suspicious patterns in {context}.',
+  'pipeline-etl':'Extracts and validates {context} data for a later ETL step; it neither transforms nor publishes data.',
+  'verificacao-cruzada':'Evaluates two pieces of evidence supplied in the same {context} input; it does not authenticate external sources.',
+  'workflow-aprovacao':'Evaluates eligibility in {context}; manager and director levels require human authorization before notification.',
+  'sintese-relatorio':'Judges whether a truncated {context} excerpt appears sufficient; it does not check omissions from the original or generate a summary.',
+  'consolidacao-feedback':'Consolidates {context} feedback into actionable themes.',
+  'quality-gate':'Quality gate for {context} deliverables: multiple criteria must pass.',
+  enriquecimento:'Classifies category, priority and completeness of {context} records; asks for more detail when context is missing.',
+  'notificacao-escalona':'Suggests a {context} cadence: immediate, daily or weekly; it sends no notifications.',
+  'triagem-dupla':'Records {context} category and complexity; prioritizes by urgency and reviews unknown categories.',
+  'validacao-formulario':'Validates {context} forms field by field with JEV.',
+  'comparacao-multipla':'Ranks {context} options for the supplied question and abstains if the best item lacks a supported answer.',
+  'guardrail-bidirecional':'Evaluates the {context} request and candidate response through two typed gates; it does not generate or publish content.'
+};
+function catalogDescription(it){
+  if(document.documentElement.lang!=='en')return it.description;
+  const lead=CATALOG_DESCRIPTIONS[it.pattern];
+  if(!lead)return it.description;
+  const context=catalogName(it.domainNome)+(it.focus==='geral'?'':' / '+catalogName(it.focusNome));
+  const threshold=({p:'0.5',d:'0.6',e:'0.75',x:'0.9'})[it.limiar]||'—';
+  const limit=String(it.description||'').split('Limite de entrada neste foco: ')[1]?.split(' tokens.')[0];
+  const focused=it.pattern==='triagem'&&it.focus!=='geral'?' Category '+catalogName(it.focusNome)+' gets immediate review.':'';
+  return lead.replaceAll('{context}',context)+' Policy: Apply the configured rules for '+context+'; ambiguous cases require human review. Threshold: '+catalogName(it.limiarNome)+' ('+threshold+'); budget profile: '+catalogName(it.variantNome)+'; composition: '+catalogName(it.complexityNome)+'.'+focused+(limit?' Input limit for this focus: '+limit+' tokens.':'');
+}
 const esc=function(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
 const $=function(id){return document.getElementById(id);};
 let offset=0,totalRows=0,loadVersion=0,CATALOG_STATS=null;
 function qs(){const p=new URLSearchParams();if($('f-search').value.trim())p.set('search',$('f-search').value.trim());['pattern','domain','variant','limiar','complexity','focus'].forEach(function(k){if($('f-'+k).value)p.set(k,$('f-'+k).value);});p.set('limit',40);p.set('offset',offset);return p.toString();}
 function setAction(kind,message){const out=$('actionOut');out.className='action-out '+kind;out.textContent=message;}
 function keyOf(it){return {id:it.id,pattern:it.pattern,domain:it.domain,variant:it.variant,limiar:it.limiar,complexity:it.complexity,focus:it.focus};}
-function testUrl(it){const q=new URLSearchParams(keyOf(it));return '/jev/flows/compendium/test?'+q.toString()+'#testador';}
-function updateFocus(){const domain=CATALOG_STATS&&CATALOG_STATS.domains.find(function(d){return d.id===$('f-domain').value;});const control=$('f-focus');control.innerHTML='<option value="">'+(domain?'todos os focos':'todos os focos · escolha um domínio')+'</option>'+(domain?domain.foci.map(function(f){return '<option value="'+esc(f.id)+'">'+esc(f.nome)+'</option>';}).join(''):'');control.disabled=!domain;control.value='';}
+function testUrl(it){const q=new URLSearchParams(keyOf(it));if(document.documentElement.lang==='en')q.set('lang','en');return '/jev/flows/compendium/test?'+q.toString()+'#testador';}
+function updateFocus(){const domain=CATALOG_STATS&&CATALOG_STATS.domains.find(function(d){return d.id===$('f-domain').value;});const control=$('f-focus');control.innerHTML='<option value="">'+(domain?'todos os focos':'todos os focos · escolha um domínio')+'</option>'+(domain?domain.foci.map(function(f){return '<option value="'+esc(f.id)+'">'+esc(catalogName(f.nome))+'</option>';}).join(''):'');control.disabled=!domain;control.value='';}
 let t=null;function debounce(){clearTimeout(t);t=setTimeout(function(){load(0);},260);}
 function pill(t){return '<span class="pill">'+esc(t)+'</span> ';}
 var COMP_ITEMS=[];
@@ -112,7 +439,7 @@ async function load(o){
     COMP_ITEMS=d.items||[];totalRows=d.total||0;
     $('rows').innerHTML=COMP_ITEMS.map(function(it,i){
       const btn='<div class="actions"><button class="primary" onclick="testFlow('+i+')">▶ testar no Studio</button><button id="btn-'+esc(it.id)+'" onclick="install('+i+')">Instalar</button><button onclick="validateFlowById('+i+')">Validar</button><button onclick="preview('+i+')">JSON</button></div>';
-      return '<tr><td><b>'+esc(it.name)+'</b><br>'+pill(it.patternNome)+pill(it.domainNome)+pill(it.focusNome)+pill(it.complexityNome)+'</td><td><div class="desc">'+esc(it.description)+'</div></td><td>'+it.nodeCount+'</td><td>'+btn+'</td></tr>';
+      return '<tr><td><b>'+esc(catalogName(it.name))+'</b><br>'+pill(catalogName(it.patternNome))+pill(catalogName(it.domainNome))+pill(catalogName(it.focusNome))+pill(catalogName(it.complexityNome))+'</td><td><div class="desc">'+esc(catalogDescription(it))+'</div></td><td>'+it.nodeCount+'</td><td>'+btn+'</td></tr>';
     }).join('')||'<tr><td colspan="4">Nenhuma configuração encontrada. Ajuste a busca ou os filtros.</td></tr>';
     $('pagerInfo').textContent=d.total?((offset+1)+'–'+Math.min(offset+d.limit,d.total)+' de '+new Intl.NumberFormat('pt-BR').format(d.total)):'0 resultados';
     document.querySelector('.pager button:first-child').disabled=offset===0;
@@ -174,4 +501,5 @@ init().catch(function(error){setAction('error','Não foi possível carregar as e
 </script>
 </body>
 </html>`;
+  return en ? englishCopy(page) : page;
 }

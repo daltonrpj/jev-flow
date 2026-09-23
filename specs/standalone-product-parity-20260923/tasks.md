@@ -7,7 +7,7 @@
 - [x] Add focused standalone runtime and certification smoke coverage without external calls.
 - [x] Integrate the English Gemini 3.1 Flash TTS narration, standalone-app capture, WebM, synchronized English VTT and transcript. Verify browser playback, 20 subtitle cues, 1920×1080 video metadata, and non-silent final audio.
 - [x] Move five editable examples to root `examples/`, media to root `media/`, and the catalog certificate to root.
-- [x] Retain the real Studio still, extract Compendium, Arena, Cart and Labs frames from the walkthrough, capture Chess in the local app, and create a short GIF teaser linked to the full WebM.
+- [x] Keep the real walkthrough and GIF teaser, then replace all six public screenshots with direct English app captures, independent from the captioned video.
 - [x] Keep the Node runtime and its Nginx deployment protected; app CI stays separate from Pages publication.
 - [x] Restore a public static guide in `site/` with real captures, a playable WebM, relative assets, honest provenance, and a preserved `#install` anchor.
 - [x] Add `site:build` with an explicit public asset allowlist and tests that reject accidental checkout publication.
@@ -15,4 +15,9 @@
 - [x] Run the prior complete local suite (`npm test`: 62/62), catalog certification (`npm run catalog:certify`: 388,080 valid/unique IDs and keys, fingerprint `dfa4bee0686e1e1dae5a88d5a702ecd24d8a52ce234c1be54`), and read-only CI certificate check (`npm run catalog:certify -- --check`: passed).
 - [x] Re-run the suite (`npm test`: 65/65), read-only certificate check (388,080 valid/unique configurations), and isolated `site:build` (19 allowlisted public files) after restoring the public guide.
 - [x] Browser-review the guide at 320, 390, 520 and 1440 px widths; verify all six screenshots, the favicon, no failed requests, and local WebM playback at 1920×1080 for 193.913 s.
+- [x] Generate EN-root, pt-BR, es, fr and de static routes from checked translations, preserving section hashes and localized metadata/accessibility text; publish README EN and pt-BR links to the GIF/WebM/VTT/transcript.
+- [x] Manifest six real English screenshots with route, honest synthetic/local/pre-run state, viewport and SHA-256; visually review all six. Expose only the fingerprint-identical shipped public Studio fixture input while keeping edited input redacted. Regression verified both cases.
+- [x] Recheck the 388,080 unique certified configurations and build the 23-file public allowlist artifact after replacing the captures.
+- [x] Browser-check all five static language routes at 320, 390, 768 and 1440 px: six images decode, no horizontal overflow, language switch preserves `#watch`, and local WebM player markup remains present.
+- [x] Re-run focused localization/manifest/build contracts (14/14) and the complete offline suite (72/72) after the capture and Studio privacy fix.
 - [ ] Run a remote-provider smoke and verify its reported source, usage, and cost separately from fixture tests. Blocked in this environment because no TypeSafe/Jev or LLM provider credentials are configured; the walkthrough labels fixtures and local rules and makes no remote inference claim.

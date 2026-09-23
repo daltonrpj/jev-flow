@@ -175,9 +175,12 @@ async function servePage(pathname, query, req, res) {
   if (pathname === '/jev/battle') return send(res, 200, await buildBattlePage(), 'text/html; charset=utf-8');
   if (pathname === '/jev/carrinho') {
     const models = (await listBattleModels()).flatMap(p => p.modelos.map(m => m.id));
-    return send(res, 200, buildCarrinhoPage({ llmModels: models }), 'text/html; charset=utf-8');
+    return send(res, 200, buildCarrinhoPage({ llmModels: models, locale: query.get('lang') }), 'text/html; charset=utf-8');
   }
-  if (pathname === '/jev/labs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-page.html'), 'utf8'), 'text/html; charset=utf-8');
+  if (pathname === '/jev/labs') {
+    const page = await readFile(join(ROOT, 'services/jev-flow/labs-page.html'), 'utf8');
+    return send(res, 200, query.get('lang') === 'en' ? page.replace('<html lang="pt-BR">', '<html lang="en">') : page, 'text/html; charset=utf-8');
+  }
   if (pathname === '/jev/labs/assets/engine.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-engine.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
   if (pathname === '/jev/labs/assets/chess.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-chess-engine.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
   if (pathname === '/jev/labs/assets/ui.mjs') return send(res, 200, await readFile(join(ROOT, 'services/jev-flow/labs-ui.mjs'), 'utf8'), 'text/javascript; charset=utf-8');

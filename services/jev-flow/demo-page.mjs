@@ -42,10 +42,18 @@ const TYPE_LABELS_PT = Object.freeze({
   'metrics.emit': 'Emitir métrica', 'action.webhook': 'Webhook seguro', 'action.log': 'Registrar log',
   'action.set': 'Definir variáveis', 'logic.subgraph': 'Grafo de Raciocínio', 'rules.find': 'Encontrar regra',
 });
+const TYPE_LABELS_EN = Object.freeze({
+  'jev.ask': 'Jev judgment', 'jev.jevlet': 'Published Jevlet', 'jev.verify': 'Verify evidence',
+  'flow.if': 'IF condition', 'flow.switch': 'Switch route', 'budget.guard': 'Budget gate',
+  'rule.match': 'Match condition', 'rule.extract': 'Extract fields', 'rule.lookup': 'Table lookup',
+  'context.compact': 'Compact context', 'context.prune': 'Prune output', 'det.skill': 'Deterministic skill',
+  'metrics.emit': 'Emit metric', 'action.webhook': 'Guarded webhook', 'action.log': 'Write log',
+  'action.set': 'Set variables', 'logic.subgraph': 'Reasoning graph', 'rules.find': 'Find rule',
+});
 
 function loadFlowLogoDataUri() {
   try {
-    const svg = readFileSync(join(MODULE_DIR, '..', '..', 'site', 'assets', 'mark.svg'));
+    const svg = readFileSync(join(MODULE_DIR, '..', '..', 'assets', 'mark.svg'));
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
   } catch {
     return '';
@@ -450,26 +458,56 @@ export async function simulatePreviewFlow(flow, input, answers) {
     mode: 'simulation', simulado: true, validacao };
 }
 
+function englishStudioSubtitle(value) {
+  return String(value || '')
+    .replace(/^(\d+) julgamento\(s\) tipado\(s\)$/u, '$1 typed judgments')
+    .replace(/^condição tipada protegida$/u, 'guarded typed condition')
+    .replace(/^seletor tipado protegido$/u, 'guarded typed selector')
+    .replace(/^mensagem protegida$/u, 'guarded message')
+    .replace(/^endpoint protegido$/u, 'guarded endpoint');
+}
+
+function shippedPublicFixture(flow) {
+  if (!/^[a-z][a-z0-9_-]{2,40}$/u.test(String(flow?.id || ''))) return null;
+  const path = join(MODULE_DIR, '..', '..', 'examples', `${flow.id}.flow.json`);
+  if (!existsSync(path)) return null;
+  try {
+    const shipped = JSON.parse(readFileSync(path, 'utf8'));
+    if (flowFingerprint(flow) !== flowFingerprint(shipped)) return null;
+    return shipped.fixtures?.find(item => item?.input && item?.answers) || null;
+  } catch { return null; }
+}
+
 export async function buildDemoPage(flowId, { answers, dir, locale, flow: catalogFlow, catalogPreview = false, catalogKey = null } = {}) {
   const i18n = getLocalePack(locale);
   const flow = catalogFlow || loadFlow(flowId, ...(dir ? [{ dir }] : []));
   const flowDir = dir || FLOWS_DIR;
+  const publicFixture = !catalogPreview && answers == null ? shippedPublicFixture(flow) : null;
   const readonlyExample = catalogPreview || existsSync(join(EXAMPLES_DIR, `${flow.id}.flow.json`))
     && !existsSync(flowPath(flow.id, { dir: flowDir }));
   // GET da visualização nunca pode disparar webhook/efeito externo. Se não
   // houver uma run gravada, o canvas usa somente o simulador determinístico.
   const { run, origem, simulado, chamadasWebhook } = await executar(flow, {
-    answers: catalogPreview ? { ...sugerirRespostas(flow, true), ...(answers || {}) } : answers,
-    input: catalogPreview ? buildExampleInput(flow) : undefined,
+    answers: catalogPreview ? { ...sugerirRespostas(flow, true), ...(answers || {}) } : publicFixture?.answers || answers,
+    input: catalogPreview ? buildExampleInput(flow) : publicFixture?.input,
     forceSimulado: true, ...(dir ? { dir } : {}),
   });
   const publicFlow = catalogPreview ? structuredClone(flow) : projectFlowForPublic(flow);
   const { nodes, edges } = layout(publicFlow);
+  if (i18n.locale === 'en') {
+    for (const node of nodes) {
+      node.rotulo = TYPE_LABELS_EN[node.tipo] || node.rotulo;
+      node.sub = englishStudioSubtitle(node.sub);
+    }
+    for (const edge of edges) edge.label = ({ sim: 'yes', 'não': 'no', padrão: 'default' })[edge.label] || edge.label.replace(/^caso (\d+)$/u, 'case $1');
+  }
   const custo = run.steps.reduce((s, st) => s + (run.outputs[st.no]?.custo_usd_estimado || 0), 0);
   const publicRun = projectRunForPublic(run);
   if (catalogPreview) {
     publicRun.input = buildExampleInput(flow);
     publicRun.outputs = structuredClone(run.outputs || {});
+  } else if (publicFixture) {
+    publicRun.input = structuredClone(publicFixture.input);
   }
 
   const payload = {
@@ -496,13 +534,16 @@ export async function buildDemoPage(flowId, { answers, dir, locale, flow: catalo
     chamadas: projectWebhookCallsForPublic(chamadasWebhook || []),
     meta: { origem, simulado, custo: catalogPreview ? 0 : custo,
       caminho: publicRun.path, catalogVersion: NODE_CATALOG_VERSION },
-    catalog: NODE_DEFINITIONS.map(definition => ({ ...definition, display: nodeDisplayDefinition(definition.type) })),
+    catalog: NODE_DEFINITIONS.map(definition => ({ ...definition, display: {
+      ...nodeDisplayDefinition(definition.type),
+      ...(i18n.locale === 'en' ? { rotulo: TYPE_LABELS_EN[definition.type] || definition.label } : {}),
+    } })),
     logoDataUri: JEV_FLOW_MARK_DATA_URI,
     locale: i18n,
     readonly: readonlyExample,
     catalogPreview,
     catalogKey,
-    sampleAnswers: catalogPreview ? { ...sugerirRespostas(flow, true), ...(answers || {}) } : null,
+    sampleAnswers: catalogPreview ? { ...sugerirRespostas(flow, true), ...(answers || {}) } : publicFixture?.answers || null,
   };
 
   return { html: CANVAS_HTML(payload), origem, simulado };
@@ -570,6 +611,7 @@ function renderCapabilityIndex() {
 }
 
 function CANVAS_HTML(p) {
+  const english = p.locale?.locale === 'en';
   const passosOk = p.steps.filter(s => s.ok).length;
   const tempoTotal = p.steps.reduce((s, step) => s + (Number(step.ms) || 0), 0);
   const confiancas = p.steps.map(s => s.confianca).filter(v => Number.isFinite(v));
@@ -1160,12 +1202,12 @@ function CANVAS_HTML(p) {
   <h1>${esc(p.flow.name)}</h1>
   <span class="pill ${p.meta.simulado ? 'sim' : 'real'}">${esc(p.meta.simulado ? 'julgamento simulado' : 'execução real')}</span>
   ${p.catalogPreview ? '<span class="pill dim">cenário sintético · sem chamada Jev</span>' : ''}
-  <span class="pill dim">${p.steps.length} passos · ${p.edges.length} arestas${p.meta.custo ? ' · ≈$' + p.meta.custo.toFixed(6) : ''}</span>
+  <span class="pill dim">${p.steps.length} ${english ? 'steps' : 'passos'} · ${p.edges.length} ${english ? 'edges' : 'arestas'}${!p.meta.simulado && p.meta.custo ? ' · ≈$' + p.meta.custo.toFixed(6) : ''}</span>
   <div class="spacer"></div>
   <button class="run" id="btnTeste">${esc(p.locale?.execution || 'Testar')}</button>
   <div class="save-cluster">
     <button class="run save" id="btnSalvar" aria-describedby="saveStatus" aria-label="${p.readonly ? 'Salvar desabilitado: exemplo shipped somente leitura' : 'Salvar flow'}"${p.readonly ? ' disabled' : ''}>${p.readonly ? 'Somente leitura' : 'Salvar'}</button>
-    <div class="save-status ${p.readonly ? 'readonly' : 'saved'}" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"${p.readonly ? ' aria-label="Somente leitura; duplique para editar"' : ''}><span id="saveStatusText">${p.catalogPreview ? 'Prévia do catálogo · somente leitura' : p.readonly ? 'Exemplo somente leitura' : 'Tudo salvo'}</span></div>
+    <div class="save-status ${p.readonly ? 'readonly' : 'saved'}" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"${p.readonly ? ' aria-label="Somente leitura; duplique para editar"' : ''}><span id="saveStatusText">${p.catalogPreview ? 'Prévia do catálogo · somente leitura' : p.readonly ? 'Exemplo somente leitura' : english ? 'All changes saved' : 'Tudo salvo'}</span></div>
     ${p.readonly ? '<button class="run duplicate" id="btnDuplicar" type="button" aria-describedby="saveStatus">Duplicar para editar</button>' : ''}
   </div>
   <select id="vel" title="velocidade do replay" style="background:#17171f;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer">
@@ -1181,8 +1223,8 @@ function CANVAS_HTML(p) {
       <div id="nodes"></div>
     </div>
     <div class="layout-switch" id="layoutSwitch" role="group" aria-label="Layout do grafo">
-      <button class="on" data-layout="timeline" aria-pressed="true">⇄ Fluxo</button>
-      <button data-layout="camadas" aria-pressed="false">⇊ Camadas</button>
+      <button class="on" data-layout="timeline" aria-pressed="true">⇄ ${english ? 'Flow' : 'Fluxo'}</button>
+      <button data-layout="camadas" aria-pressed="false">⇊ ${english ? 'Layers' : 'Camadas'}</button>
       <button data-layout="radial" aria-pressed="false">◎ Radial</button>
     </div>
     <div id="minimap" title="minimapa — clique para navegar"></div>
@@ -1196,7 +1238,7 @@ function CANVAS_HTML(p) {
         <div id="reasoningGraph"></div>
       </div>
     </section>
-    <div class="legenda"><b>clique no ✎</b> editar · <b>arraste</b> nós · <b>scroll</b> zoom · <b>arraste o fundo</b> pan</div>
+    <div class="legenda">${english ? '<b>click ✎</b> to edit · <b>drag</b> nodes · <b>scroll</b> to zoom · <b>drag the background</b> to pan' : '<b>clique no ✎</b> editar · <b>arraste</b> nós · <b>scroll</b> zoom · <b>arraste o fundo</b> pan'}</div>
     <div class="zoomer">
       <button id="zin">+</button><button id="zout">−</button><button id="zfit" title="enquadrar">⤢</button><button id="ztour" title="tour explicado para leigos">🎓</button>
     </div>
@@ -1313,8 +1355,8 @@ function CANVAS_HTML(p) {
     <div class="tabbody on" data-t="exec">
       <div class="evidence-summary ${operacaoOk ? 'ok' : 'fail'}" role="status" aria-live="polite">
         <div class="evidence-kicker"><span class="evidence-dot"></span>${operacaoOk ? 'operação concluída' : 'operação com falha'}<span class="evidence-mode">${p.meta.simulado ? 'SIMULAÇÃO' : 'EXECUÇÃO REAL'}</span></div>
-        <div class="evidence-metrics"><span><b>${passosOk}/${p.steps.length}</b> passos</span><span><b>${tempoTotal}ms</b> duração</span><span><b>${p.meta.caminho.length}</b> caminho</span></div>
-        ${confiancaMin == null ? '' : '<div class="evidence-note ' + (confiancaMin < 0.65 ? 'warn' : '') + '">' + (p.meta.simulado ? 'confiança do cenário simulado ' : 'menor confiança Jev ') + '<b>' + Math.round(confiancaMin * 100) + '%</b>' + (p.meta.simulado ? ' · sem inferência do input' : confiancaMin < 0.65 ? ' · revisar antes de automatizar' : ' · evidência dentro do limiar operacional') + '</div>'}
+        <div class="evidence-metrics"><span><b>${passosOk}/${p.steps.length}</b> ${english ? 'steps' : 'passos'}</span><span><b>${tempoTotal}ms</b> ${english ? 'duration' : 'duração'}</span><span><b>${p.meta.caminho.length}</b> ${english ? 'path nodes' : 'caminho'}</span></div>
+        ${confiancaMin == null ? '' : '<div class="evidence-note ' + (confiancaMin < 0.65 ? 'warn' : '') + '">' + (p.meta.simulado ? (english ? 'simulated scenario confidence ' : 'confiança do cenário simulado ') : (english ? 'lowest Jev confidence ' : 'menor confiança Jev ')) + '<b>' + Math.round(confiancaMin * 100) + '%</b>' + (p.meta.simulado ? (english ? ' · no inference from input' : ' · sem inferência do input') : confiancaMin < 0.65 ? (english ? ' · review before automation' : ' · revisar antes de automatizar') : (english ? ' · evidence within operational threshold' : ' · evidência dentro do limiar operacional')) + '</div>'}
       </div>
       <div class="info-linha">input: <code>${esc(JSON.stringify(p.input))}</code></div>
       <div id="cards"></div>

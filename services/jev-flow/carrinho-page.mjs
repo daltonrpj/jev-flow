@@ -4,6 +4,80 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 
+const EN_COPY = [
+  ['O mesmo percurso para JEV e LLM. Cada resposta mostra origem, modelo e métricas reais.', 'The same course for JEV and LLM. Each response shows its source, model and measured metrics.'],
+  ['A percepção vai à API; o código valida a resposta e dirige. Se JEV falhar, o reflexo local fica identificado.', 'Perception goes to the API; code validates the response and drives. If JEV fails, the local reflex is clearly identified.'],
+  ['Mostrar respostas tipadas na pista', 'Show typed responses on the track'],
+  ['Reflexo de emergência no código', 'Emergency reflex in code'],
+  ['Gerar objetos no percurso', 'Generate objects on the course'],
+  ['Clique na pista para adicionar:', 'Click the track to add:'],
+  ['Estreitamento de pista (difícil)', 'Narrow lane course (hard)'],
+  ['Nenhum modelo disponível', 'No model available'],
+  ['Selecione um modelo LLM disponível.', 'Select an available LLM model.'],
+  ['Resposta da API fora do contrato', 'API response violated the contract'],
+  ['faixa solicitada bloqueada no estado atual', 'requested lane blocked in the current state'],
+  ['desvio local: estado mudou durante a chamada', 'local dodge: state changed during the call'],
+  ['freio local: sem faixa livre', 'local braking: no open lane'],
+  ['retomada local após freio', 'local recovery after braking'],
+  ['sem aceleração junto ao obstáculo', 'no acceleration near the obstacle'],
+  ['Aguardando primeira decisão.', 'Waiting for the first decision.'],
+  ['JEV · aguardando', 'JEV · waiting'],
+  ['LLM · aguardando', 'LLM · waiting'],
+  ['REFLEXO LOCAL', 'LOCAL REFLEX'],
+  ['Segurança local: ', 'Local safety: '],
+  ['Modelo propôs ', 'Model proposed '],
+  ['Segurança: ', 'Safety: '],
+  [' · aplicado ', ' · applied '],
+  ['Estatísticas ao vivo', 'Live statistics'],
+  ['Decisões recentes', 'Recent decisions'],
+  ['Velocidade máxima', 'Maximum speed'],
+  ['Intervalo de decisão', 'Decision interval'],
+  ['Seed do percurso', 'Course seed'],
+  ['Modelo LLM', 'LLM model'],
+  ['Trânsito urbano', 'Urban traffic'],
+  ['Objeto aleatório', 'Random object'],
+  ['Mostrar sensores', 'Show sensors'],
+  ['Vel. média', 'Avg. speed'],
+  ['Tokens entrada', 'Input tokens'],
+  ['Tokens saída', 'Output tokens'],
+  ['Custo conhecido', 'Known cost'],
+  ['Latência API', 'API latency'],
+  ['Carro parado', 'Parked car'],
+  ['Caminhão', 'Truck'],
+  ['Pedestre', 'Pedestrian'],
+  ['Barreira', 'Barrier'],
+  ['Trânsito', 'Traffic'],
+  ['Remover', 'Remove'],
+  ['Reiniciar', 'Restart'],
+  ['Modo', 'Mode'],
+  ['Retomar', 'Resume'],
+  ['Pausar', 'Pause'],
+  ['Percurso', 'Course'],
+  ['Aleatório', 'Random'],
+  ['Densidade', 'Density'],
+  ['Métrica', 'Metric'],
+  ['Distância', 'Distance'],
+  ['Decisões', 'Decisions'],
+  ['Desvios', 'Dodges'],
+  ['Colisões', 'Collisions'],
+  ['Pista JEV', 'JEV track'],
+  ['Pista LLM', 'LLM track'],
+  ['Fluxos', 'Flows'],
+  ['iniciando', 'starting'],
+  ['aguardando', 'waiting'],
+  ['pausado', 'paused'],
+  ['ao vivo · ', 'live · '],
+  ['reflexo local', 'local reflex'],
+  ['pista ', 'lane '],
+  ['COLISÃO', 'COLLISION'],
+  ['código', 'code'],
+];
+
+function englishCopy(page) {
+  return EN_COPY.reduce((html, [pt, en]) => html.replaceAll(pt, en), page)
+    .replaceAll("toLocaleString('pt-BR')", "toLocaleString('en-US')");
+}
+
 export function createSeededRandom(seed) {
   let state = Number(seed) >>> 0;
   return function random() {
@@ -15,11 +89,13 @@ export function createSeededRandom(seed) {
   };
 }
 
-export function buildCarrinhoPage({ llmModels = [] } = {}) {
+export function buildCarrinhoPage({ llmModels = [], locale } = {}) {
+  const en = locale === 'en';
+  const langQuery = en ? '?lang=en' : '';
   const modelOpts = [...new Set(llmModels.filter((model) => typeof model === 'string' && model.length < 180))]
     .slice(0, 60).map((model) => `<option value="${escapeHtml(model)}"${model === 'groq/openai/gpt-oss-20b' ? ' selected' : ''}>${escapeHtml(model)}</option>`).join('');
-  return `<!doctype html>
-<html lang="pt-BR">
+  const page = `<!doctype html>
+<html lang="${en ? 'en' : 'pt-BR'}">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>JEV Self-Driving Sim · Jev Flow</title><link rel="icon" href="/logo.svg" type="image/svg+xml">
@@ -45,7 +121,7 @@ body[data-mode="jev-only"] .layout,body[data-mode="llm-only"] .layout{grid-templ
 </head>
 <body data-mode="compare">
 <main class="shell">
-  <header class="top"><div><h1>🛒 JEV Self-Driving Sim</h1><p>O mesmo percurso para JEV e LLM. Cada resposta mostra origem, modelo e métricas reais.</p></div><nav class="links"><a href="/jev/labs">Labs</a><a href="/jev/battle">Arena</a><a href="/jev/flows">Fluxos</a></nav></header>
+  <header class="top"><div><h1>🛒 JEV Self-Driving Sim</h1><p>O mesmo percurso para JEV e LLM. Cada resposta mostra origem, modelo e métricas reais.</p></div><nav class="links"><a href="/jev/labs${langQuery}">Labs</a><a href="/jev/battle${langQuery}">Arena</a><a href="/jev/flows${langQuery}">Fluxos</a></nav></header>
   <div class="layout">
     <section class="track jev" id="trackJ" aria-label="Pista JEV"><div class="track-head" id="titleJ">JEV · aguardando</div><canvas id="canvasJ" width="420" height="680"></canvas><div class="track-hud" id="hudJ"></div><div class="track-answer" id="answerJ">Aguardando primeira decisão.</div><div class="crash">CRASHED</div></section>
     <section class="track llm" id="trackL" aria-label="Pista LLM"><div class="track-head" id="titleL">LLM · aguardando</div><canvas id="canvasL" width="420" height="680"></canvas><div class="track-hud" id="hudL"></div><div class="track-answer" id="answerL">Aguardando primeira decisão.</div><div class="crash">CRASHED</div></section>
@@ -60,7 +136,7 @@ body[data-mode="jev-only"] .layout,body[data-mode="llm-only"] .layout{grid-templ
       <div class="buttons"><button class="primary" id="reset">↻ Reiniciar (R)</button><button id="pause">Pausar</button><button id="random">＋ Objeto aleatório</button></div>
       <div class="field"><label for="course">Percurso</label><select id="course"><option value="squeeze">Estreitamento de pista (difícil)</option><option value="city">Trânsito urbano</option><option value="random">Aleatório</option></select></div>
       <div class="model-seed-row">
-        <div class="field"><label for="model">Modelo LLM</label><select id="model">${modelOpts || '<option value="">Nenhum modelo disponível</option>'}</select></div>
+        <div class="field"><label for="model">Modelo LLM</label><select id="model">@@MODEL_OPTIONS@@</select></div>
         <div class="field"><label for="seed">Seed do percurso</label><input id="seed" type="number" min="0" max="4294967295" step="1" value="20260922"></div>
       </div>
       <div class="field"><div class="range-line"><label for="density">Densidade</label><output id="densityValue">1×</output></div><input id="density" type="range" min="0.5" max="2.5" step="0.25" value="1"></div>
@@ -94,6 +170,7 @@ body[data-mode="jev-only"] .layout,body[data-mode="llm-only"] .layout{grid-templ
 @@PRNG@@
 var W=420,H=680,ROAD_X=87,ROAD_W=246,LANE_W=82,CAR_Y=550,PX_PER_M=4;
 var $=function(id){return document.getElementById(id);};
+function displayReason(reason){const message=String(reason??'');return document.documentElement.lang==='en'?message.replaceAll('JEV não configurado','JEV is not configured'):message;}
 var canvas={jev:$('canvasJ'),llm:$('canvasL')};
 var context={jev:canvas.jev.getContext('2d'),llm:canvas.llm.getContext('2d')};
 var mode='compare',paused=false,selectedTool='barrier',obstacles=[],nextId=1,courseRow=0,runId=0,lastFrame=0,elapsed=0,rand=createSeededRandom(20260922);
@@ -187,13 +264,13 @@ function setAnswer(key,result,d){
   if(result.proposedDecision){var proposal=document.createElement('div');proposal.textContent='Modelo propôs '+result.proposedDecision.lane_action+' / '+result.proposedDecision.speed_action;el.appendChild(proposal);}
   if(result.safetyOverride){var safety=document.createElement('div');safety.textContent='Segurança: '+result.safetyOverride.join('; ');safety.style.color='#ffc179';el.appendChild(safety);}
   if(result.clientSafetyOverride){var local=document.createElement('div');local.textContent='Segurança local: '+result.clientSafetyOverride.join('; ');local.style.color='#ffc179';el.appendChild(local);}
-  if(result.fallbackReason){var reason=document.createElement('div');reason.textContent=result.fallbackReason;reason.style.color='#ffafa8';el.appendChild(reason);}
+  if(result.fallbackReason){var reason=document.createElement('div');reason.textContent=displayReason(result.fallbackReason);reason.style.color='#ffafa8';el.appendChild(reason);}
   if(result.answers){var pre=document.createElement('pre');pre.textContent=JSON.stringify(result.answers,null,1);el.appendChild(pre);}
 }
 function logDecision(key,result,d){
   var item=document.createElement('div');item.className='log-item';
   var headline=document.createElement('strong');headline.textContent=(key==='jev'?'JEV':'LLM')+' · '+result.source+' · '+d.lane_action+' / '+d.speed_action;
-  var detail=document.createElement('small');detail.textContent='\\n'+(result.model||result.backend||'código')+' · '+(result.latencyMs==null?'—':result.latencyMs+' ms')+(result.costUsd==null?'':' · '+fmtCost(result.costUsd))+(result.fallbackReason?' · '+result.fallbackReason:'');
+  var detail=document.createElement('small');detail.textContent='\\n'+(result.model||result.backend||'código')+' · '+(result.latencyMs==null?'—':result.latencyMs+' ms')+(result.costUsd==null?'':' · '+fmtCost(result.costUsd))+(result.fallbackReason?' · '+displayReason(result.fallbackReason):'');
   item.append(headline,detail);$('log').prepend(item);while($('log').children.length>18)$('log').lastChild.remove();
 }
 async function decide(key){
@@ -213,7 +290,7 @@ async function decide(key){
     if(result.usage&&Number.isInteger(result.usage.inputTokens)){car.usage.input+=result.usage.inputTokens;car.usage.seen=true;}
     if(result.usage&&Number.isInteger(result.usage.outputTokens)){car.usage.output+=result.usage.outputTokens;car.usage.seen=true;}
     if(typeof result.costUsd==='number'&&Number.isFinite(result.costUsd)){car.cost+=result.costUsd;car.costSeen=true;}else car.costPartial=true;
-    car.error=result.fallbackReason||null;if(car.error)$('error').textContent=(key==='jev'?'JEV':'LLM')+': '+car.error;
+    car.error=result.fallbackReason||null;if(car.error)$('error').textContent=(key==='jev'?'JEV':'LLM')+': '+displayReason(car.error);
     setAnswer(key,result,decision);logDecision(key,result,decision);
     text(key==='jev'?'titleJ':'titleL',(key==='jev'?'JEV':'LLM')+' · '+(result.source==='deterministic'?'REFLEXO LOCAL':result.model||result.backend||result.source));
   }catch(error){
@@ -221,7 +298,7 @@ async function decide(key){
     var reason=String(error&&error.message||error).slice(0,180),d=applyDecision(car,fallbackLocal(car));
     car.decisions++;car.latency=Math.round(performance.now()-started);car.roundTrip=car.latency;car.source='deterministic';car.error=reason;car.costPartial=true;
     var fallback={source:'deterministic',backend:'local-code',model:null,latencyMs:car.latency,costUsd:null,fallbackReason:reason,clientSafetyOverride:car.clientSafetyOverride};
-    $('error').textContent=(key==='jev'?'JEV':'LLM')+': '+reason;setAnswer(key,fallback,d);logDecision(key,fallback,d);
+    $('error').textContent=(key==='jev'?'JEV':'LLM')+': '+displayReason(reason);setAnswer(key,fallback,d);logDecision(key,fallback,d);
   }finally{clearTimeout(timer);if(generation===runId)car.pending=false;}
 }
 function tick(timestamp){
@@ -319,4 +396,6 @@ reset();updateControls();requestAnimationFrame(tick);
 })();
 </script>
 </body></html>`.replace('@@PRNG@@', createSeededRandom.toString());
+  return (en ? englishCopy(page) : page).replace('@@MODEL_OPTIONS@@',
+    modelOpts || (en ? '<option value="">No model available</option>' : '<option value="">Nenhum modelo disponível</option>'));
 }

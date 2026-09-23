@@ -50,6 +50,13 @@ const PACKS = {
       'Exemplos reais de entrada': 'Real input examples', 'Flow JSON': 'Flow JSON', 'Arquivo ou JSON exportado': 'File or exported JSON',
       'fluxos': 'flows', 'Suas políticas indexadas': 'Your indexed policies', 'Indexar regras': 'Index rules',
       'ver regras': 'view rules', 'Nenhum fluxo ainda': 'No flow yet', 'Excluir flow': 'Delete flow',
+      'Tudo salvo': 'All changes saved', 'Executar': 'Play', 'Reproduzir amostra': 'Play sample',
+      'JULGAMENTO JEV': 'JEV JUDGMENT', 'ROTEADOR SWITCH': 'SWITCH ROUTE', 'CONDIÇÃO IF': 'IF CONDITION',
+      'REGISTRAR LOG': 'WRITE LOG', 'mensagem protegida': 'guarded message',
+      'condição tipada protegida': 'guarded typed condition', 'seletor tipado protegido': 'guarded typed selector',
+      'REDE': 'NETWORK', 'rede': 'network', 'sim': 'yes', 'não': 'no', 'padrão': 'default',
+      'SIMULAÇÃO': 'SIMULATION', 'caminho executado': 'executed path',
+      'clique no ✎ editar · arraste nós · scroll zoom · arraste o fundo pan': 'click ✎ to edit · drag nodes · scroll to zoom · drag background to pan',
     },
   },
   es: {
