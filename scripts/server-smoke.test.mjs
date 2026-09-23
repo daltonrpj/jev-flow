@@ -75,7 +75,7 @@ test('standalone server opens the Studio, protects local mutations and fulfills 
   const rootResponse = await fetch(`${baseUrl}/`, { redirect: 'manual' });
   assert.equal(rootResponse.status, 302);
   assert.equal(rootResponse.headers.get('location'), '/jev/flows');
-  for (const path of ['/assets/mark.svg', '/examples/support-triage.flow.json', '/catalog-certification.json', '/docs/quickstart.md', '/media/studio-screenshot.png']) {
+  for (const path of ['/assets/mark.svg', '/favicon.svg', '/logo.svg', '/examples/support-triage.flow.json', '/catalog-certification.json', '/docs/quickstart.md', '/media/studio-screenshot.png']) {
     const response = await fetch(`${baseUrl}${path}`);
     assert.equal(response.status, 200, path);
   }

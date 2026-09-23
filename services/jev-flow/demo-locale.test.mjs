@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { buildDemoPage } from './demo-page.mjs';
+import { buildDemoPage, buildFlowsIndexPage } from './demo-page.mjs';
 
 const flow = JSON.parse(await readFile(new URL('../../examples/support-triage.flow.json', import.meta.url), 'utf8'));
 
@@ -32,4 +32,15 @@ test('Studio exposes only the exact shipped public fixture input', async () => {
   const privatePage = (await buildDemoPage(edited.id, { flow: edited, locale: 'en' })).html;
   assert.doesNotMatch(privatePage, /PRIVATE_CUSTOMER_REFERENCE_4821/);
   assert.match(privatePage, /\[REDACTED:\s*input-value\]/);
+});
+
+test('Studio pages do not request font files missing from the standalone package', async () => {
+  const [canvas, index] = await Promise.all([
+    buildDemoPage(flow.id, { flow, locale: 'en' }).then(result => result.html),
+    buildFlowsIndexPage({ locale: 'en' }),
+  ]);
+  for (const html of [canvas, index]) {
+    assert.doesNotMatch(html, /\/synap-(?:instrument|fraunces)\.woff2/u);
+    assert.doesNotMatch(html, /font-family:\s*['"]Jev Flow (?:Instrument|Editorial)['"]/u);
+  }
 });

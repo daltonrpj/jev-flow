@@ -119,3 +119,19 @@
 - **Cause:** the German compound in the translated hero heading set the minimum content width of a one-column `1fr` grid, so the grid track expanded beyond the viewport.
 - **Fix:** use a zero-minimum grid track below 800 px and allow long hero/frame text to wrap.
 - **Regression checks:** browser review of all five language routes at 320, 390, 768 and 1440 px found no overflow; all six images decoded, the WebM player remained present, and the language selector preserved `#watch`.
+
+## 2026-09-23 — jevflow.cloud pointed away from the active VPS
+
+- **Input:** open `https://jevflow.cloud` and `https://www.jevflow.cloud` while checking the standalone Jev Flow deployment.
+- **State:** the Hostinger A record for `@` pointed to `2.57.91.91`, while the active Jev Flow VPS was `179.197.236.153`; the shared Caddy configuration had no Jev Flow virtual host or TLS policy. The app and private bridge were running, and local app health returned 200. The deployed app release also lagged the repository's current `684702711c5a35d3f26cf7a2fffe1fc37d84b389` commit.
+- **Cause:** DNS targeted an inactive address and the active reverse proxy had never been configured for the custom domain, so requests could not reach the already-running app over HTTP or HTTPS.
+- **Fix:** update only the apex A record to the active VPS IP, retain all mail records and the `www` CNAME, and deploy the tested standalone release with an atomic symlink switch and verified data backup. Prepare a Caddy vhost that redirects `www`, proxies through the existing private bridge, returns 404 for public health, requires Basic Auth for app routes, and enables automatic HTTPS. Caddy activation is pending the operator's password entry through the VPS terminal.
+- **Regression checks:** repository `npm test` passed 70 tests with 0 failures and 2 browser tests skipped because Playwright is not installed; the new release passed an isolated least-privilege startup health check and is now the active release with its process working directory verified; the live loopback health check returned 200; Hostinger confirmed the new A record and public DNS resolution returned the VPS IP; the proposed authenticated Caddy config passed `caddy validate`. Public HTTPS and authenticated UI checks remain pending the operator password handoff and certificate issuance.
+
+## 2026-09-23 — Studio requested absent Synap font files
+
+- **Input:** render the Studio canvas and flow index pages from `buildDemoPage` and `buildFlowsIndexPage`.
+- **State:** both pages emitted `@font-face` URLs for `/synap-instrument.woff2` and `/synap-fraunces.woff2`, but the standalone package contains no WOFF/WOFF2/TTF/OTF assets or routes for those paths. A focused regression failed on those references before the edit. `assets/favicon.svg` also duplicated `assets/mark.svg` byte for byte while the app's favicon routes served `assets/mark.svg` and the public guide used its separate `site/favicon.svg`.
+- **Cause:** font rules and a duplicate icon remained from an earlier visual pass without the corresponding packaged font assets or consumers.
+- **Fix:** remove the stale font-face declarations, use the already specified Segoe UI and Georgia fallbacks directly, and delete only the unused duplicate `assets/favicon.svg`.
+- **Regression checks:** the focused Studio test failed on the absent font URLs before the edit and passed 3/3 afterward for both rendered pages; HTTP smoke covers `/favicon.svg`, `/logo.svg`, and `/assets/mark.svg`, while the public guide keeps `site/favicon.svg`. The full offline suite passed 73/73, catalog certification confirmed 388,080 valid unique configurations, and `site:build` produced 23 allowlisted public files. `git diff --check` passed.

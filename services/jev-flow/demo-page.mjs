@@ -989,15 +989,13 @@ function CANVAS_HTML(p) {
     .node .pin.out { right:auto; left:50%; top:auto; bottom:-5px; }
   }
   /* ── Jev Flow Decision Studio · precision instrument pass ─────── */
-  @font-face { font-family:'Jev Flow Instrument'; src:url('/synap-instrument.woff2') format('woff2'); font-display:swap; }
-  @font-face { font-family:'Jev Flow Editorial'; src:url('/synap-fraunces.woff2') format('woff2'); font-display:swap; }
   :root {
     --bg:#080d12; --panel:#101820; --panel-solid:#111a23; --panel-2:#16212b; --line:rgba(218,229,238,.12);
     --line-strong:rgba(218,229,238,.22); --txt:#eef2ef; --dim:#93a1ad; --accent:#9a83ff; --accent2:#48c7da;
     --ok:#55c88a; --warn:#e3b45d; --err:#ef6c78; --det:#57c99b; --ctx:#5ba8e8; --control:#d7a95c;
     --judgment:#9a83ff; --skill:#f08d63; --action:#e06f78; --observe:#7e91a4;
   }
-  body { font-family:'Jev Flow Instrument','Segoe UI Variable','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--txt); }
+  body { font-family:'Segoe UI Variable','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--txt); }
   body:before { content:''; position:fixed; inset:0; pointer-events:none; opacity:.12; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px); background-size:100% 8px; }
   header { height:66px; padding:0 20px; gap:12px; background:rgba(8,13,18,.96); border-bottom-color:var(--line-strong); backdrop-filter:blur(18px); }
   .logo { gap:10px; letter-spacing:.01em; }
@@ -1049,7 +1047,7 @@ function CANVAS_HTML(p) {
   .reasoning-surface:before { content:''; position:fixed; inset:66px 420px 0 0; pointer-events:none; opacity:.24; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:32px 32px; }
   .reasoning-shell { position:relative; width:min(1120px,100%); margin:0 auto; padding:76px 32px 52px; }
   .reasoning-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; padding-bottom:18px; border-bottom:1px solid var(--line-strong); }
-  .reasoning-head h2 { margin-top:7px; font:600 clamp(23px,3vw,34px) 'Jev Flow Editorial',Georgia,serif; letter-spacing:-.025em; }
+  .reasoning-head h2 { margin-top:7px; font:600 clamp(23px,3vw,34px) Georgia,serif; letter-spacing:-.025em; }
   .reasoning-head p { margin-top:7px; max-width:650px; color:#9fadb7; font-size:12px; line-height:1.55; }
   .reasoning-proof { flex:none; padding:5px 7px; border:1px solid rgba(87,201,155,.32); border-radius:4px; color:#7fd9b0; font:700 8px ui-monospace,Consolas,monospace; letter-spacing:.09em; }
   .reasoning-intro { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
@@ -1123,7 +1121,7 @@ function CANVAS_HTML(p) {
   .guide-kicker { display:flex; align-items:center; gap:8px; color:var(--accent2); font:700 8px ui-monospace,Consolas,monospace; letter-spacing:.12em; text-transform:uppercase; }
   .guide-title { display:flex; gap:11px; align-items:center; margin-top:11px; }
   .guide-title .cap-glyph { width:38px; height:38px; }
-  .guide-title h3 { font:600 18px 'Jev Flow Editorial',Georgia,serif; letter-spacing:-.02em; }
+  .guide-title h3 { font:600 18px Georgia,serif; letter-spacing:-.02em; }
   .guide-title code { display:block; margin-top:3px; color:#84939e; font-size:9px; }
   .guide-copy { margin-top:12px; color:#bdc7ce; font-size:12px; line-height:1.55; }
   .guide-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
@@ -3494,10 +3492,8 @@ export async function buildFlowsIndexPage({ locale } = {}) {
     .modal { padding:18px; } .field-grid { grid-template-columns:1fr; }
   }
   /* ── Jev Flow Decision Studio · index precision pass ──────────── */
-  @font-face { font-family:'Jev Flow Instrument'; src:url('/synap-instrument.woff2') format('woff2'); font-display:swap; }
-  @font-face { font-family:'Jev Flow Editorial'; src:url('/synap-fraunces.woff2') format('woff2'); font-display:swap; }
   :root { --bg:#080d12; --surface:#101820; --line:rgba(218,229,238,.12); --line-strong:rgba(218,229,238,.22); --txt:#eef2ef; --dim:#93a1ad; --accent:#9a83ff; --accent2:#48c7da; --ok:#55c88a; --warn:#e3b45d; --err:#ef6c78; }
-  body { font-family:'Jev Flow Instrument','Segoe UI Variable','Segoe UI',system-ui,sans-serif; color:var(--txt); background:var(--bg); }
+  body { font-family:'Segoe UI Variable','Segoe UI',system-ui,sans-serif; color:var(--txt); background:var(--bg); }
   body:before { content:''; position:fixed; inset:0; pointer-events:none; opacity:.11; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px); background-size:100% 8px; }
   header { height:66px; padding:0 max(20px,calc((100vw - 1240px)/2)); background:rgba(8,13,18,.96); border-bottom-color:var(--line-strong); backdrop-filter:blur(18px); }
   .logo { gap:10px; }.brand-mark { width:29px; height:29px; display:block; object-fit:contain; filter:drop-shadow(0 5px 12px rgba(94,97,255,.22)); }
@@ -3508,18 +3504,18 @@ export async function buildFlowsIndexPage({ locale } = {}) {
   .hero,.stats,.grid,.flow-toolbar,footer,.capability-index,.jevificar-banner { max-width:1240px; }
   .hero { padding:60px 28px 12px; grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); gap:36px; align-items:start; }
   .eyebrow { color:var(--accent2); font:700 9px ui-monospace,Consolas,monospace; letter-spacing:.16em; }
-  .hero h1 { margin-top:13px; color:#f3f4ef; background:none; font:600 clamp(44px,6vw,76px)/.96 'Jev Flow Editorial',Georgia,serif; letter-spacing:-.045em; }
+  .hero h1 { margin-top:13px; color:#f3f4ef; background:none; font:600 clamp(44px,6vw,76px)/.96 Georgia,serif; letter-spacing:-.045em; }
   .hero p { margin-top:18px; max-width:700px; color:#aeb9c1; font-size:15px; line-height:1.6; }
   .hero-principles { display:flex; flex-wrap:wrap; gap:6px; margin-top:15px; }
   .hero-nav { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
   .hero-nav a { transition: border-color .2s, transform .15s; }
   .hero-nav a:hover { border-color: var(--accent) !important; transform: translateY(-1px); }.hero-principles span { padding:5px 7px; border:1px solid var(--line); border-radius:4px; color:#8696a1; font:8px ui-monospace,Consolas,monospace; letter-spacing:.05em; text-transform:uppercase; }
   button.criar,.mbtn.p { border:1px solid #947fff; border-radius:6px; background:#7864d8!important; box-shadow:none; }.action-soft { min-height:39px; border-radius:6px; background:#121b24; border-color:var(--line-strong); }
-  .signal-card { min-height:224px; border-radius:9px; border-color:var(--line-strong); background:#101820; box-shadow:0 18px 48px rgba(0,0,0,.24); }.signal-card h3 { font:600 20px 'Jev Flow Editorial',Georgia,serif; }.signal-kicker,.signal-mode { color:#8f9da7; }
+  .signal-card { min-height:224px; border-radius:9px; border-color:var(--line-strong); background:#101820; box-shadow:0 18px 48px rgba(0,0,0,.24); }.signal-card h3 { font:600 20px Georgia,serif; }.signal-kicker,.signal-mode { color:#8f9da7; }
   .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:22px; padding:0 28px; gap:1px; border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; background:var(--line); }
   .stat { border:0; border-radius:0; background:#0e161e; backdrop-filter:none; padding:15px 17px; }.stat b { font-size:24px; color:#f0f2ee; }.stat span { color:#7f8e99; font:700 8px ui-monospace,Consolas,monospace; letter-spacing:.11em; }
   .capability-index { position:relative; z-index:1; scroll-margin-top:150px; margin:28px auto 0; padding:28px; border-top:1px solid var(--line-strong); border-bottom:1px solid var(--line-strong); }
-  .capability-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:30px; align-items:end; }.capability-head h2 { margin-top:8px; color:#eff2ee; font:600 clamp(24px,3vw,38px) 'Jev Flow Editorial',Georgia,serif; letter-spacing:-.025em; }.capability-head p { max-width:700px; margin-top:9px; color:#98a6b0; font-size:12px; line-height:1.55; }
+  .capability-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:30px; align-items:end; }.capability-head h2 { margin-top:8px; color:#eff2ee; font:600 clamp(24px,3vw,38px) Georgia,serif; letter-spacing:-.025em; }.capability-head p { max-width:700px; margin-top:9px; color:#98a6b0; font-size:12px; line-height:1.55; }
   .capability-totals { display:grid; grid-template-columns:repeat(2,minmax(96px,1fr)); gap:1px; border:1px solid var(--line); border-radius:7px; overflow:hidden; background:var(--line); }.capability-totals span { min-width:110px; padding:10px 11px; background:#0c141b; color:#778690; font:8px ui-monospace,Consolas,monospace; text-transform:uppercase; }.capability-totals b { display:block; margin-bottom:3px; color:#f1f3ef; font-size:16px; }
   .capability-controls { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:22px; padding:10px; border:1px solid var(--line); border-radius:7px; background:#0c141b; }.capability-controls label { position:relative; flex:1; max-width:520px; }.capability-controls label>span { position:absolute; left:10px; top:10px; color:#657580; font:700 8px ui-monospace,Consolas,monospace; letter-spacing:.09em; pointer-events:none; }.capability-controls input { width:100%; height:34px; padding:7px 10px 7px 126px; border:1px solid var(--line); border-radius:5px; background:#080f15; color:var(--txt); font:11px inherit; }
   .capability-filters { display:flex; gap:5px; }.capability-filters button { min-height:30px; padding:5px 9px; border:1px solid var(--line); border-radius:4px; background:transparent; color:#82919c; font:8px ui-monospace,Consolas,monospace; text-transform:uppercase; cursor:pointer; }.capability-filters button.on,.capability-filters button:hover { color:#f1edff; border-color:rgba(154,131,255,.52); background:rgba(154,131,255,.09); }
@@ -3529,7 +3525,7 @@ export async function buildFlowsIndexPage({ locale } = {}) {
   .cap-title { min-width:0; flex:1; }.cap-title b { display:block; color:#e9eeea; font-size:10.5px; }.cap-title code { display:block; margin-top:3px; color:#73828d; background:none; padding:0; font-size:8px; }.cap-badges { display:flex; gap:4px; }.cap-badges i { padding:3px 4px; border:1px solid var(--line); border-radius:3px; color:#788791; font:normal 7px ui-monospace,Consolas,monospace; text-transform:uppercase; }.cap-open { color:#64737e; font-size:14px; }.cap-node[open] .cap-open { transform:rotate(45deg); }
   .cap-detail { padding:0 10px 12px 51px; }.cap-detail>p { color:#9aa8b2; font-size:9.5px; line-height:1.48; }.cap-description { color:#d1d8dc!important; margin-bottom:5px; }.contract-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:10px; }.contract-grid h4 { margin-bottom:5px; color:#6f7f89; font:700 7px ui-monospace,Consolas,monospace; letter-spacing:.1em; }.contract-grid ul { display:grid; gap:3px; list-style:none; padding:0; }.contract-grid li { padding:5px; border:1px solid var(--line); border-radius:4px; background:#091017; }.contract-grid li code { display:block; padding:0; background:none; color:#c1b4ff; font-size:7.5px; }.contract-grid li span { display:block; margin-top:2px; color:#8897a1; font-size:8px; line-height:1.35; }
   .cap-policy { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }.cap-policy span { padding:3px 4px; border:1px solid var(--line); border-radius:3px; color:#7f8e99; font:7px ui-monospace,Consolas,monospace; }.cap-fallback { margin-top:8px; padding:7px; border-left:2px solid var(--warn); background:rgba(227,180,93,.05); color:#929fa8; font-size:8.5px; line-height:1.4; }.cap-fallback b { display:block; margin-bottom:2px; color:#d8bd83; }.cap-detail pre { margin-top:8px; max-height:150px; overflow:auto; padding:7px; border:1px solid var(--line); border-radius:4px; background:#070d12; color:#aebac2; font-size:7.5px; white-space:pre-wrap; }.cap-empty { margin-top:12px; padding:20px; border:1px dashed var(--line-strong); border-radius:7px; color:var(--dim); text-align:center; font-size:11px; }
-  .flow-toolbar { top:66px; margin-top:24px; padding:11px 28px; background:rgba(8,13,18,.96); border-bottom-color:var(--line-strong); }.flow-toolbar h2 { font:600 22px 'Jev Flow Editorial',Georgia,serif; }.grid { margin-top:12px; }.wf { border-radius:8px; background:#101820; backdrop-filter:none; box-shadow:none; }.wf:before { display:none; }.wf:hover { transform:translateY(-2px); border-color:rgba(154,131,255,.48); box-shadow:0 16px 36px rgba(0,0,0,.28); }.wf-ico { border-radius:6px; background:#131d27; box-shadow:none; border:1px solid var(--line); }.wf-ico img { width:25px; height:25px; object-fit:contain; }.wf-name { color:#edf1ed; }.wf-desc { color:#a4b0b8; }.wf-metrics span { border-radius:4px; background:#0c141b; }.wf-acts { border-radius:0 0 8px 8px; background:#0c141b; }.b,.more-trigger { border-radius:5px; background:#111a23; }
+  .flow-toolbar { top:66px; margin-top:24px; padding:11px 28px; background:rgba(8,13,18,.96); border-bottom-color:var(--line-strong); }.flow-toolbar h2 { font:600 22px Georgia,serif; }.grid { margin-top:12px; }.wf { border-radius:8px; background:#101820; backdrop-filter:none; box-shadow:none; }.wf:before { display:none; }.wf:hover { transform:translateY(-2px); border-color:rgba(154,131,255,.48); box-shadow:0 16px 36px rgba(0,0,0,.28); }.wf-ico { border-radius:6px; background:#131d27; box-shadow:none; border:1px solid var(--line); }.wf-ico img { width:25px; height:25px; object-fit:contain; }.wf-name { color:#edf1ed; }.wf-desc { color:#a4b0b8; }.wf-metrics span { border-radius:4px; background:#0c141b; }.wf-acts { border-radius:0 0 8px 8px; background:#0c141b; }.b,.more-trigger { border-radius:5px; background:#111a23; }
   .jevificar-banner { margin:18px auto 0; padding:0 28px; position:relative; z-index:1; }.discovery-card { width:100%; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; padding:16px 18px; border:1px solid var(--line-strong); border-radius:8px; background:#0e171f; color:var(--txt); text-align:left; cursor:pointer; }.discovery-card:hover { border-color:rgba(154,131,255,.48); background:#121d26; }.discovery-index { color:var(--accent2); font:700 8px ui-monospace,Consolas,monospace; letter-spacing:.09em; }.discovery-copy b { display:block; font-size:12px; }.discovery-copy small { display:block; margin-top:4px; color:#8f9da7; font-size:10px; line-height:1.4; }.discovery-arrow { color:var(--accent); }.modal { border-radius:9px; background:#0f171f; border-color:var(--line-strong); }textarea,.fixture-select { background:#080f15; border-radius:6px; }
   @media (min-width:901px) and (max-height:800px) { .hero { padding-top:24px; padding-bottom:0; }.stats { margin-top:12px; }.flow-toolbar { margin-top:10px; padding-top:0; padding-bottom:0; }.grid { margin-top:0; }.wf-open { padding:5px 16px 1px; }.wf-desc { min-height:22px; } }
   :focus-visible { outline:2px solid var(--accent2)!important; outline-offset:3px!important; }
