@@ -239,3 +239,11 @@
 - **Cause:** baseline creation was coupled to the first persisted run.
 - **Fix:** persist full live runs without automatically selecting one; expose an explicit page button, API endpoint, and CLI command to set the latest eligible live run as baseline. The page confirms replacement when one exists.
 - **Regression checks:** injected runs still cannot persist or set a baseline; a focused suite test will verify an eligible recorded run remains unbased until `setBaseline` is called.
+
+## 2026-09-24 — README lost the GitHub Pages mirror reference
+
+- **Input:** run `node --test scripts/repository-contract.test.mjs` from the clean standalone checkout used for the VPS release.
+- **State:** the walkthrough/source-link test failed because `README.md` linked only to `jevflow.cloud`, while the repository contract also requires an explicit GitHub Pages mirror link.
+- **Cause:** the README was updated for the custom domain without preserving the older mirror reference; the full suite had not been rerun after that edit.
+- **Fix:** restore a direct mirror link and clarify that both public guides are static, while the Node application requires a local or protected deployment.
+- **Regression checks:** rerun the focused repository contract, full `npm test`, catalog certificate check, and public-site build before switching the VPS release.

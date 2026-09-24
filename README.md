@@ -4,6 +4,8 @@
 
 Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, Ship Pack, live fixture suite, interactive games, prompt/context tools, webhook and subflow nodes, local examples, tests, and an English narrated walkthrough. The [public product guide](https://jevflow.cloud/) has real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. The public guide does not host the server or execute a model call.
 
+The [GitHub Pages mirror](https://daltonrpj.github.io/jev-flow/) serves the same static public guide as jevflow.cloud; use a local or protected Node deployment for the application.
+
 ## Watch: deterministic AI and Jev Flow
 
 [![Preview of the Jev Flow English explainer](media/jev-flow-deterministic-ai-explainer-en-poster.png)](media/jev-flow-deterministic-ai-explainer-en.webm)
