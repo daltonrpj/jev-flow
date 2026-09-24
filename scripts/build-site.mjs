@@ -16,6 +16,7 @@ const invariantText = new Set([
   'J', 'Jev Flow', '.', '·', '{ }', '?', '◇', '↗', '↳', '/', '27', '388,080',
   '01', '02', '03', '04', '01 — 06', '02 — 06',
   'English', 'Português (Brasil)', 'Español', 'Français', 'Deutsch',
+  'GitHub', 'daltonrpj/jev-flow',
   'http://127.0.0.1:8723/jev/flows',
   'git clone https://github.com/daltonrpj/jev-flow.git\ncd jev-flow\nnpm ci\nnpm start',
 ]);

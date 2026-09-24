@@ -52,6 +52,9 @@ test('site:build copies only the explicit public allowlist', async () => {
       assert.match(html, new RegExp(`<html lang="${locale}" data-site-root="../">`, 'u'));
       assert.match(html, /href="\.\.\/styles\.css"/u);
       assert.match(html, /src="\.\.\/media\/jev-flow-walkthrough\.webm"/u);
+      assert.match(html, /class="header-repo" href="https:\/\/github\.com\/daltonrpj\/jev-flow"/u);
+      assert.match(html, /<svg class="github-mark"[^>]*aria-hidden="true"/u);
+      assert.match(html, /<span class="header-repo-slug">daltonrpj\/jev-flow<\/span>/u);
       assert.match(html, new RegExp(`<option value="${locale}" selected>`, 'u'));
       for (const target of ['en', ...Object.keys(localeNames)]) {
         const path = target === 'en' ? '../' : `../${target}/`;

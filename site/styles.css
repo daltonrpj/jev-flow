@@ -18,7 +18,11 @@ figure{margin:0}
 .site-header nav{display:flex;gap:2rem;align-items:center;color:#c3ceca;font-size:.84rem}
 .site-header nav a,.header-repo,.text-link,.film-links a,.install-links a,.catalog-metric a{transition:color .2s ease}
 .site-header nav a:hover,.header-repo:hover,.text-link:hover,.film-links a:hover,.install-links a:hover,.catalog-metric a:hover{color:var(--lime)}
-.header-repo{font-size:.84rem;border-bottom:1px solid #64736a;padding-bottom:.3rem;white-space:nowrap}
+.header-repo{display:inline-flex;align-items:center;gap:.55rem;font-size:.8rem;border:1px solid #52655b;padding:.58rem .7rem;white-space:nowrap;background:#1b2927}
+.github-mark{width:19px;height:19px;flex:none}
+.header-repo-name{font-weight:700}
+.header-repo-slug{color:#aebeb7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.7rem}
+.header-repo:hover .header-repo-slug{color:var(--lime)}
 .hero{min-height:750px;display:grid;grid-template-columns:47% 53%;align-items:center;position:relative;padding-block:6rem 8rem;gap:0}
 .hero:before{content:"";position:absolute;inset:0 auto 0 45%;width:1px;background:#263436}
 .hero-copy{position:relative;z-index:1;padding-right:3.6rem}
