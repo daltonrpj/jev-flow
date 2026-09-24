@@ -1,0 +1,78 @@
+{
+  "id": "entrada-pronta",
+  "descricao": "Julga se o pedido é específico o bastante para iniciar sem perguntar de volta — barra trabalho caro de LLM com entrada vaga ou sem critério.",
+  "categoria": "roteramento",
+  "state_schema": {
+    "pedido": "string — o que o chamador quer executar",
+    "contexto": "string — material anexado ao pedido (código, dados, texto)"
+  },
+  "questions": {
+    "pronto": {
+      "type": "noul",
+      "instructions": "O `pedido` é específico — objetivo claro, escopo delimitado e resultado verificável — em vez de vago, genérico ou multitarefa?"
+    },
+    "o_que_falta": {
+      "type": "choice",
+      "instructions": "O que mais pesa contra executar o `pedido` agora?",
+      "criteria": {
+        "nada": "Dá para prosseguir sem detalhe novo",
+        "contexto": "Falta material de apoio (arquivo, código, dados)",
+        "criterio": "Falta critério de aceite ou formato de saída",
+        "escopo": "O escopo está ambíguo ou contraditório",
+        "nao_sei": "Não dá para dizer com o que foi enviado"
+      }
+    }
+  },
+  "politica": {
+    "regras": [
+      {
+        "quando": "pronto <= 0.3",
+        "acao": "pedir_detalhe",
+        "explica": "pedido vago ou genérico — perguntar antes de gastar token caro"
+      },
+      {
+        "quando": "o_que_falta == 'escopo'",
+        "acao": "pedir_detalhe",
+        "explica": "escopo ambíguo ou contraditório"
+      },
+      {
+        "quando": "o_que_falta == 'criterio'",
+        "acao": "pedir_detalhe",
+        "explica": "sem critério de aceite ou formato de saída"
+      }
+    ],
+    "default": "prosseguir"
+  },
+  "limiares": {
+    "pronto": {
+      "limiar": 0.7
+    }
+  },
+  "tests": [
+    {
+      "nome": "pedido específico com causa e correção descritas",
+      "state": {
+        "pedido": "Corrigir o bug de acentuação no exportador de CSV descrito na issue 42",
+        "contexto": "Issue 42: campo com vírgula quebra a linha do CSV. Causa visível no trecho do exportador em anexo: os campos são escritos crus, sem escape de vírgula ou aspas. Correção mínima evidente: escapar aspas e vírgulas ao escrever cada campo."
+      },
+      "espera": {
+        "pronto": {
+          "min": 0.6
+        }
+      }
+    },
+    {
+      "nome": "pedido vago e sem material (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "pedido": "melhora o app",
+        "contexto": "nenhum material anexado"
+      },
+      "espera": {
+        "pronto": {
+          "max": 0.3
+        }
+      }
+    }
+  ]
+}

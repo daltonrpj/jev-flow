@@ -1,8 +1,8 @@
 # Jev Flow
 
-**Repository guide:** [English](README.md) · [Português (Brasil)](README.pt-BR.md). **Static guide, prepared for publication:** [English](https://daltonrpj.github.io/jev-flow/) · [Português](https://daltonrpj.github.io/jev-flow/pt-BR/) · [Español](https://daltonrpj.github.io/jev-flow/es/) · [Français](https://daltonrpj.github.io/jev-flow/fr/) · [Deutsch](https://daltonrpj.github.io/jev-flow/de/). The static URLs become available after GitHub Pages is enabled and deployed.
+**Repository guide:** [English](README.md) · [Português (Brasil)](README.pt-BR.md). **Public guide:** [English](https://jevflow.cloud/) · [Português](https://jevflow.cloud/pt-BR/) · [Español](https://jevflow.cloud/es/) · [Français](https://jevflow.cloud/fr/) · [Deutsch](https://jevflow.cloud/de/).
 
-Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, decision Labs, local examples, tests, and an English narrated walkthrough. A static product guide is prepared for [GitHub Pages](https://daltonrpj.github.io/jev-flow/) with real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. GitHub Pages does not host the server or execute a model call.
+Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, Ship Pack, live fixture suite, interactive games, prompt/context tools, webhook and subflow nodes, local examples, tests, and an English narrated walkthrough. The [public product guide](https://jevflow.cloud/) has real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. The public guide does not host the server or execute a model call.
 
 ## Watch: deterministic AI and Jev Flow
 
@@ -14,7 +14,7 @@ The explainer uses 26 alternating Gemini 3.1 Flash TTS turns (Charon and Kore). 
 
 [![A short animated preview of the real Jev Flow application](media/jev-flow-walkthrough-teaser.gif)](media/jev-flow-walkthrough.webm)
 
-The GIF is a short preview. [Download the full WebM](media/jev-flow-walkthrough.webm), [read the English captions](media/jev-flow-walkthrough.vtt), or [inspect the transcript and demo provenance](media/jev-flow-walkthrough-transcript.md). The [Pages guide](https://daltonrpj.github.io/jev-flow/#watch) provides a real video player when published; repository Markdown links to the file. The recording uses synthetic fixtures and local rules. It does not claim a live remote Jev or LLM run.
+The GIF is a short preview. [Download the full WebM](media/jev-flow-walkthrough.webm), [read the English captions](media/jev-flow-walkthrough.vtt), or [inspect the transcript and demo provenance](media/jev-flow-walkthrough-transcript.md). The [public guide](https://jevflow.cloud/#watch) provides a video player; repository Markdown links to the file. The recording uses synthetic fixtures and local rules. It does not claim a live remote Jev or LLM run.
 
 ## Run locally
 
@@ -36,6 +36,9 @@ Open **http://127.0.0.1:8723/**. The root redirects to the Studio. You can impor
 | Battle Arena | `/jev/battle` | Jev and LLM questions, answers, source, measured latency, and reported usage | Comparison claims require comparable, observed answers. |
 | Self-Driving Cart | `/jev/carrinho` | Two simulated tracks, decisions, safety interventions, and provenance | The simulation is not evidence of real-world driving safety. |
 | Labs | `/jev/labs` | Spam, evidence, rescue, chess, and Blast Garden exercises | Local rules and model proposals are identified separately. |
+| Ship Pack | `/jev/ship` | Ten packaged Jevlets, eleven typed gates, synthetic inputs, and local decision metadata | A packaged definition is not a live certification. |
+| Ship Test Suite | `/jev/suite` | 12 scenarios and 52 synthetic cases with a live-run baseline | Fixture score is not general model accuracy; incomplete or injected runs are excluded. |
+| Games | `/jev/games` | Tic-Tac-Toe, fictional combat, and JevFlow City | Local mode is deterministic; live Jev requires an explicit click. |
 
 ## Real application captures
 
@@ -78,6 +81,8 @@ Configure a provider only for an explicit live run. `TYPESAFE_API_KEY` selects t
 
 Jev answers are structured evidence. Flow validation and policy code own every branch and external effect. Read the [architecture](docs/architecture.md), [examples](docs/examples.md), and [security boundary](docs/security.md) before enabling webhooks.
 
+The [Ship Pack and integrations guide](docs/ship-suite-and-integrations.md) covers CLI certification, the 52-case suite, conversational design, prompt/context APIs, webhook authentication, shared subflow budgets, and games. All runtime data remain outside this checkout.
+
 ## Catalog and tests
 
 The Compendium combines 22 patterns, 42 unique domains, 7 variants, 4 thresholds, 3 complexity profiles, and 5 focus options into **388,080 valid generated configurations**. The total is certified against the current catalog source fingerprint and unique IDs/keys. It is not a count of hand-authored flow files or separately executed model evaluations. The certificate is in [`catalog-certification.json`](catalog-certification.json).
@@ -92,7 +97,7 @@ After changing catalog source, run `npm run catalog:certify` to regenerate the m
 
 ## Deployment and media
 
-The public Pages guide is a separate static brochure. It contains only its source, six real screenshots, the walkthrough and text sidecars, generic examples, and the catalog certificate. It has no API, provider key, user data, or live application session.
+The public guide is a separate static brochure. It contains only its source, six real screenshots, the walkthrough and text sidecars, generic examples, and the catalog certificate. It has no API, provider key, user data, or live application session.
 
 The Node server binds to loopback by default. A single-tenant Ubuntu/Nginx installation may set an exact HTTPS `JEVFLOW_PUBLIC_ORIGIN` while keeping Node bound to `127.0.0.1`; Nginx must protect the **entire app**, including `/`, APIs, examples, docs, and media, with HTTP Basic Auth. The server checks the exact Host/Origin and loopback socket peer and ignores forwarded headers as authorization evidence. See the [deployment runbook](docs/deploy-hostinger.md). Do not expose the Node port publicly.
 

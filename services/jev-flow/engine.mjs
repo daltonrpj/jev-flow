@@ -99,7 +99,7 @@ function switchCaseAuthorizes(selector, caseValue) {
   return false;
 }
 
-function validateWebhookGates(flow, alvosDe) {
+function validateWebhookGates(flow) {
   const errors = [];
   const seen = new Set();
   const visit = (id, state, path) => {
@@ -114,6 +114,10 @@ function validateWebhookGates(flow, alvosDe) {
       verifySources: new Set(state.verifySources),
     };
     if (node.type === 'jev.verify') nextState.verifySources.add(id);
+    if (node.onError && typeof node.onError === 'object' && node.onError.next) {
+      // A failure branch cannot inherit authorization from a successful path.
+      visit(node.onError.next, { budget: false, authorized: false, verifySources: new Set() }, path.concat(id));
+    }
     if (node.type === 'action.webhook') {
       if (!state.budget || !state.authorized) {
         errors.push({ codigo: 'WEBHOOK_GATE_AUSENTE', campo: `nodes.${id}`, msg: `action.webhook alcançável sem budget.guard e gate explícito jev.verify autorizado (${path.concat(id).join(' → ')})` });
@@ -135,7 +139,7 @@ function validateWebhookGates(flow, alvosDe) {
       }
       return;
     }
-    for (const child of alvosDe(id).filter(Boolean)) visit(child, nextState, path.concat(id));
+    if (node.next) visit(node.next, nextState, path.concat(id));
   };
   visit(flow.start, { budget: false, authorized: false, verifySources: new Set() }, []);
   for (const [id, node] of Object.entries(flow.nodes || {})) {
@@ -286,6 +290,7 @@ export function validateFlow(flow) {
     if (n.next) alvos.push(n.next);
     if (n.type === 'flow.if') { if (n.then) alvos.push(n.then); if (n.else) alvos.push(n.else); }
     if (n.type === 'flow.switch') for (const t of Object.values(n.cases || {})) alvos.push(...(Array.isArray(t) ? t : [t]));
+    if (n.onError && typeof n.onError === 'object' && n.onError.next) alvos.push(n.onError.next);
     return alvos;
   };
 
@@ -345,6 +350,33 @@ export function validateFlow(flow) {
     }
     if (node.type === 'action.webhook' && !node.url) err('WEBHOOK_SEM_URL', `nodes.${id}.url`, 'action.webhook precisa de url');
     if (node.type === 'action.set' && (!node.values || !Object.keys(node.values).length)) err('SET_VAZIO', `nodes.${id}.values`, 'action.set precisa de values');
+    if (node.type === 'trigger.webhook') {
+      if (flow.start !== id) err('TRIGGER_FORA_DO_START', `nodes.${id}`, 'trigger.webhook deve ser o nó start');
+      if (!node.next) err('NEXT_FALTANDO', `nodes.${id}.next`, 'trigger.webhook precisa de next');
+      if (node.path != null && !ID_RE.test(node.path)) err('TRIGGER_PATH_INVALIDO', `nodes.${id}.path`, 'path deve ser slug de 3–41 caracteres');
+      if (node.response != null && !['resumo', 'completo'].includes(node.response)) err('TRIGGER_RESPONSE_INVALIDA', `nodes.${id}.response`, 'response deve ser resumo ou completo');
+      if (!/^JEVFLOW_HOOK_[A-Z0-9_]{1,48}$/u.test(String(node.secret || ''))) err('TRIGGER_SECRET_INVALIDO', `nodes.${id}.secret`, 'secret deve nomear variável de ambiente JEVFLOW_HOOK_[A-Z0-9_]+');
+    }
+    if (node.type === 'flow.call') {
+      if (!isFlowId(node.flow)) err('CALL_SEM_FLOW', `nodes.${id}.flow`, 'flow.call exige id de subflow válido');
+      if (node.flow === flow.id) err('CALL_RECURSIVO', `nodes.${id}.flow`, 'flow.call não pode chamar a si mesmo');
+      if (!node.next) err('NEXT_FALTANDO', `nodes.${id}.next`, 'flow.call precisa de next');
+      if (node.input != null && (!node.input || typeof node.input !== 'object' || Array.isArray(node.input))) err('CALL_INPUT_INVALIDO', `nodes.${id}.input`, 'input deve ser objeto');
+    }
+    if (node.type === 'flow.each') {
+      if (typeof node.list !== 'string' || !EXACT_EXPR_RE.test(node.list)) err('EACH_SEM_LISTA', `nodes.${id}.list`, 'list deve ser uma expressão exata {{caminho}}');
+      if (!isFlowId(node.flow)) err('EACH_SEM_FLOW', `nodes.${id}.flow`, 'flow.each exige id de subflow válido');
+      if (node.flow === flow.id) err('CALL_RECURSIVO', `nodes.${id}.flow`, 'flow.each não pode chamar a si mesmo');
+      if (!node.next) err('NEXT_FALTANDO', `nodes.${id}.next`, 'flow.each precisa de next');
+    }
+    if (node.type === 'note.sticky') {
+      if (typeof node.texto !== 'string' || !node.texto.trim()) err('NOTA_VAZIA', `nodes.${id}.texto`, 'descreva a nota');
+      if (node.next || flow.start === id) err('NOTA_EXECUTAVEL', `nodes.${id}`, 'note.sticky não participa do caminho de execução');
+    }
+    if (node.onError != null && node.onError !== 'abortar') {
+      if (!node.onError || typeof node.onError !== 'object' || Array.isArray(node.onError) || typeof node.onError.next !== 'string') err('ON_ERROR_INVALIDO', `nodes.${id}.onError`, 'onError deve ser abortar ou {next: id}');
+      else if (!flow.nodes[node.onError.next]) err('ALVO_INEXISTENTE', `nodes.${id}.onError.next`, `alvo de erro não existe: ${node.onError.next}`);
+    }
     if (node.type === 'rule.match') {
       if (node.value == null) err('RULE_VALUE_FALTANDO', `nodes.${id}.value`, 'rule.match precisa de value');
       if (!['equals', 'includes', 'regex', 'exists', 'in'].includes(node.operator)) err('RULE_OPERATOR_INVALIDO', `nodes.${id}.operator`, 'use equals | includes | regex | exists | in');
@@ -368,7 +400,7 @@ export function validateFlow(flow) {
     }
 
     // expressões: raízes válidas = input | vars | flow | nó existente
-    const textos = [
+    const textos = node.type === 'note.sticky' ? [] : [
       node.when,
       node.on,
       node.url,
@@ -387,6 +419,8 @@ export function validateFlow(flow) {
       node.ruleset,
       node.messages ? JSON.stringify(node.messages) : null,
       node.state ? JSON.stringify(node.state) : null,
+      node.input ? JSON.stringify(node.input) : null,
+      node.list,
       node.event ? JSON.stringify(node.event) : null,
       node.graph ? JSON.stringify(node.graph) : null,
       node.facts ? JSON.stringify(node.facts) : null,
@@ -402,7 +436,13 @@ export function validateFlow(flow) {
     }
   }
 
-  for (const gateError of validateWebhookGates(flow, alvosDe)) errors.push(gateError);
+  for (const [id, node] of Object.entries(flow.nodes)) {
+    if (node.type !== 'note.sticky') continue;
+    for (const [source, candidate] of Object.entries(flow.nodes)) {
+      if (source !== id && alvosDe(source).includes(id)) err('NOTA_EXECUTAVEL', `nodes.${source}`, `note.sticky ${id} não pode ser destino de execução`);
+    }
+  }
+  for (const gateError of validateWebhookGates(flow)) errors.push(gateError);
 
   // ciclos: o grafo tem que ser um DAG
   if (!errors.some(e => ['START_INVALIDO', 'TIPO_INVALIDO', 'SEM_NOS'].includes(e.codigo))) {
@@ -637,8 +677,35 @@ function proximoDo(node, context) {
 const DETERMINISTIC_NODE_TYPES = new Set([
   'flow.if', 'flow.switch', 'flow.ensemble', 'rule.match', 'rule.extract', 'rule.lookup',
   'context.compact', 'action.log', 'action.set', 'det.skill', 'budget.guard', 'metrics.emit', 'logic.subgraph',
+  'trigger.webhook',
 ]);
-const BUDGET_ERROR_CODES = new Set(['FLOW_BUDGET_JEV_CALLS', 'FLOW_BUDGET_INPUT_TOKENS', 'JEV_REMOTE_STATE_UNSAFE']);
+const BUDGET_ERROR_CODES = new Set(['FLOW_BUDGET_STEPS', 'FLOW_BUDGET_JEV_CALLS', 'FLOW_BUDGET_INPUT_TOKENS', 'JEV_REMOTE_STATE_UNSAFE']);
+const SUBFLOW_USAGE_KEYS = Object.freeze([
+  'jevCalls', 'jevTransportCalls', 'remoteCalls', 'generatorCalls', 'inputTokensBudgeted',
+  'inputTokensObserved', 'inputTokensEstimated', 'outputTokensObserved', 'outputTokensEstimated',
+  'deterministicNodes', 'cacheHits', 'tokensAvoidedEstimated', 'bytesSaved',
+]);
+
+function addSubflowUsage(parent, child) {
+  if (!child) return;
+  parent.childSteps += (Number(child.steps) || 0) + (Number(child.childSteps) || 0);
+  for (const key of SUBFLOW_USAGE_KEYS) parent[key] += Number(child[key]) || 0;
+  for (const [key, count] of Object.entries(child.measurements || {})) {
+    parent.measurements[key] = (parent.measurements[key] || 0) + (Number(count) || 0);
+  }
+}
+
+function subflowFailure(run) {
+  const failures = run?.steps?.filter(candidate => !candidate.ok) || [];
+  const step = failures.find(candidate => {
+    const code = run.outputs?.[candidate.no]?.code;
+    return BUDGET_ERROR_CODES.has(code) || code === 'FLOW_ABORTED' || String(code || '').startsWith('FLOW_BUDGET_GUARD_');
+  }) || failures[0];
+  return {
+    code: step ? run.outputs?.[step.no]?.code || null : null,
+    error: step?.erro || (run?.status === 'paused' ? 'subflow interrompido' : 'subflow falhou'),
+  };
+}
 
 function digest(value) {
   return createHash('sha256').update(canonicalJson(value)).digest('hex');
@@ -651,6 +718,7 @@ export function flowFingerprint(flow) {
 function flowTargets(node) {
   const targets = [];
   if (node?.next) targets.push(node.next);
+  if (node?.onError && typeof node.onError === 'object' && node.onError.next) targets.push(node.onError.next);
   if (node?.type === 'flow.if') targets.push(node.then, node.else);
   if (node?.type === 'flow.switch') {
     for (const target of Object.values(node.cases || {})) targets.push(...(Array.isArray(target) ? target : [target]));
@@ -707,7 +775,7 @@ function assertCheckpointIntegrity(checkpoint, flow = null) {
       throw new FlowError('contexto e outputs do checkpoint divergem', 'CHECKPOINT_LEDGER_INVALIDO');
     }
   }
-  const usageKeys = ['steps', 'jevCalls', 'jevTransportCalls', 'remoteCalls', 'generatorCalls', 'inputTokensBudgeted', 'inputTokensObserved', 'inputTokensEstimated', 'outputTokensObserved', 'outputTokensEstimated', 'deterministicNodes', 'cacheHits', 'tokensAvoidedEstimated', 'bytesSaved'];
+  const usageKeys = ['steps', 'childSteps', ...SUBFLOW_USAGE_KEYS];
   for (const key of usageKeys) {
     const value = checkpoint.usage[key] ?? 0;
     if (!Number.isFinite(Number(value)) || Number(value) < 0) throw new FlowError(`usage.${key} inválido`, 'CHECKPOINT_LEDGER_INVALIDO');
@@ -730,12 +798,16 @@ function assertCheckpointFresh(checkpoint) {
   return checkpoint;
 }
 
-function normalizedLimits(flow) {
-  return {
+function normalizedLimits(flow, ceiling = null) {
+  const limits = {
     maxSteps: flow?.limits?.maxSteps ?? FLOW_LIMITS.defaults.maxSteps,
     maxJevCalls: flow?.limits?.maxJevCalls ?? FLOW_LIMITS.defaults.maxJevCalls,
     maxInputTokens: flow?.limits?.maxInputTokens ?? FLOW_LIMITS.defaults.maxInputTokens,
   };
+  if (ceiling) for (const key of Object.keys(limits)) {
+    if (Number.isInteger(ceiling[key]) && ceiling[key] >= 0) limits[key] = Math.min(limits[key], ceiling[key]);
+  }
+  return limits;
 }
 
 function estimatedTokens(value) {
@@ -876,7 +948,7 @@ function sanitizeMetricValue(value, key = '', depth = 0) {
 function executeBudgetGuard(node, usage, limits) {
   const requested = node.budget || {};
   const checks = [
-    ['steps', limits.maxSteps, usage.steps, requested.steps],
+    ['steps', limits.maxSteps, usage.steps + (usage.childSteps || 0), requested.steps],
     ['jevCalls', limits.maxJevCalls, usage.jevCalls, requested.jevCalls],
     ['inputTokens', limits.maxInputTokens, usage.inputTokensBudgeted, requested.inputTokens ?? requested.inputTokensBudgeted],
   ];
@@ -917,8 +989,23 @@ async function executeExtendedNode(node, context, runtime) {
     const messages = exactTemplateValue(node.messages, context);
     const options = exactTemplateValue(node.options || {}, context) || {};
     if (!Array.isArray(messages)) return { tipo: 'context.prune', messages, meta: { applied: false, failOpen: true, reason: 'messages-not-array', measurement: 'estimated' }, measurement: 'estimated' };
+    const possibleRemote = runtime.pruner !== pruneMessages;
+    const reservedInputTokens = possibleRemote ? estimatedTokens({ messages, options }) : 0;
+    if (possibleRemote && (runtime.usage.jevCalls + 1 > runtime.limits.maxJevCalls || runtime.usage.inputTokensBudgeted + reservedInputTokens > runtime.limits.maxInputTokens)) {
+      return { tipo: 'context.prune', messages, meta: { applied: false, failOpen: true, reason: 'budget-unavailable', transportCalled: false, measurement: 'observed' }, measurement: 'observed' };
+    }
+    if (possibleRemote) {
+      // An injected pruner may call Jev. Reserve before invocation and refund
+      // only when its receipt explicitly confirms no transport.
+      runtime.usage.jevCalls++;
+      runtime.usage.inputTokensBudgeted += reservedInputTokens;
+    }
     try {
       const result = await runtime.pruner(messages, options);
+      if (possibleRemote && result?.meta?.transportCalled === false) {
+        runtime.usage.jevCalls--;
+        runtime.usage.inputTokensBudgeted -= reservedInputTokens;
+      }
       return { tipo: 'context.prune', ...result, remoteCalled: result?.meta?.transportCalled === true, measurement: result?.meta?.measurement || 'estimated' };
     } catch (error) {
       return { tipo: 'context.prune', messages, meta: { applied: false, failOpen: true, reason: 'adapter-error', errorCode: error?.code || 'PRUNER_ERROR', measurement: 'estimated' }, measurement: 'estimated' };
@@ -928,6 +1015,15 @@ async function executeExtendedNode(node, context, runtime) {
     const claimRedaction = redactAutonomyText(exactTemplateValue(node.claim, context), 12_000);
     const evidenceRedaction = redactAutonomyText(exactTemplateValue(node.evidence, context), 12_000);
     if (!claimRedaction.remoteSafe || !evidenceRedaction.remoteSafe) throw new FlowError('jev.verify bloqueado: claim/evidence não são seguros para egress', 'JEV_VERIFY_REMOTE_STATE_UNSAFE');
+    if (runtime.usage.jevCalls + 1 > runtime.limits.maxJevCalls) {
+      throw new FlowError('jev.verify excede orçamento de julgamentos Jev', 'FLOW_BUDGET_JEV_CALLS');
+    }
+    const reservedInputTokens = estimatedTokens({ alegacao: claimRedaction.text, evidencia: evidenceRedaction.text }) + 512;
+    if (runtime.usage.inputTokensBudgeted + reservedInputTokens > runtime.limits.maxInputTokens) {
+      throw new FlowError('jev.verify excede orçamento de tokens de input', 'FLOW_BUDGET_INPUT_TOKENS');
+    }
+    runtime.usage.jevCalls++;
+    runtime.usage.inputTokensBudgeted += reservedInputTokens;
     let verification;
     try {
       verification = await runtime.verifyExecutor({ claim: claimRedaction.text, evidence: evidenceRedaction.text, client: runtime.jevClient });
@@ -964,11 +1060,11 @@ async function executeExtendedNode(node, context, runtime) {
       throw new FlowError(redaction.tooLarge ? 'state do ruleset excede limite seguro' : 'state do ruleset ficou vazio ou inseguro após redação', 'JEV_REMOTE_STATE_UNSAFE');
     }
     const client = runtime.jevCached || runtime.jevClient;
+    runtime.usage.jevCalls++;
+    runtime.usage.inputTokensBudgeted += reservedInputTokens;
     const res = await client.ask({ state: redaction.state, questions: req.questions });
     const cacheMeta = judgmentCacheMetadata(res);
     const cacheHit = cacheMeta?.transportCalled === false;
-    runtime.usage.jevCalls++;
-    runtime.usage.inputTokensBudgeted += reservedInputTokens;
     if (cacheHit) {
       runtime.usage.cacheHits++;
       runtime.usage.tokensAvoidedEstimated += reservedInputTokens;
@@ -1143,13 +1239,18 @@ export async function runFlow(flow, input = {}, {
   gateExecutor = gateResult,
   metricsEmitter = async () => {},
   logicEvaluator = evaluateReasoningGraph,
+  _subflow = null,
 } = {}) {
   const validacao = validateFlow(flow);
   if (!validacao.ok) throw new FlowError(`flow inválido: ${validacao.errors[0]?.codigo} (${validacao.errors[0]?.msg})`, 'FLOW_INVALIDO');
   const inputValidacao = validateInput(flow, input);
   if (!inputValidacao.ok) throw new FlowError(`input inválido: ${inputValidacao.errors[0]?.codigo} (${inputValidacao.errors[0]?.msg})`, 'INPUT_INVALIDO');
 
-  const limits = normalizedLimits(flow);
+  const lineage = Array.isArray(_subflow?.lineage) ? _subflow.lineage : [flow.id];
+  if (lineage.at(-1) !== flow.id || lineage.length > 3 || new Set(lineage).size !== lineage.length) {
+    throw new FlowError('linhagem de subflow inválida ou recursiva', 'CALL_RECURSIVO');
+  }
+  const limits = normalizedLimits(flow, _subflow?.budgetCeiling);
   const currentFlowFingerprint = flowFingerprint(flow);
   const currentInputFingerprint = digest(input);
   const resumeCheckpoint = typeof resume === 'string' ? loadFlowCheckpoint(resume) : resume;
@@ -1164,6 +1265,9 @@ export async function runFlow(flow, input = {}, {
     }
     if (resumeCheckpoint.pendingNode && ['jev.ask', 'jev.jevlet'].includes(flow.nodes?.[resumeCheckpoint.pendingNode]?.type)) {
       throw new FlowError('julgamento Jev ficou incerto; reconcilie o receipt/cache antes de retomar', 'CHECKPOINT_JEV_EFFECT_UNKNOWN');
+    }
+    if (resumeCheckpoint.pendingNode && ['flow.call', 'flow.each'].includes(flow.nodes?.[resumeCheckpoint.pendingNode]?.type)) {
+      throw new FlowError('subflow ficou incerto; reconcilie efeitos antes de retomar', 'CHECKPOINT_SUBFLOW_EFFECT_UNKNOWN');
     }
   }
 
@@ -1182,6 +1286,7 @@ export async function runFlow(flow, input = {}, {
   const createdAt = resumeCheckpoint?.createdAt || new Date().toISOString();
   const usage = {
     steps: Number(resumeCheckpoint?.usage?.steps) || steps.length,
+    childSteps: Number(resumeCheckpoint?.usage?.childSteps) || 0,
     jevCalls: Number(resumeCheckpoint?.usage?.jevCalls) || 0,
     jevTransportCalls: Number(resumeCheckpoint?.usage?.jevTransportCalls) || 0,
     remoteCalls: Number(resumeCheckpoint?.usage?.remoteCalls) || 0,
@@ -1239,13 +1344,42 @@ export async function runFlow(flow, input = {}, {
     jevCached: jev,
   };
 
+  const runChild = async (subflowId, childInput) => {
+    if (lineage.includes(subflowId)) throw new FlowError(`ciclo de subflow: ${lineage.concat(subflowId).join(' → ')}`, 'CALL_RECURSIVO');
+    if (lineage.length >= 3) throw new FlowError('profundidade máxima de subflows excedida (2)', 'CALL_DEPTH');
+    const remaining = {
+      maxSteps: limits.maxSteps - usage.steps - usage.childSteps - 1,
+      maxJevCalls: limits.maxJevCalls - usage.jevCalls,
+      maxInputTokens: limits.maxInputTokens - usage.inputTokensBudgeted,
+    };
+    if (remaining.maxSteps < 1) throw new FlowError('orçamento agregado de passos esgotado antes do subflow', 'FLOW_BUDGET_STEPS');
+    if (remaining.maxJevCalls < 0) throw new FlowError('orçamento agregado de Jev esgotado antes do subflow', 'FLOW_BUDGET_JEV_CALLS');
+    if (remaining.maxInputTokens < 0) throw new FlowError('orçamento agregado de input esgotado antes do subflow', 'FLOW_BUDGET_INPUT_TOKENS');
+    const childFlow = loadFlow(subflowId, { dir });
+    if (childFlow.id !== subflowId) throw new FlowError(`id do subflow diverge do arquivo: ${subflowId}`, 'CALL_FLOW_ID_MISMATCH');
+    let childRun;
+    try {
+      childRun = await runFlow(childFlow, childInput, {
+        client: jevBruto, fetchImpl, dir, jevletDir, useCache, gravar: false,
+        enforceUrlPolicy, signal, skillExecutor, pruner, verifyExecutor,
+        gateExecutor, metricsEmitter, logicEvaluator,
+        _subflow: { lineage: lineage.concat(subflowId), budgetCeiling: remaining },
+      });
+    } catch (error) {
+      if (error?.checkpoint?.usage) addSubflowUsage(usage, error.checkpoint.usage);
+      throw error;
+    }
+    addSubflowUsage(usage, childRun.usage);
+    return childRun;
+  };
+
   while (atual) {
     if (signal?.aborted) {
       paused = true;
       pauseReason = 'signal-aborted';
       break;
     }
-    if (usage.steps >= limits.maxSteps) {
+    if (usage.steps + usage.childSteps >= limits.maxSteps) {
       const checkpoint = persistCheckpoint('paused', { stopReason: 'max-steps' });
       const error = new FlowError(`flow excedeu orçamento de ${limits.maxSteps} passos`, 'FLOW_BUDGET_STEPS');
       error.checkpoint = checkpoint;
@@ -1437,11 +1571,10 @@ export async function runFlow(flow, input = {}, {
         saida = await executeExtendedNode(node, context, runtime);
         if (node.type === 'context.prune') {
           usage.bytesSaved += Number(saida?.meta?.bytesSaved || saida?.meta?.candidateBytesSaved || 0) || 0;
-          if (saida?.meta?.transportCalled === true) { usage.jevCalls++; usage.jevTransportCalls++; }
+          if (saida?.meta?.transportCalled === true) usage.jevTransportCalls++;
           if (saida?.meta?.cacheHit === true) usage.cacheHits++;
         }
         if (node.type === 'jev.verify') {
-          usage.jevCalls++;
           usage.jevTransportCalls++;
         }
       } else if (node.type === 'action.webhook') {
@@ -1494,6 +1627,56 @@ export async function runFlow(flow, input = {}, {
         saida = { tipo: 'set', valores };
       } else if (node.type === 'flow.if' || node.type === 'flow.switch') {
         saida = { tipo: node.type };
+      } else if (node.type === 'trigger.webhook') {
+        saida = { tipo: 'trigger.webhook', triggered: true, path: node.path || flow.id, response: node.response || 'resumo', remoteCalled: false, measurement: 'observed' };
+      } else if (node.type === 'flow.call') {
+        const childInput = node.input == null ? { ...input } : exactTemplateDeep(node.input, context);
+        const child = await runChild(node.flow, childInput);
+        const failure = subflowFailure(child);
+        saida = { tipo: 'flow.call', flow: node.flow, ok: child.ok, vars: child.vars || {}, caminho: child.path || [],
+          status: child.status, steps: child.steps?.length || 0, usage: child.usage, remoteCalled: false, measurement: 'observed' };
+        if (!child.ok) {
+          const code = failure.code || (child.status === 'paused' ? 'FLOW_ABORTED' : 'CALL_CHILD_FAILED');
+          saida.code = code;
+          ok = false;
+          erro = failure.error;
+        }
+      } else if (node.type === 'flow.each') {
+        const items = exactTemplateValue(node.list, context);
+        if (!Array.isArray(items)) throw new FlowError('list precisa resolver para um array', 'EACH_LISTA_INVALIDA');
+        if (!items.length) throw new FlowError('list veio vazia', 'EACH_LISTA_VAZIA');
+        if (items.length > 25) throw new FlowError(`list excede o teto de 25 itens (${items.length})`, 'EACH_TETO_ITENS');
+        const resultados = [];
+        for (const [indice, item] of items.entries()) {
+          let child;
+          try {
+            child = await runChild(node.flow, { item, indice, total: items.length });
+          } catch (error) {
+            error.partial = { tipo: 'flow.each', flow: node.flow, total: items.length, processados: resultados.length,
+              resultados, ok_count: resultados.filter(result => result.ok).length, orçamento_esgotado: BUDGET_ERROR_CODES.has(error?.code) };
+            throw error;
+          }
+          const failure = subflowFailure(child);
+          resultados.push({ indice, ok: child.ok, vars: child.vars || {}, status: child.status,
+            erro: child.ok ? null : failure.error, code: child.ok ? null : failure.code, usage: child.usage });
+          if (!child.ok && (BUDGET_ERROR_CODES.has(failure.code) || child.status === 'paused')) {
+            const error = new FlowError(failure.error, child.status === 'paused' ? 'FLOW_ABORTED' : failure.code);
+            error.partial = { tipo: 'flow.each', flow: node.flow, total: items.length, processados: resultados.length,
+              resultados, ok_count: resultados.filter(result => result.ok).length, orçamento_esgotado: BUDGET_ERROR_CODES.has(failure.code) };
+            throw error;
+          }
+        }
+        const failures = resultados.filter(result => !result.ok);
+        saida = { tipo: 'flow.each', flow: node.flow, total: items.length, processados: resultados.length,
+          resultados, ok_count: resultados.length - failures.length, ok: failures.length === 0,
+          remoteCalled: false, measurement: 'observed' };
+        if (failures.length) {
+          ok = false;
+          erro = `${failures.length} item(ns) falharam`;
+          saida.code = 'EACH_PARTIAL_FAILURE';
+        }
+      } else if (node.type === 'note.sticky') {
+        throw new FlowError('note.sticky não pode executar', 'NOTA_EXECUTAVEL');
       } else {
         throw new FlowError(`tipo não executável: ${node.type}`, 'TIPO_INVALIDO');
       }
@@ -1502,6 +1685,7 @@ export async function runFlow(flow, input = {}, {
       erro = String(e?.message || e).slice(0, 300);
       saida = {
         tipo: node.type,
+        ...(e?.partial && typeof e.partial === 'object' ? e.partial : {}),
         erro,
         code: e?.code || null,
         ...(transportAttempted ? { remoteCalled: true, measurement: 'observed' } : {}),
@@ -1519,21 +1703,27 @@ export async function runFlow(flow, input = {}, {
     usage.steps = steps.length;
     executedThisCall++;
 
-    if (!ok && (node.onError === 'abortar' || BUDGET_ERROR_CODES.has(saida.code) || String(saida.code || '').startsWith('FLOW_BUDGET_GUARD_'))) {
+    if (!ok && (node.onError === 'abortar' || BUDGET_ERROR_CODES.has(saida.code) || saida.code === 'FLOW_ABORTED' || String(saida.code || '').startsWith('FLOW_BUDGET_GUARD_'))) {
       abortou = true;
       atual = null;
       break;
     }
-    try {
-      atual = proximoDo(node, context);
-    } catch (e) {
-      const step = steps[steps.length - 1];
-      step.ok = false;
-      step.erro = String(e?.message || e).slice(0, 300);
-      step.resumo = `roteamento: ${step.erro}`;
-      outputs[atual] = { ...outputs[atual], erro: step.erro, code: e?.code || 'ROTEAMENTO_INVALIDO' };
-      abortou = true;
-      atual = null;
+    if (!ok && node.onError && typeof node.onError === 'object' && node.onError.next) {
+      outputs[atual] = { ...outputs[atual], desviou_para_erro: node.onError.next };
+      context[atual] = outputs[atual];
+      atual = node.onError.next;
+    } else {
+      try {
+        atual = proximoDo(node, context);
+      } catch (e) {
+        const step = steps[steps.length - 1];
+        step.ok = false;
+        step.erro = String(e?.message || e).slice(0, 300);
+        step.resumo = `roteamento: ${step.erro}`;
+        outputs[atual] = { ...outputs[atual], erro: step.erro, code: e?.code || 'ROTEAMENTO_INVALIDO' };
+        abortou = true;
+        atual = null;
+      }
     }
     persistCheckpoint('running');
     if (Number.isInteger(pauseAfterSteps) && pauseAfterSteps > 0 && executedThisCall >= pauseAfterSteps && atual) {

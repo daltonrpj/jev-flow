@@ -1,6 +1,6 @@
 # Jev Flow
 
-**Leia em:** [English](README.md) · **Português (Brasil)**. O guia estático preparado para publicação também terá [português](https://daltonrpj.github.io/jev-flow/pt-BR/), [espanhol](https://daltonrpj.github.io/jev-flow/es/), [francês](https://daltonrpj.github.io/jev-flow/fr/) e [alemão](https://daltonrpj.github.io/jev-flow/de/). Esses endereços funcionarão depois da ativação e publicação do GitHub Pages.
+**Leia em:** [English](README.md) · **Português (Brasil)**. O [guia público](https://jevflow.cloud/) também está disponível em [português](https://jevflow.cloud/pt-BR/), [espanhol](https://jevflow.cloud/es/), [francês](https://jevflow.cloud/fr/) e [alemão](https://jevflow.cloud/de/).
 
 Jev Flow é um aplicativo Node.js independente para criar e testar fluxos com julgamentos tipados do Jev e decisões controladas por código. O Studio, Compendium, Battle Arena, Carrinho e Labs rodam localmente ou em uma instalação protegida. O guia público é apenas uma apresentação estática; não executa fluxos, modelos ou APIs.
 
@@ -28,6 +28,11 @@ Abra `http://127.0.0.1:8723/`; a raiz leva ao Studio. Importe um dos [fluxos de 
 | Battle Arena | `/jev/battle` | Perguntas, respostas, origem, latência e uso informado | Comparações exigem respostas observadas, válidas e comparáveis. |
 | Carrinho | `/jev/carrinho` | Duas pistas simuladas, decisões, reflexo local e telemetria | Uma simulação não comprova segurança de veículos reais. |
 | Labs | `/jev/labs` | Exercícios de spam, evidência, resgate, xadrez e Blast Garden | O código valida regras e movimentos; propostas de modelo têm origem identificada. |
+| Ship Pack | `/jev/ship` | Dez jevlets empacotados, onze gates, entradas sintéticas e relatório local | Pacote disponível não significa certificação ao vivo nesta instalação. |
+| Suíte | `/jev/suite` | Doze cenários e 52 casos, com histórico e baseline de execuções completas | Precisão e custo aparecem somente após execução real. |
+| Jogos | `/jev/games` | Velha, combate fictício e cidade com simulação local ou Jev explícito | O modo local não é resultado do Jev. |
+
+O Studio também oferece chat para criar fluxos, nós de webhook, subflow, loop e tratamento de erro. O [guia das integrações](docs/ship-suite-and-integrations.md) explica autenticação, orçamento e os comandos `jev-flow ship` e `jev-flow suite`. O compositor de prompts e os julgamentos de cache/compactação só chamam o provedor quando ele está configurado e a ação é solicitada.
 
 ## Capturas reais
 

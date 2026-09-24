@@ -22,6 +22,7 @@ import {
   serializeForInlineScript,
 } from './public-projection.mjs';
 import { getLocalePack, listLocales } from './i18n.mjs';
+import { buildFlowChatWidget } from './flow-chat-widget.mjs';
 
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
 const NODE_DEFINITIONS = listNodeDefinitions();
@@ -33,6 +34,8 @@ const GROUP_UI = Object.freeze({
   control: { classe: 'control', rotulo: 'Controle · rota' },
   action: { classe: 'action', rotulo: 'Ação · efeito' },
   observability: { classe: 'observability', rotulo: 'Observabilidade' },
+  trigger: { classe: 'control', rotulo: 'Gatilhos' },
+  annotation: { classe: 'context', rotulo: 'Anotações' },
 });
 const TYPE_LABELS_PT = Object.freeze({
   'jev.ask': 'Julgamento Jev', 'jev.jevlet': 'Jevlet publicado', 'jev.verify': 'Verificar evidência',
@@ -41,6 +44,8 @@ const TYPE_LABELS_PT = Object.freeze({
   'context.compact': 'Compactar contexto', 'context.prune': 'Podar saída', 'det.skill': 'Skill determinística',
   'metrics.emit': 'Emitir métrica', 'action.webhook': 'Webhook seguro', 'action.log': 'Registrar log',
   'action.set': 'Definir variáveis', 'logic.subgraph': 'Grafo de Raciocínio', 'rules.find': 'Encontrar regra',
+  'trigger.webhook': 'Gatilho por webhook', 'flow.call': 'Chamar fluxo', 'flow.each': 'Para cada item',
+  'note.sticky': 'Nota visual',
 });
 const TYPE_LABELS_EN = Object.freeze({
   'jev.ask': 'Jev judgment', 'jev.jevlet': 'Published Jevlet', 'jev.verify': 'Verify evidence',
@@ -49,6 +54,8 @@ const TYPE_LABELS_EN = Object.freeze({
   'context.compact': 'Compact context', 'context.prune': 'Prune output', 'det.skill': 'Deterministic skill',
   'metrics.emit': 'Emit metric', 'action.webhook': 'Guarded webhook', 'action.log': 'Write log',
   'action.set': 'Set variables', 'logic.subgraph': 'Reasoning graph', 'rules.find': 'Find rule',
+  'trigger.webhook': 'Webhook trigger', 'flow.call': 'Call flow', 'flow.each': 'For each item',
+  'note.sticky': 'Sticky note',
 });
 
 function loadFlowLogoDataUri() {
@@ -554,6 +561,12 @@ function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&
 const GROUP_LABELS_PT = Object.freeze({
   judgment: 'Julgamento Jev', deterministic: 'Determinístico', context: 'Contexto',
   control: 'Controle', logic: 'Grafo de Raciocínio', action: 'Ações', observability: 'Observabilidade',
+  trigger: 'Gatilhos', annotation: 'Anotações',
+});
+const GROUP_LABELS_EN = Object.freeze({
+  judgment: 'Jev judgment', deterministic: 'Deterministic', context: 'Context',
+  control: 'Control', logic: 'Reasoning graph', action: 'Actions', observability: 'Observability',
+  trigger: 'Triggers', annotation: 'Annotations',
 });
 
 function costLabel(costClass) {
@@ -564,9 +577,10 @@ function riskLabel(riskClass) {
   return ({ low: 'baixo risco', medium: 'risco médio', high: 'alto controle' })[riskClass] || riskClass;
 }
 
-function renderNodePalette() {
+function renderNodePalette(english = false) {
   const cards = NODE_DEFINITIONS.map(definition => {
     const display = nodeDisplayDefinition(definition.type);
+    if (english) display.rotulo = TYPE_LABELS_EN[definition.type] || definition.label;
     const search = `${definition.type} ${display.rotulo} ${definition.description} ${definition.group}`.toLowerCase();
     return `<button class="pn node-library-item" data-t="${esc(definition.type)}" data-type="${esc(definition.type)}" data-group="${esc(definition.group)}" data-cost="${esc(definition.costClass)}" data-remote="${definition.remote ? '1' : '0'}" data-search="${esc(search)}">
       <span class="pn-glyph ${esc(display.classe)}">${esc(definition.glyph)}</span>
@@ -586,14 +600,15 @@ function renderNodePalette() {
     <div class="dica">Selecione um nó no canvas e adicione a próxima capacidade. O contrato e o exemplo aparecem em <b>Entender</b> antes de salvar.</div>`;
 }
 
-function renderCapabilityIndex() {
+function renderCapabilityIndex(english = false) {
   const groups = Object.entries(Object.groupBy
     ? Object.groupBy(NODE_DEFINITIONS, definition => definition.group)
     : NODE_DEFINITIONS.reduce((all, definition) => ((all[definition.group] ||= []).push(definition), all), {}));
   return groups.map(([group, definitions], groupIndex) => `<section class="cap-group" data-cap-group="${esc(group)}">
-    <div class="cap-group-head"><span class="section-index">${String(groupIndex + 1).padStart(2, '0')}</span><div><h3>${esc(GROUP_LABELS_PT[group] || group)}</h3><p>${definitions.length} capacidades com contrato fechado</p></div></div>
+    <div class="cap-group-head"><span class="section-index">${String(groupIndex + 1).padStart(2, '0')}</span><div><h3>${esc((english ? GROUP_LABELS_EN : GROUP_LABELS_PT)[group] || group)}</h3><p>${definitions.length} ${english ? 'validated node contracts' : 'capacidades com contrato fechado'}</p></div></div>
     <div class="cap-list">${definitions.map(definition => {
       const display = nodeDisplayDefinition(definition.type);
+      if (english) display.rotulo = TYPE_LABELS_EN[definition.type] || definition.label;
       const search = `${definition.type} ${display.rotulo} ${definition.description} ${definition.what} ${group}`.toLowerCase();
       const inputs = Object.entries(definition.inputs || {}).map(([name, description]) => `<li><code>${esc(name)}</code><span>${esc(description)}</span></li>`).join('');
       const outputs = Object.entries(definition.outputs || {}).map(([name, description]) => `<li><code>${esc(name)}</code><span>${esc(description)}</span></li>`).join('');
@@ -1260,7 +1275,7 @@ function CANVAS_HTML(p) {
       <button id="rbGaveta" title="testes e conexões" aria-label="Abrir testes e conexões" aria-expanded="false" aria-controls="gaveta">T</button>
     </div>
     <div class="paleta" id="paleta">
-      ${renderNodePalette()}
+      ${renderNodePalette(english)}
     </div>
 
     <div class="gaveta" id="gaveta">
@@ -2363,7 +2378,7 @@ function CANVAS_HTML(p) {
       html += '<label>Configuração do contrato (JSON)</label><textarea data-f="nodeJson" style="min-height:230px">' + esc(JSON.stringify(editableNode, null, 2)) + '</textarea>';
       html += '<div class="field-hint">O tipo, custo, risco e capacidade vêm do catálogo e não podem ser reduzidos aqui.</div><div class="config-error" id="enConfigError" role="alert"></div>';
     }
-    html += '<label>Próximo nó (next)</label><input data-f="next" value="' + String(n.next || '') + '" placeholder="deixe vazio para fim">';
+    if (n.type !== 'note.sticky') html += '<label>Próximo nó (next)</label><input data-f="next" value="' + String(n.next || '') + '" placeholder="deixe vazio para fim">';
 
     corpo.innerHTML = html;
 
@@ -3176,7 +3191,7 @@ export async function buildFlowsIndexPage({ locale } = {}) {
     : flowsNaoVerificados ? 'O filtro de atenção reúne falhas e flows sem execução registrada.'
     : flowsSemFixture ? 'Fixtures tornam o teste reproduzível para o time inteiro.'
     : 'O motor simulado não dispara efeitos externos nem grava histórico.';
-  const capabilityIndex = renderCapabilityIndex();
+  const capabilityIndex = renderCapabilityIndex(i18n.locale === 'en');
   const localeOptions = listLocales().map(item => `<option value="${esc(item.locale)}"${item.locale === i18n.locale ? ' selected' : ''}>${esc(item.label)}</option>`).join('');
   const localCapabilities = NODE_DEFINITIONS.filter(definition => !definition.remote).length;
   const zeroCostCapabilities = NODE_DEFINITIONS.filter(definition => definition.costClass === 'free').length;
@@ -4499,5 +4514,6 @@ export async function buildFlowsIndexPage({ locale } = {}) {
     else { fecharTudo(); alert((r.body && r.body.error) || 'falha ao excluir'); }
   };
 </script>
+${buildFlowChatWidget()}
 </body></html>`;
 }

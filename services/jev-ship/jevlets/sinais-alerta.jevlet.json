@@ -1,0 +1,62 @@
+{
+  "id": "sinais-alerta",
+  "descricao": "Aponta armadilha em cláusula de contrato ou proposta: risco presente, tema dominante e gravidade.",
+  "categoria": "verificacao",
+  "state_schema": {
+    "clausula": "string — cláusula ou trecho do contrato/proposta"
+  },
+  "questions": {
+    "risco": {
+      "type": "noul",
+      "instructions": "A `clausula` contém risco MATERIAL para quem aceita — desequilíbrio real de obrigações, prazo, ônus ou direitos entre as partes? Linguagem padrão (foro, regência, formalização, legislação aplicável) não conta como risco."
+    },
+    "tema": {
+      "type": "choice",
+      "instructions": "Qual o maior risco presente na `clausula`?",
+      "criteria": {
+        "nenhum": "Sem risco material — formalização, foro ou linguagem padrão não contam como risco",
+        "prazo": "Prazo curto, renovação automática ou fidelização desproporcional",
+        "rescisao": "Rescisão ou multa assimétrica entre as partes",
+        "sigilo": "Sigilo ou cessão de direitos amplos demais",
+        "pagamento": "Reajuste, cobrança ou retenção abusiva",
+        "outro": "Risco real de outra natureza"
+      }
+    },
+    "gravidade": {
+      "type": "score",
+      "instructions": "Qual a gravidade do risco na `clausula`?",
+      "criteria": [
+        "Formalização apenas — linguagem padrão sem desequilíbrio",
+        "Irritante, mas comum, negociável e sem desequilíbrio explícito",
+        "Risco real com prejuízo plausível para quem aceita",
+        "Armadilha clara: desequilíbrio explícito e desproporcional entre as partes"
+      ]
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "risco >= 0.7 && gravidade >= 2.5", "acao": "revisao_humana_urgente", "explica": "armadilha desproporcional — revisão humana antes de aceitar" },
+      { "quando": "risco >= 0.7", "acao": "marcar_para_revisao", "explica": "risco presente — fila de revisão" },
+      { "quando": "tema != 'nenhum'", "acao": "marcar_para_revisao", "explica": "tema de risco apontado mesmo sem convicção alta" }
+    ],
+    "default": "ok"
+  },
+  "limiares": { "risco": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "multa rescisória assimétrica",
+      "state": {
+        "clausula": "O CONTRATADO poderá rescindir a qualquer tempo sem ônus; o CONTRATANTE que rescindir antes de 24 meses pagará multa de 100% do valor restante do contrato."
+      },
+      "espera": { "risco": { "min": 0.7 }, "tema": "rescisao", "gravidade": { "min": 2.5 } }
+    },
+    {
+      "nome": "cláusula padrão inofensiva (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "clausula": "Este contrato é regido pelas leis brasileiras e as partes elegem o foro da comarca de São Paulo."
+      },
+      "espera": { "risco": { "max": 0.3 }, "tema": "nenhum", "gravidade": { "max": 1 } }
+    }
+  ]
+}

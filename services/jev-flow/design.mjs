@@ -9,7 +9,7 @@ import { designGuidelinesMarkdown } from '../jev-forge/knowledge.mjs';
 import { defaultChatFn } from '../jev-forge/forge.mjs';
 import { validateFlow } from './engine.mjs';
 import { NODE_CATALOG_VERSION, listNodeDefinitions } from './node-catalog.mjs';
-import { projectProviderPayload } from './public-projection.mjs';
+import { projectProviderPayload, projectFlowForProvider } from './public-projection.mjs';
 
 function designerNodeCatalogMarkdown() {
   const lines = listNodeDefinitions().map(node => {
@@ -51,7 +51,7 @@ const SPEC_SHAPE = `Formato EXATO do JSON de saída (nada fora do JSON):
  * { rascunho, validacao, bruto }. chatFn injetável p/ teste (default: LLM
  * do próprio Jev Flow via executor).
  */
-export async function designFlow({ intent, exemplos = [], chatFn, metadata = {} } = {}) {
+export async function designFlow({ intent, exemplos = [], chatFn, metadata = {}, baseFlow = null, historico = [] } = {}) {
   if (!intent || typeof intent !== 'string') throw new Error('descreva o objetivo (intent)');
   const fn = chatFn || defaultChatFn;
 
@@ -70,7 +70,7 @@ export async function designFlow({ intent, exemplos = [], chatFn, metadata = {} 
         role: 'system',
         content: `${designGuidelinesMarkdown()}\n\n---\n# Jev Flow — estúdio visual de decisões e regras com julgamentos Jev\n${MENU_DE_NOS}\n\n---\n${SPEC_SHAPE}\n\nVocê é o Jev Flow Designer do Jev Flow. Receba uma descrição natural e construa a estrutura completa por conta própria: invente um nome curto, um id técnico seguro, o input_schema mínimo, fixtures úteis e os nós necessários. Não peça ao usuário JSON, IDs ou nomes de nós. Preserve a intenção, torne cada etapa explicável e deixe casos ambíguos encaminhados para revisão. Responda APENAS com o JSON do flow.`,
       },
-      { role: 'user', content: `Objetivo desejado (linguagem natural): ${intent}${inputHint}${exemplosTxt}` },
+      { role: 'user', content: `Desired flow (current user turn): ${intent}${inputHint}${exemplosTxt}${baseFlow ? `\n\nCurrent flow topology and contracts: ${JSON.stringify(projectFlowForProvider(baseFlow)).slice(0, 12000)}\nUpdate it according to the current request. Preserve unmentioned nodes and the flow id.` : ''}${historico.length ? `\n\nThis is turn ${Math.min(100, historico.length + 1)} of a conversation. The current flow above carries prior edits; do not infer hidden history.` : ''}` },
     ],
   });
 

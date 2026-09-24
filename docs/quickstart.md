@@ -1,8 +1,8 @@
 # Jev Flow quickstart
 
-Jev Flow runs as a local Node.js app. Node.js 20 or later is required; Python is optional for Laya. A [public guide prepared for GitHub Pages](https://daltonrpj.github.io/jev-flow/) is a separate static brochure with real captures and a playable walkthrough; it does not run the application or its APIs.
+Jev Flow runs as a local Node.js app. Node.js 20 or later is required; Python is optional for Laya. The [public guide](https://jevflow.cloud/) is a separate static brochure with real captures and a playable walkthrough; it does not run the application or its APIs.
 
-The public guide has independent pages in [English](https://daltonrpj.github.io/jev-flow/), [Português (Brasil)](https://daltonrpj.github.io/jev-flow/pt-BR/), [Español](https://daltonrpj.github.io/jev-flow/es/), [Français](https://daltonrpj.github.io/jev-flow/fr/), and [Deutsch](https://daltonrpj.github.io/jev-flow/de/). These URLs require a future authorized Pages deployment; this checkout can build them locally with `npm run site:build`.
+The public guide has independent pages in [English](https://jevflow.cloud/), [Português (Brasil)](https://jevflow.cloud/pt-BR/), [Español](https://jevflow.cloud/es/), [Français](https://jevflow.cloud/fr/), and [Deutsch](https://jevflow.cloud/de/). This checkout builds the same public content locally with `npm run site:build`.
 
 ```sh
 git clone https://github.com/daltonrpj/jev-flow.git

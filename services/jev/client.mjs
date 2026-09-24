@@ -221,8 +221,10 @@ export function isJevConfigured() {
     && process.env.OPENJEV_ALLOW_NO_KEY !== '0' && runtimeConfig.allowAnonymous !== false;
 }
 
-export function estimateCostUsd(usage) {
-  if (!usage?.input_tokens) return 0;
+export function estimateCostUsd(usage, backend = 'typesafe') {
+  if (!Number.isFinite(usage?.input_tokens) || usage.input_tokens < 0) return null;
+  if (backend !== 'typesafe' && !Object.hasOwn(process.env, 'JEV_USD_PER_MTOK_IN')) return null;
+  if (!Number.isFinite(JEV_USD_PER_MTOK_IN) || JEV_USD_PER_MTOK_IN < 0) return null;
   return (usage.input_tokens / 1e6) * JEV_USD_PER_MTOK_IN;
 }
 
@@ -368,7 +370,7 @@ export class JevClient {
         }
 
         const latencyMs = Date.now() - started;
-        const costEstimateUsd = estimateCostUsd(data.usage);
+        const costEstimateUsd = estimateCostUsd(data.usage, this.backend);
         if (this.logUsageEnabled) {
           appendJsonl(join(this.dataDir, 'usage.jsonl'), {
             ts: new Date().toISOString(),

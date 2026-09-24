@@ -40,7 +40,8 @@ before(async () => {
   dataDirectory = mkdtempSync(join(tmpdir(), 'jev-flow-smoke-'));
   isolatedEnv = { ...process.env, HOST: '127.0.0.1', PORT: String(port), JEVFLOW_DATA_DIR: dataDirectory,
     TYPESAFE_API_KEY: '', OPENJEV_API_KEY: '', OPENAI_API_KEY: '', GEMINI_API_KEY: '',
-    JEVFLOW_LLM_API_KEY: '', JEVFLOW_LLM_BASE_URL: '', JEVFLOW_LLM_MODEL: '' };
+    JEVFLOW_LLM_API_KEY: '', JEVFLOW_LLM_BASE_URL: '', JEVFLOW_LLM_MODEL: '',
+    JEVFLOW_HOOK_SMOKE: 'synthetic-hook-token' };
   delete isolatedEnv.JEVFLOW_PUBLIC_ORIGIN;
   child = spawn(process.execPath, ['server.mjs'], { cwd: root, env: isolatedEnv, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
@@ -275,4 +276,42 @@ test('IPv6 loopback requests use a valid bracketed authority', async t => {
       await new Promise(resolve => ipv6Child.once('exit', resolve));
     }
   }
+});
+
+test('Ship, suite, games and chat routes are honest without providers; machine hook requires token', async () => {
+  for (const path of ['/jev/ship', '/jev/suite', '/jev/games', '/jev/games/velha', '/jev/games/arena', '/jev/games/city']) {
+    const response = await fetch(`${baseUrl}${path}`);
+    assert.equal(response.status, 200, path);
+    const html = await response.text();
+    assert.match(html, /<html lang="en">/u, path);
+    for (const [index, match] of [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/giu)].entries()) {
+      assert.doesNotThrow(() => new Script(match[2], { filename: `${path}-${index}.js` }), path);
+    }
+  }
+  const ship = await (await fetch(`${baseUrl}/api/jev/ship`)).json();
+  assert.equal(ship.totalGates, 11);
+  assert.equal(ship.packagedJevlets, 10);
+  const suite = await (await fetch(`${baseUrl}/api/jev/battle/tests`)).json();
+  assert.equal(suite.length, 27);
+  const post = (path, body, headers = {}) => fetch(`${baseUrl}${path}`, {
+    method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body),
+  });
+  assert.equal((await post('/api/jev/ship/filtrarSlop', { titulo: 'Synthetic title' })).status, 503);
+  assert.equal((await post('/api/jev/suite/run', {})).status, 503);
+  assert.equal((await post('/api/jev/flows/design-chat', { mensagens: [{ role: 'user', content: 'Create a flow' }] })).status, 503);
+  const flow = { id: 'hook-smoke', name: 'Hook smoke', input_schema: { message: 'synthetic input' },
+    start: 'hook', nodes: { hook: { type: 'trigger.webhook', secret: 'JEVFLOW_HOOK_SMOKE', next: 'done' },
+      done: { type: 'action.log', texto: 'done' } } };
+  const create = await post('/api/jev/flows', { flow });
+  assert.equal(create.status, 201, JSON.stringify(await create.json()));
+  const noSecret = structuredClone(flow); noSecret.id = 'hook-no-secret'; delete noSecret.nodes.hook.secret;
+  assert.equal((await post('/api/jev/flows', { flow: noSecret })).status, 422);
+  assert.equal((await post('/api/jev/flows/hook-smoke/hook', { message: 'hello' })).status, 401);
+  assert.equal((await post('/api/jev/flows/hook-smoke/hook', { message: 'hello' }, { Origin: baseUrl })).status, 401);
+  const authorized = await post('/api/jev/flows/hook-smoke/hook', { message: 'hello' },
+    { 'x-jev-webhook-token': 'synthetic-hook-token' });
+  assert.equal(authorized.status, 200, JSON.stringify(await authorized.json()));
+  const browserWithToken = await post('/api/jev/flows/hook-smoke/hook', { message: 'hello' },
+    { Origin: baseUrl, 'x-jev-webhook-token': 'synthetic-hook-token' });
+  assert.equal(browserWithToken.status, 200, JSON.stringify(await browserWithToken.json()));
 });

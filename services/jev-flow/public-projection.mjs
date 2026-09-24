@@ -139,7 +139,13 @@ export function projectFlowForPublic(flow) {
 
 /** Provider-facing boundary: topology and contracts survive, payloads do not. */
 export function projectFlowForProvider(flow) {
-  return projectFlowForPublic(flow);
+  const projected = projectFlowForPublic(flow);
+  for (const node of Object.values(projected?.nodes || {})) {
+    if (node?.type === 'note.sticky' && Object.hasOwn(node, 'texto')) {
+      node.texto = PUBLIC_REDACTION.message;
+    }
+  }
+  return projected;
 }
 
 /** Redacts arbitrary examples/state before they enter a provider prompt. */

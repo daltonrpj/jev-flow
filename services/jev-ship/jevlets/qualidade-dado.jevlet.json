@@ -1,0 +1,67 @@
+{
+  "id": "qualidade-dado",
+  "descricao": "Portão de qualidade de dados: julga se um valor observado é anomalia, a origem provável e o que fazer antes de ingerir.",
+  "categoria": "verificacao",
+  "state_schema": {
+    "campo": "string — nome do campo monitorado",
+    "valor": "string — valor observado (serializado)",
+    "serie": "string — resumo da série de referência (mín, mediana, máx, janela)"
+  },
+  "questions": {
+    "anomalo": {
+      "type": "noul",
+      "instructions": "O `valor` do campo `campo` é anômalo em relação à `serie`?"
+    },
+    "natureza": {
+      "type": "choice",
+      "instructions": "Se for anômalo, qual a origem mais provável do `valor`?",
+      "criteria": {
+        "ok_real": "Dado real raro — evento atípico mas verdadeiro",
+        "erro_coleta": "Erro de coleta, parsing ou unidade",
+        "desatualizado": "Dado velho, vencido ou de janela errada",
+        "nao_sei": "Não dá para dizer com o material enviado"
+      }
+    },
+    "impacto": {
+      "type": "score",
+      "instructions": "Qual o impacto de ingerir o `valor` sem correção?",
+      "criteria": [
+        "Nenhum impacto perceptível",
+        "Distorce métrica secundária",
+        "Corrompe decisão ou sinal derivado",
+        "Corrompe decisão com prejuízo financeiro real"
+      ]
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "anomalo <= 0.3", "acao": "aceitar", "explica": "valor dentro do padrão da série — natureza é moot e não roteia" },
+      { "quando": "anomalo >= 0.7 && natureza == 'erro_coleta'", "acao": "bloquear_ingestao", "explica": "erro de coleta não entra na base" },
+      { "quando": "natureza == 'ok_real'", "acao": "aceitar_com_nota", "explica": "valor raro real — entra com anotação" },
+      { "quando": "anomalo >= 0.7 && impacto >= 2", "acao": "revisar_humano", "explica": "anomalia de origem incerta com impacto real" }
+    ],
+    "default": "marcar_revisao"
+  },
+  "limiares": { "anomalo": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "pico real de mercado",
+      "state": {
+        "campo": "volume_btc_usd",
+        "valor": "18400000000",
+        "serie": "mín 8.2e9, mediana 12.1e9, máx 15.5e9 na janela de 30 dias; hoje houve halving com cascata de liquidação nos feeds"
+      },
+      "espera": { "anomalo": { "min": 0.7 }, "natureza": "ok_real" }
+    },
+    {
+      "nome": "valor dentro do padrão (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "campo": "latencia_p95_ms",
+        "valor": "412",
+        "serie": "mín 320, mediana 405, máx 480 nos últimos 7 dias"
+      },
+      "espera": { "anomalo": { "max": 0.3 }, "impacto": { "max": 1 } }
+    }
+  ]
+}

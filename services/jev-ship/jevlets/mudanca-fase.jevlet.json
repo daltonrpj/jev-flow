@@ -1,0 +1,57 @@
+{
+  "id": "mudanca-fase",
+  "descricao": "Detector de mudança de fase: julga se uma métrica saiu do regime histórico de forma estrutural e para qual direção.",
+  "categoria": "verificacao",
+  "state_schema": {
+    "metrica": "string — nome da métrica monitorada",
+    "atual": "string — valor/estado atual da métrica",
+    "serie": "string — resumo da série histórica (valores recentes, tendência, janela)"
+  },
+  "questions": {
+    "mudou": {
+      "type": "noul",
+      "instructions": "A `serie` indica mudança de regime na `metrica` — o valor `atual` diverge do padrão histórico de forma estrutural, e não apenas ruído normal da série?"
+    },
+    "direcao": {
+      "type": "choice",
+      "instructions": "Comparando `atual` com a `serie`, a mudança de fase é para pior, para melhor, ou é ruído?",
+      "criteria": {
+        "piora": "Deterioração estrutural — o nível atual é pior que o regime histórico",
+        "melhora": "Melhora estrutural — o nível atual é melhor que o regime histórico",
+        "ruido": "Oscilação dentro do padrão histórico — sem mudança de fase",
+        "nao_sei": "Material insuficiente para dizer"
+      }
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "mudou >= 0.7 && direcao == 'piora'", "acao": "alertar_mudanca", "explica": "deterioração estrutural — investigar causa raiz" },
+      { "quando": "mudou >= 0.7 && direcao == 'melhora'", "acao": "registrar_melhora", "explica": "melhora estrutural — entender e preservar" },
+      { "quando": "mudou >= 0.7", "acao": "registrar_mudanca", "explica": "fase mudou sem direção clara — acompanhar" },
+      { "quando": "mudou <= 0.3", "acao": "sem_mudanca", "explica": "série dentro do regime conhecido" }
+    ],
+    "default": "observar"
+  },
+  "limiares": { "mudou": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "acurácia desabou estruturalmente",
+      "state": {
+        "metrica": "acuracia_diaria_do_analista",
+        "atual": "31%",
+        "serie": "últimos 14 dias: 58, 57, 60, 56, 59, 58, 61, 57, 59, 58, 60, 57, 59, 58 — estável em ~58%"
+      },
+      "espera": { "mudou": { "min": 0.7 }, "direcao": "piora" }
+    },
+    {
+      "nome": "oscilação normal (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "metrica": "acuracia_diaria_do_analista",
+        "atual": "57%",
+        "serie": "últimos 14 dias: 58, 57, 60, 56, 59, 58, 61, 57, 59, 58, 60, 57, 59, 58 — estável em ~58%"
+      },
+      "espera": { "mudou": { "max": 0.3 }, "direcao": "ruido" }
+    }
+  ]
+}

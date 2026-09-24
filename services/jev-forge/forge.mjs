@@ -25,6 +25,7 @@ import { validateJevlet, normalizeAnswers, applyPolicy, JevletError } from './je
 
 export const FORGE_DIR = join(JEV_DATA_DIR, 'jevlets');
 export const EXAMPLES_DIR = join(dirname(fileURLToPath(import.meta.url)), 'examples');
+export const SHIP_PACK_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'jev-ship', 'jevlets');
 
 // ---------------------------------------------------------------------------
 // design — o LLM desenha, o validador fiscaliza
@@ -153,7 +154,8 @@ export async function testJevlet(jevlet, { client } = {}) {
       });
       const valores = normalizeAnswers(res.answers);
       const falhas = checkEspera(t.espera, valores);
-      detalhes.push({ nome: t.nome, tipo: t.tipo || 'positivo', ok: falhas.length === 0, falhas, obtido: valores, latencia_ms: res.latencyMs, custo_usd: res.costEstimateUsd });
+      detalhes.push({ nome: t.nome, tipo: t.tipo || 'positivo', ok: falhas.length === 0, falhas, obtido: valores,
+        latencia_ms: res.latencyMs, custo_usd: res.costEstimateUsd ?? null, model: res.model || null });
     } catch (err) {
       detalhes.push({ nome: t.nome, tipo: t.tipo || 'positivo', ok: false, falhas: [`erro: ${err.message}`], obtido: null });
     }
@@ -167,6 +169,7 @@ export async function testJevlet(jevlet, { client } = {}) {
     detalhes,
     knowledge_version: KNOWLEDGE_VERSION,
     executado_em: new Date().toISOString(),
+    executionKind: client ? 'injected-test' : 'live',
   };
 }
 
@@ -179,7 +182,8 @@ export function jevletPath(id, { dir = FORGE_DIR } = {}) {
 }
 
 export function loadJevlet(idOrPath, { dir = FORGE_DIR } = {}) {
-  const caminhos = idOrPath.endsWith('.json') ? [idOrPath] : [jevletPath(idOrPath, { dir }), join(EXAMPLES_DIR, `${idOrPath}.jevlet.json`)];
+  const caminhos = idOrPath.endsWith('.json') ? [idOrPath] : [jevletPath(idOrPath, { dir }),
+    join(EXAMPLES_DIR, `${idOrPath}.jevlet.json`), join(SHIP_PACK_DIR, `${idOrPath}.jevlet.json`)];
   for (const c of caminhos) {
     try { return JSON.parse(readFileSync(c, 'utf8')); } catch { /* tenta o próximo */ }
   }
@@ -225,7 +229,8 @@ export function registerJevlet(jevlet, { teste, dir = FORGE_DIR } = {}) {
     historico,
     knowledge_version: KNOWLEDGE_VERSION,
     registrado_em: new Date().toISOString(),
-    resultado_teste: { aprovado: teste.aprovado, pass_rate: teste.pass_rate, total: teste.total, executado_em: teste.executado_em },
+    resultado_teste: { aprovado: teste.aprovado, pass_rate: teste.pass_rate, total: teste.total,
+      executado_em: teste.executado_em, executionKind: teste.executionKind || 'unknown' },
   };
   const path = jevletPath(jevlet.id, { dir });
   mkdirSync(dirname(path), { recursive: true });
@@ -235,7 +240,10 @@ export function registerJevlet(jevlet, { teste, dir = FORGE_DIR } = {}) {
   const indexPath = join(dir, '_index.json');
   let index = { jevlets: [] };
   try { index = JSON.parse(readFileSync(indexPath, 'utf8')); } catch { /* primeiro */ }
-  const entrada = { id: registro.id, version: registro.version || 1, descricao: registro.descricao, categoria: registro.categoria || 'outro', pass_rate: teste.pass_rate, knowledge_version: registro.knowledge_version, atualizado: registro.registrado_em };
+  const entrada = { id: registro.id, version: registro.version || 1, descricao: registro.descricao,
+    categoria: registro.categoria || 'outro', pass_rate: teste.pass_rate,
+    executionKind: teste.executionKind || 'unknown', knowledge_version: registro.knowledge_version,
+    atualizado: registro.registrado_em };
   index.jevlets = index.jevlets.filter(e => e.id !== registro.id).concat(entrada).sort((a, b) => a.id.localeCompare(b.id));
   writeFileSync(indexPath, JSON.stringify(index, null, 2));
 

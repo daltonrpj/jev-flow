@@ -1,0 +1,53 @@
+{
+  "id": "deflecao-suporte",
+  "descricao": "Decide a rota de menor custo para um pedido de suporte: resposta automática, doc existente ou escala para humano.",
+  "categoria": "suporte",
+  "state_schema": {
+    "mensagem": "string — pedido ou mensagem do usuário",
+    "doc_disponivel": "string — resumo do que a base de apoio cobre (vazio se nada cobre)"
+  },
+  "questions": {
+    "rota": {
+      "type": "choice",
+      "instructions": "Qual rota atende a `mensagem` com o menor custo total e risco aceitável?",
+      "criteria": {
+        "auto": "Resposta automática padrão resolve com segurança",
+        "doc": "Um guia ou doc existente resolve — basta apontar o caminho",
+        "humano": "Precisa de decisão ou empatia humana",
+        "nao_sei": "Não dá para classificar com o material enviado"
+      }
+    },
+    "critico": {
+      "type": "noul",
+      "instructions": "A `mensagem` envolve perda de dinheiro, dados ou prazo real do usuário?"
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "critico >= 0.7", "acao": "escalar_humano", "explica": "dano real não se automatiza" },
+      { "quando": "rota == 'humano'", "acao": "escalar_humano", "explica": "julgamento explícito da rota" },
+      { "quando": "rota == 'doc'", "acao": "apontar_doc", "explica": "autoatendimento com material existente" }
+    ],
+    "default": "responder_auto"
+  },
+  "limiares": { "critico": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "dúvida com guia pronto",
+      "state": {
+        "mensagem": "Como troco o e-mail da minha conta?",
+        "doc_disponivel": "Central de ajuda: artigo 'Alterar e-mail e senha' cobre o passo a passo com confirmação por link"
+      },
+      "espera": { "rota": "doc", "critico": { "max": 0.3 } }
+    },
+    {
+      "nome": "dano real em andamento (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "mensagem": "Importei a planilha errada e apaguei 300 clientes do CRM, preciso resolver hoje",
+        "doc_disponivel": "nenhum artigo cobre restauração de dados"
+      },
+      "espera": { "critico": { "min": 0.7 }, "rota": "humano" }
+    }
+  ]
+}

@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": false,
   "description": "Standalone open-source visual orchestration studio for typed Jev decisions.",
+  "license": "MIT",
   "type": "module",
+  "bin": { "jev-flow": "bin/jev-flow.mjs" },
   "engines": { "node": ">=20" },
   "scripts": {
     "start": "node server.mjs",

@@ -1,0 +1,53 @@
+{
+  "id": "lacuna-docs",
+  "descricao": "Julga se a documentação responde à pergunta do usuário e, se não responde, onde exatamente está a lacuna.",
+  "categoria": "pesquisa",
+  "state_schema": {
+    "pergunta": "string — pergunta real do usuário",
+    "trecho_doc": "string — melhor trecho encontrado na documentação para a pergunta"
+  },
+  "questions": {
+    "respondida": {
+      "type": "noul",
+      "instructions": "O `trecho_doc` responde a `pergunta` de forma utilizável, sem exigir busca externa?"
+    },
+    "falha": {
+      "type": "choice",
+      "instructions": "Onde a documentação falha em relação à `pergunta`?",
+      "criteria": {
+        "nao_aplica": "A doc responde bem — sem lacuna",
+        "desatualizada": "Existe resposta, mas desatualizada ou contraditória",
+        "incompleta": "O tema existe, mas o ponto específico da pergunta falta",
+        "ausente": "O tema não existe na documentação",
+        "nao_sei": "Material insuficiente para julgar"
+      }
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "falha == 'desatualizada'", "acao": "corrigir_doc", "explica": "atualizar o que existe antes de ampliar" },
+      { "quando": "respondida <= 0.3", "acao": "registrar_lacuna", "explica": "pergunta sem resposta útil — entra no backlog de docs" }
+    ],
+    "default": "sem_acao"
+  },
+  "limiares": { "respondida": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "doc cobre a pergunta",
+      "state": {
+        "pergunta": "Como agendo um fluxo para rodar todo dia às 9h?",
+        "trecho_doc": "Use POST /api/jev/flows/:id/schedule com cron '0 9 * * *' ou o botão agendar com preset diário 09:00."
+      },
+      "espera": { "respondida": { "min": 0.7 }, "falha": "nao_aplica" }
+    },
+    {
+      "nome": "pergunta além do que a doc cobre (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "pergunta": "Como exporto o histórico de runs em parquet?",
+        "trecho_doc": "Runs persistem em data/jev/flows/runs/<id>/ como JSON com caminho, outputs e custo."
+      },
+      "espera": { "respondida": { "max": 0.3 }, "falha": "incompleta" }
+    }
+  ]
+}

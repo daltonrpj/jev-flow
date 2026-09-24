@@ -1,0 +1,95 @@
+{
+  "id": "portao-qualidade-dado",
+  "name": "Portão de qualidade de dados (Ship Pack)",
+  "description": "Exemplo Ship Pack: o jevlet qualidade-dado julga se o valor observado é anomalia — erro de coleta é bloqueado antes de entrar na base; dado raro real entra com anotação; origem incerta com impacto real vai para revisão humana.",
+  "input_schema": {
+    "campo": "string — nome do campo monitorado",
+    "valor": "string — valor observado (serializado)",
+    "serie": "string — resumo da série de referência (mín, mediana, máx, janela)"
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 4000
+  },
+  "fixtures": [
+    {
+      "id": "erro-coleta",
+      "name": "erro de coleta — bloqueia ingestão",
+      "input": {
+        "campo": "preco_usd",
+        "valor": "0.0000012",
+        "serie": "mín 28.000, mediana 31.500, máx 34.000 nos últimos 30 dias; sem evento de mercado"
+      },
+      "answers": { "anomalo": 0.95, "natureza": "erro_coleta", "impacto": 3 },
+      "esperado": { "pathIncludes": ["bloquear"], "status": "bloquear_ingestao" }
+    },
+    {
+      "id": "pico-real",
+      "name": "dado raro real — aceita com anotação",
+      "input": {
+        "campo": "volume_btc_usd",
+        "valor": "18400000000",
+        "serie": "mín 8.2e9, mediana 12.1e9, máx 15.5e9 na janela de 30 dias; hoje houve halving com cascata de liquidação nos feeds"
+      },
+      "answers": { "anomalo": 0.9, "natureza": "ok_real", "impacto": 0 },
+      "esperado": { "pathIncludes": ["registrar-valor"], "status": "aceito" }
+    },
+    {
+      "id": "dentro-padrao",
+      "name": "valor dentro do padrão — aceita",
+      "input": {
+        "campo": "latencia_p95_ms",
+        "valor": "412",
+        "serie": "mín 320, mediana 405, máx 480 nos últimos 7 dias"
+      },
+      "answers": { "anomalo": 0.1, "natureza": "ok_real", "impacto": 0 },
+      "esperado": { "pathIncludes": ["registrar-valor"], "status": "aceito" }
+    }
+  ],
+  "start": "julgar",
+  "nodes": {
+    "julgar": {
+      "type": "jev.jevlet",
+      "jevlet": "qualidade-dado",
+      "next": "rotear"
+    },
+    "rotear": {
+      "type": "flow.switch",
+      "on": "{{julgar.acao}}",
+      "cases": {
+        "bloquear_ingestao": "bloquear",
+        "revisar_humano": "fila-revisao",
+        "_default": "registrar-valor"
+      }
+    },
+    "bloquear": {
+      "type": "action.set",
+      "values": {
+        "status": "bloquear_ingestao",
+        "resposta": "🚫 {{input.campo}}={{input.valor}} bloqueado: erro de coleta não entra na base."
+      },
+      "next": "log-decisao"
+    },
+    "fila-revisao": {
+      "type": "action.set",
+      "values": {
+        "status": "revisar_humano",
+        "resposta": "⚠️ {{input.campo}}={{input.valor}} com origem incerta e impacto real — fila de revisão."
+      },
+      "next": "log-decisao"
+    },
+    "registrar-valor": {
+      "type": "action.set",
+      "values": {
+        "status": "aceito",
+        "resposta": "✔ {{input.campo}}={{input.valor}} aceito (ação: {{julgar.acao}})."
+      },
+      "next": "log-decisao"
+    },
+    "log-decisao": {
+      "type": "action.log",
+      "texto": "portao-qualidade: acao={{julgar.acao}} · status={{vars.status}}"
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "id": "deflexao-suporte",
+  "name": "Deflexão de suporte (Ship Pack)",
+  "description": "Exemplo Ship Pack: o jevlet deflecao-suporte decide a rota de menor custo — dano real escala, doc apontada vira autoatendimento sem gastar LLM gerador, restante segue o fluxo padrão.",
+  "input_schema": {
+    "mensagem": "string — pedido ou mensagem do usuário",
+    "doc_disponivel": "string — resumo do que a base de apoio cobre (vazio se nada cobre)"
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 4000
+  },
+  "fixtures": [
+    {
+      "id": "doc-resolve",
+      "name": "dúvida com guia pronto — aponta doc",
+      "input": {
+        "mensagem": "Como troco o e-mail da minha conta?",
+        "doc_disponivel": "Central de ajuda: artigo 'Alterar e-mail e senha' cobre o passo a passo com confirmação"
+      },
+      "answers": { "rota": "doc", "critico": 0.1 },
+      "esperado": { "pathIncludes": ["responder-doc"], "status": "apontar_doc" }
+    },
+    {
+      "id": "dano-real",
+      "name": "dano real em andamento — escala humano",
+      "input": {
+        "mensagem": "Importei a planilha errada e apaguei 300 clientes do CRM, preciso resolver hoje",
+        "doc_disponivel": "nenhum artigo cobre restauração de dados"
+      },
+      "answers": { "rota": "humano", "critico": 0.9 },
+      "esperado": { "pathIncludes": ["sinalizar-escalacao"], "status": "escalar_humano" }
+    },
+    {
+      "id": "auto",
+      "name": "rotina simples — resposta padrão",
+      "input": {
+        "mensagem": "Qual o horário de atendimento?",
+        "doc_disponivel": ""
+      },
+      "answers": { "rota": "auto", "critico": 0.1 },
+      "esperado": { "pathIncludes": ["responder-auto"], "status": "responder_auto" }
+    }
+  ],
+  "start": "triagem",
+  "nodes": {
+    "triagem": {
+      "type": "jev.jevlet",
+      "jevlet": "deflecao-suporte",
+      "next": "rotear"
+    },
+    "rotear": {
+      "type": "flow.switch",
+      "on": "{{triagem.acao}}",
+      "cases": {
+        "escalar_humano": "sinalizar-escalacao",
+        "apontar_doc": "responder-doc",
+        "_default": "responder-auto"
+      }
+    },
+    "sinalizar-escalacao": {
+      "type": "action.set",
+      "values": {
+        "status": "escalar_humano",
+        "resposta": "⚠️ Dano real identificado — encaminhado para atendimento humano."
+      },
+      "next": "log-decisao"
+    },
+    "responder-doc": {
+      "type": "action.set",
+      "values": {
+        "status": "apontar_doc",
+        "resposta": "📚 {{input.doc_disponivel}} — se não resolver, responda aqui que eu trato por completo."
+      },
+      "next": "log-decisao"
+    },
+    "responder-auto": {
+      "type": "action.set",
+      "values": {
+        "status": "responder_auto",
+        "resposta": "Mensagem registrada — resposta padrão a caminho."
+      },
+      "next": "log-decisao"
+    },
+    "log-decisao": {
+      "type": "action.log",
+      "texto": "deflexao-suporte: acao={{triagem.acao}} · status={{vars.status}}"
+    }
+  }
+}

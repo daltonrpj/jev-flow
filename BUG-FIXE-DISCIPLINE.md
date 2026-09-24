@@ -151,3 +151,91 @@
 - **Cause:** those cards and the dynamically rebuilt fixture option were created after static locale translation and emitted source strings directly.
 - **Fix:** render the step summary, confidence/action/error labels, fixture option, and fixture status in the selected locale.
 - **Regression checks:** a headless English browser run edited the support request, used `area: billing` and `deadline: 0.1`, and verified a 4/4 local path with no Jev call, console errors, or Portuguese result labels; the English Studio and server smoke tests passed.
+
+## 2026-09-24 — nested flows could exceed a parent's Jev and token ceilings
+
+- **Input:** a parent with `limits.maxJevCalls: 1` invokes a child containing two `jev.ask` nodes; the same shape with `maxInputTokens` set to the first ask's reservation exercises token accounting.
+- **State:** the Atlas WIP subflow path used a child-local budget and did not aggregate the child's reserved input tokens into the parent before the next ask. Separately, `rules.find` counted its Jev request only after transport, and `jev.verify` and an injected `context.prune` lacked pre-egress checks.
+- **Cause:** nested calls did not share the remaining parent ceiling, and some delegated Jev paths reserved or counted usage after the possible external request.
+- **Fix:** carry lineage and remaining ceilings in a private `runFlow` option, clamp each child to the parent remainder, aggregate child steps/calls/token reservations on return or checkpointed failure, and reserve delegated Jev usage before invocation. Budget failures abort instead of following `onError`.
+- **Regression checks:** `node --test services/jev-flow/engine-n8n.test.mjs services/jev-flow/engine-examples.test.mjs` passed 14/14, including one allowed parent call versus two child asks, shared input-token and step ceilings, verification and injected pruner gates, recursion, partial `flow.each`, and no budget-error branch diversion even when an ordinary error preceded budget exhaustion. Catalog traversal validated 388,080 configurations; its checked-in source fingerprint must be regenerated after this engine/catalog change.
+
+## 2026-09-24 — conversational flow repair and prompt projection
+
+- **Input:** submit a conversation whose first LLM draft fails validation and whose second draft fixes it; supply a prior flow containing `nodes.hook.secret = SECRET_SENTINEL_4821` and a fixture email to a test LLM adapter.
+- **State:** the Atlas working-tree route attempted to reassign a `const` result during repair, causing a TypeError. Its `baseFlow` was also serialized into the provider prompt without projection, exposing the secret sentinel in an injected-client reproduction.
+- **Cause:** repair was implemented directly in a route without a mutable result or regression test; the existing provider boundary was not applied to the prior flow.
+- **Fix:** extract `designChat` with up to two validator-guided repair passes and explicit draft/save steps; project prior flow topology and fixture values before provider egress; keep earlier conversation text local while the current draft carries edits.
+- **Regression checks:** `design-chat.test.mjs` covers successful second draft, two-attempt cap, and absence of secret/fixture sentinels in the captured prompt. The server smoke test verifies a disconnected designer returns 503 without a provider call.
+
+## 2026-09-24 — Ship Pack definitions were invisible to a clean standalone checkout
+
+- **Input:** load `slop-filter` and render `/jev/ship` with a fresh `JEVFLOW_DATA_DIR` and no API key.
+- **State:** the Atlas Forge looked for installed `data/jev/jevlets/<id>/jevlet.json`; packaged `services/jev-ship/jevlets/<id>.jevlet.json` would not resolve. The Atlas report counted missing cost as zero and the decision journal included raw excerpts from input.
+- **Cause:** the packaged-source path, runtime installation path, and source provenance were conflated; report arithmetic used falsy defaults and journaled the longest text field.
+- **Fix:** add an explicit Forge fallback for the ten packaged definitions; label packaged versus registered status; store journal entries under `JEVFLOW_DATA_DIR` with an input hash; preserve unknown cost as `null`; require a complete live pass before installing all definitions.
+- **Regression checks:** `ship-pack.test.mjs` verifies ten packaged definitions, eleven gates, no transport for empty input, injected-source labeling, unknown cost, and no raw secret in the journal. `node bin/jev-flow.mjs ship doctor` validates ten definitions offline.
+
+## 2026-09-24 — live suite could treat a mock or partial run as baseline
+
+- **Input:** execute one Ship scenario with an injected Jev client, or a partial/zero-case provider response, with persistence requested.
+- **State:** the Atlas suite runner defaulted unknown cost to `$0`, recorded any run, and made the first result a baseline, while the page claimed a real Jev run before execution.
+- **Cause:** the runner did not require `executionKind=live`, complete status, and all 52 cases when recording a benchmark.
+- **Fix:** compare and persist only full 12-scenario, 52-case live runs; label injected and partial runs; show unknown cost as an em dash and keep pre-run source pending. The full-suite UI makes one deliberate API request rather than running the same cases twice.
+- **Regression checks:** `ship-pack.test.mjs` confirms an injected run neither writes history nor creates a baseline; the server smoke test confirms no-key live suite returns 503. The 388,080-configuration certificate was regenerated and passed its check.
+
+## 2026-09-24 — webhook machine calls failed the browser-Origin guard
+
+- **Input:** send a JSON POST to `/api/jev/flows/<id>/hook` without `Origin`, as an automation would, while `JEVFLOW_PUBLIC_ORIGIN` is configured.
+- **State:** the standalone global mutation guard returned 403 before the route could read the per-flow token.
+- **Cause:** the browser CSRF rule was applied unchanged to a machine endpoint.
+- **Fix:** keep exact Host and loopback-peer checks, and allow an Origin-less webhook only when its start node names a `JEVFLOW_HOOK_*` environment variable and a single `x-jev-webhook-token` header matches it in constant time. Other mutations retain the browser Origin rule; the proxy may add Basic Auth.
+- **Regression checks:** the server smoke test creates a synthetic webhook flow, rejects the same request without a token, and accepts it with the configured test token. Engine tests reject literal secret values and old header names in flow definitions.
+
+## 2026-09-24 — ported game previews needed stable and safe state transitions
+
+- **Input:** replay Tic-Tac-Toe after a stale response, judge a fighter-B victory, and advance City with repeated or prototype-shaped citizen IDs and malformed stats.
+- **State:** the Atlas prototypes could apply an obsolete move, invert the B-win probability, mix partial live results with local decisions, and render unescaped dynamic text.
+- **Cause:** game UI and decision adapters trusted intermediate state and used shared random/UI paths without sufficient validation.
+- **Fix:** validate board turn and typed outputs; make local minimax deterministic; correct combat probability/bar semantics; batch City judgments atomically; bound and normalize citizen state; escape dynamic UI text. The Cart FX now uses a separate PRNG so visual randomness does not alter seeded track replay.
+- **Regression checks:** `games.test.mjs` covers the three games offline and injected, including stale/malformed cases; `carrinho-shipped-flows.test.mjs` and the existing Cart tests cover deterministic replay. English game pages parse and render in server smoke without provider calls.
+
+## 2026-09-24 — command suggestion bypassed paid request budget and invented zero cost
+
+- **Input:** call `POST /api/jev/ship/sugerirComando` repeatedly with a configured Jev provider; return a valid typed answer without usage metadata.
+- **State:** the route skipped `debitPaid()` even though the gate could call Jev; its response turned an unknown provider cost into `0`. The core client also estimated `0` when usage was missing.
+- **Cause:** the suggestion gate was treated as purely local at the HTTP boundary, and falsy cost defaults erased unknown metadata.
+- **Fix:** debit configured-provider suggestion calls before the gate, preserve missing cost as `null`, and require valid token usage plus a supported price basis before estimating a cost. An unpriced compatible backend stays unknown. Suggestions using an injected client do not enter the production decision journal.
+- **Regression checks:** an injected suggestion with missing cost returns `null` without creating a journal; a schema-valid mocked provider response without `usage` returns `null` and an unpriced compatible backend does too. `npm test` and the catalog check are rerun before publication.
+
+## 2026-09-24 — sticky-note text reached the conversational designer provider
+
+- **Input:** refine an existing flow containing a `note.sticky` with a private email in `texto` through the Studio designer.
+- **State:** the provider-bound flow projection kept that note verbatim and the generated prompt included it.
+- **Cause:** the public projection redacted action logs and fixtures but did not treat sticky-note content as private when reused for provider egress.
+- **Fix:** replace sticky-note text with a redaction marker in `projectFlowForProvider`, preserving the note's graph topology.
+- **Regression checks:** an injected designer captures the outbound prompt and confirms the sticky email, webhook secret, and fixture email are all absent.
+
+## 2026-09-24 — live suite launch and cost label overstated the evidence
+
+- **Input:** click **Run full live suite** and inspect its cost column before or after an actual provider run.
+- **State:** one click started up to 52 paid requests without a browser confirmation; the UI called token-based estimates “observed cost.”
+- **Cause:** the suite page skipped an action-time request-count warning and did not distinguish an estimate from a billed amount.
+- **Fix:** ask for confirmation before one-scenario and full-suite runs, state the maximum call count and absence of a guaranteed USD cap, and label available cost as an estimate. The server's 30-minute unit budget still applies before execution.
+- **Regression checks:** server smoke compiles the page script; offline suite tests verify unknown cost stays `null` and no injected run can become a live baseline.
+
+## 2026-09-24 — webhook without a token could execute from a same-origin browser
+
+- **Input:** save a flow starting with `trigger.webhook` but no `secret`, then POST from the exact same browser origin to `/api/jev/flows/<id>/hook` without a token.
+- **State:** validation accepted the flow and the route skipped its token check. Basic Auth users could trigger its effects without the per-flow capability secret.
+- **Cause:** the validator checked the secret format only when present, and the HTTP handler made the token conditional.
+- **Fix:** require a valid `JEVFLOW_HOOK_*` variable name for every webhook trigger and require its configured token for both browser and machine requests.
+- **Regression checks:** the engine validator rejects a missing secret, and server smoke rejects both a secretless flow and a same-origin webhook POST without the token while accepting a token-bearing request.
+
+## 2026-09-24 — suite picked the first live run as baseline without operator choice
+
+- **Input:** complete a full 52-case live suite for the first time with persistence enabled.
+- **State:** the runner immediately wrote the result as baseline, even if the operator wanted to inspect it first or select a later run.
+- **Cause:** baseline creation was coupled to the first persisted run.
+- **Fix:** persist full live runs without automatically selecting one; expose an explicit page button, API endpoint, and CLI command to set the latest eligible live run as baseline. The page confirms replacement when one exists.
+- **Regression checks:** injected runs still cannot persist or set a baseline; a focused suite test will verify an eligible recorded run remains unbased until `setBaseline` is called.

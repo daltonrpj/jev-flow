@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { timingSafeEqual } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { createReadStream, existsSync } from 'node:fs';
 import { extname, join, relative, resolve, isAbsolute } from 'node:path';
@@ -15,6 +16,23 @@ import { handleJevDecision, handleLlmDecision } from './services/jev-flow/carrin
 import { validateFlow, saveFlow, loadFlow, listFlows, deleteFlow, listRuns, runFlow, flowPath,
   scheduleFlow, schedulesInfo, executarAgendado } from './services/jev-flow/engine.mjs';
 import { designFlow } from './services/jev-flow/design.mjs';
+import { designChat } from './services/jev-flow/design-chat.mjs';
+import { buildShipPage } from './services/jev-ship/page.mjs';
+import { shipStatus } from './services/jev-ship/catalog.mjs';
+import { runShipGate, SHIP_GATES } from './services/jev-ship/gates.mjs';
+import { shipReport } from './services/jev-ship/report.mjs';
+import { buildSuitePage } from './services/jev-flow/suite-page.mjs';
+import { SHIP_TESTES } from './services/jev-flow/ship-tests.mjs';
+import { runSuite, suiteHistory, setBaseline } from './services/jev-flow/suite-runs.mjs';
+import { composePrompt } from './services/jev-prompt/composer.mjs';
+import { julgarCache, planejarCompactacao } from './services/jev/context.mjs';
+import { buildGamesPage } from './services/jev-games/games-page.mjs';
+import { buildVelhaPage } from './services/jev-games/velha-page.mjs';
+import { buildArenaPage } from './services/jev-games/arena-page.mjs';
+import { buildCityPage } from './services/jev-games/city-page.mjs';
+import { jevVelhaMove } from './services/jev-games/velha.mjs';
+import { fightJudge } from './services/jev-games/arena.mjs';
+import { cityTick } from './services/jev-games/city.mjs';
 import { assistFlow } from './services/jev-flow/assist.mjs';
 import { queryCatalog, catalogStats, getCatalogItem } from './services/jev-flow/compendium-catalog.mjs';
 import { configureLLM, llmStatus, resolveModel } from './services/jev-flow/llm-gateway.mjs';
@@ -31,6 +49,7 @@ import { join as joinPath } from 'node:path';
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const LIMIT_BODY = 1_000_000;
 const labsWindow = { startedAt: Date.now(), used: 0, units: 120 };
+const paidWindow = { startedAt: Date.now(), used: 0, units: 180 };
 const PORT = Number(process.env.PORT ?? 8723);
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) throw new Error('PORT must be an integer from 1 to 65535');
 const HOST = process.env.HOST || '127.0.0.1';
@@ -108,6 +127,37 @@ function authorizeLocalRequest(req) {
     method: req.method || 'GET', remoteAddress: req.socket.remoteAddress, port: PORT,
     publicOrigin: PUBLIC_ORIGIN, rawHeaders: req.rawHeaders });
 }
+function isMachineHook(req, pathname) {
+  return req.method === 'POST' && /^\/api\/jev\/flows\/[a-z][a-z0-9_-]{2,40}\/hook$/u.test(pathname)
+    && req.headers.origin === undefined;
+}
+function hookTokenValid(req, trigger) {
+  const name = trigger?.secret;
+  if (!/^JEVFLOW_HOOK_[A-Z0-9_]+$/u.test(String(name || ''))) return false;
+  const expected = process.env[name];
+  const supplied = req.headers['x-jev-webhook-token'];
+  const occurrences = req.rawHeaders.filter((value, index) => index % 2 === 0 && value.toLowerCase() === 'x-jev-webhook-token').length;
+  if (!expected || typeof supplied !== 'string' || supplied.length > 512 || occurrences !== 1) return false;
+  const actual = Buffer.from(supplied); const reference = Buffer.from(expected);
+  return actual.length === reference.length && timingSafeEqual(actual, reference);
+}
+function authorizeMachineHook(req, pathname) {
+  // Apply the same strict Host/peer checks, then require a per-flow machine token.
+  authorizeIncomingRequest({ host: req.headers.host, origin: req.headers.origin,
+    method: 'GET', remoteAddress: req.socket.remoteAddress, port: PORT,
+    publicOrigin: PUBLIC_ORIGIN, rawHeaders: req.rawHeaders });
+  let trigger;
+  try { const id = pathname.split('/')[4]; const flow = loadFlow(id); trigger = flow.nodes?.[flow.start]; }
+  catch { /* return the same response for unknown flows and invalid tokens */ }
+  if (trigger?.type !== 'trigger.webhook' || !hookTokenValid(req, trigger)) {
+    throw Object.assign(new Error('Webhook authentication failed'), { status: 401, code: 'WEBHOOK_UNAUTHORIZED' });
+  }
+}
+function debitPaid(units = 1) {
+  if (Date.now() - paidWindow.startedAt >= 30 * 60_000) { paidWindow.startedAt = Date.now(); paidWindow.used = 0; }
+  if (paidWindow.used + units > paidWindow.units) throw Object.assign(new Error('remote request budget exhausted; retry after the 30 minute window'), { status: 429 });
+  paidWindow.used += units;
+}
 function authorizeApiRequest(req) {
   const method = req.method || 'GET';
   if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && req.headers['content-type']?.split(';', 1)[0].trim().toLowerCase() !== 'application/json') {
@@ -162,6 +212,12 @@ async function servePage(pathname, query, req, res) {
   if (pathname === '/jev' || pathname === '/jev/') { res.writeHead(302, { location: '/jev/flows' }); return res.end(); }
   if (pathname === '/jev/flows') return send(res, 200, await buildFlowsIndexPage({ locale: query.get('lang') }), 'text/html; charset=utf-8');
   if (pathname === '/jev/flows/compendium') return send(res, 200, await buildCompendiumPage({ locale: query.get('lang') }), 'text/html; charset=utf-8');
+  if (pathname === '/jev/ship') return send(res, 200, buildShipPage({ status: shipStatus() }), 'text/html; charset=utf-8');
+  if (pathname === '/jev/suite') return send(res, 200, buildSuitePage({ testes: SHIP_TESTES }), 'text/html; charset=utf-8');
+  if (pathname === '/jev/games') return send(res, 200, buildGamesPage(), 'text/html; charset=utf-8');
+  if (pathname === '/jev/games/velha') return send(res, 200, buildVelhaPage(), 'text/html; charset=utf-8');
+  if (pathname === '/jev/games/arena') return send(res, 200, buildArenaPage(), 'text/html; charset=utf-8');
+  if (pathname === '/jev/games/city') return send(res, 200, buildCityPage(), 'text/html; charset=utf-8');
   if (pathname === '/jev/flows/compendium/test') {
     const item = requireCatalogItem(Object.fromEntries(query.entries()));
     const page = await buildDemoPage(item.id, { flow: item.flow, catalogPreview: true, catalogKey: catalogParts(Object.fromEntries(query.entries())), locale: query.get('lang') });
@@ -210,11 +266,12 @@ async function servePage(pathname, query, req, res) {
 }
 
 async function route(req, res) {
-  authorizeLocalRequest(req);
   const requestHost = HOST.includes(':') ? `[${HOST}]` : HOST;
   const url = new URL(req.url, `http://${requestHost}:${PORT}`);
   const p = url.pathname;
   const method = req.method || 'GET';
+  if (isMachineHook(req, p)) authorizeMachineHook(req, p);
+  else authorizeLocalRequest(req);
   if (p.startsWith('/api/')) authorizeApiRequest(req);
   if (method === 'GET' || method === 'HEAD') {
     if (p === '/api/health') return json(res, { ok: true, name: 'Jev Flow', mode: 'standalone', dependencies: 'project-local' });
@@ -226,6 +283,19 @@ async function route(req, res) {
     if (p === '/api/jev/flows/compendium/stats') return json(res, catalogStats());
     if (p === '/api/jev/flows/compendium') return json(res, queryCatalog(Object.fromEntries(url.searchParams.entries())));
     if (p === '/api/jev/flows/compendium/item') return json(res, requireCatalogItem(Object.fromEntries(url.searchParams.entries())).flow);
+    if (p === '/api/jev/ship') return json(res, shipStatus());
+    if (p === '/api/jev/ship/report') return json(res, shipReport({ dias: Math.max(1, Math.min(90, Number(url.searchParams.get('days')) || 7)) }));
+    if (p === '/api/jev/suite/history') return json(res, suiteHistory({ limit: Math.max(1, Math.min(60, Number(url.searchParams.get('limit')) || 12)) }));
+    if (p === '/api/jev/flows/hooks') {
+      const hooks = [];
+      for (const entry of listFlows()) {
+        try { const flow = loadFlow(entry.id); const trigger = flow.nodes?.[flow.start];
+          if (trigger?.type === 'trigger.webhook') hooks.push({ id: flow.id, path: trigger.path || flow.id,
+            response: trigger.response || 'resumo', requiresToken: Boolean(trigger.secret) }); }
+        catch { /* an unreadable flow is not advertised */ }
+      }
+      return json(res, { hooks, endpoint: 'POST /api/jev/flows/<id>/hook' });
+    }
     if (p === '/api/jev/battle/models') return json(res, await listBattleModels());
     if (p === '/api/jev/battle/tests') return json(res, listArenaTests());
     if (p === '/api/jev/battle/status') {
@@ -291,6 +361,50 @@ async function route(req, res) {
     writeFileSync(joinPath(RULESETS_DIR, `${id}.ruleset.json`), JSON.stringify(ruleset,null,2));
     return json(res, { ruleset }, 201);
   }
+  const shipGate = p.match(/^\/api\/jev\/ship\/([A-Za-z][A-Za-z0-9]+)$/u);
+  if (shipGate && method === 'POST') {
+    if (!Object.hasOwn(SHIP_GATES, shipGate[1])) throw Object.assign(new Error('Unknown Jev Ship gate'), { status: 404 });
+    if (shipGate[1] !== 'sugerirComando' && !isJevConfigured()) {
+      throw Object.assign(new Error('Connect a Jev provider before running a live gate'), { status: 503 });
+    }
+    if (isJevConfigured()) debitPaid();
+    return json(res, await runShipGate(shipGate[1], normalizeInput(body)));
+  }
+  if (p === '/api/jev/suite/run' && method === 'POST') {
+    if (!isJevConfigured()) throw Object.assign(new Error('Connect a Jev provider before running the live suite'), { status: 503 });
+    const ids = Array.isArray(body.ids) ? body.ids.filter(id => typeof id === 'string').slice(0, 12) : null;
+    const cases = ids?.length ? SHIP_TESTES.filter(item => ids.includes(item.id)).reduce((sum, item) => sum + item.casos.length, 0)
+      : SHIP_TESTES.reduce((sum, item) => sum + item.casos.length, 0);
+    debitPaid(cases);
+    return json(res, await runSuite({ ids }));
+  }
+  if (p === '/api/jev/suite/baseline' && method === 'POST') {
+    return json(res, { baseline: setBaseline() });
+  }
+  if (p === '/api/jev/prompt/compose' && method === 'POST') {
+    if (isJevConfigured()) debitPaid();
+    return json(res, await composePrompt(body));
+  }
+  if (p === '/api/jev/context/cache' && method === 'POST') {
+    if (isJevConfigured()) debitPaid();
+    return json(res, await julgarCache(body));
+  }
+  if (p === '/api/jev/context/compact' && method === 'POST') {
+    if (isJevConfigured()) debitPaid();
+    return json(res, await planejarCompactacao(body));
+  }
+  if (p === '/api/jev/games/velha/move' && method === 'POST') {
+    if (body.live === true) { if (!isJevConfigured()) throw Object.assign(new Error('Connect Jev to play live'), { status: 503 }); debitPaid(); }
+    return json(res, await jevVelhaMove(body));
+  }
+  if (p === '/api/jev/games/arena/fight' && method === 'POST') {
+    if (body.live === true) { if (!isJevConfigured()) throw Object.assign(new Error('Connect Jev to judge live'), { status: 503 }); debitPaid(); }
+    return json(res, await fightJudge(body));
+  }
+  if (p === '/api/jev/games/city/tick' && method === 'POST') {
+    if (body.live === true) { if (!isJevConfigured()) throw Object.assign(new Error('Connect Jev for live city ticks'), { status: 503 }); debitPaid(); }
+    return json(res, await cityTick(body));
+  }
   if (p === '/api/jev/flows' && method === 'POST') {
     const flow = body.flow || body;
     const validation = validateFlow(flow);
@@ -323,7 +437,32 @@ async function route(req, res) {
     for (const key of body.items) try { const item=requireCatalogItem(key); if (existsSync(join(JEV_DATA_DIR,'flows',`${item.id}.flow.json`))) skipped.push(item.id); else { const stored=persistFlow(item.flow); if(stored.ok)installed++; else errors.push({key,error:stored.error||'flow failed validation'}); } } catch(e) { errors.push({key,error:e.message}); }
     return json(res,{installed,skipped,errors});
   }
-  if (p === '/api/jev/flows/design' && method === 'POST') return json(res, await designFlow(body));
+  if (p === '/api/jev/flows/design' && method === 'POST') {
+    if (!llmStatus().configured) throw Object.assign(new Error('Connect an LLM before designing a flow'), { status: 503 });
+    debitPaid(); return json(res, await designFlow(body));
+  }
+  if (p === '/api/jev/flows/design-chat' && method === 'POST') {
+    if (!llmStatus().configured) throw Object.assign(new Error('Connect an LLM before designing a flow'), { status: 503 });
+    debitPaid(3); return json(res, await designChat(body));
+  }
+  const hookRoute = p.match(/^\/api\/jev\/flows\/([a-z][a-z0-9_-]{2,40})\/hook$/u);
+  if (hookRoute && method === 'POST') {
+    const flow = loadFlow(hookRoute[1]);
+    const validation = validateFlow(flow);
+    if (!validation.ok) return json(res, { validation }, 422);
+    const trigger = flow.nodes?.[flow.start];
+    if (trigger?.type !== 'trigger.webhook') throw Object.assign(new Error('Flow has no webhook trigger'), { status: 404 });
+    if (!hookTokenValid(req, trigger)) {
+      throw Object.assign(new Error('Webhook authentication failed'), { status: 401, code: 'WEBHOOK_UNAUTHORIZED' });
+    }
+    debitPaid(Math.max(1, Math.min(30, Number(flow.limits?.maxJevCalls) || 1)));
+    const result = await runFlow(flow, normalizeInput(body), { gravar: true });
+    return json(res, trigger.response === 'completo' ? result : {
+      ok: result.ok, status: result.status, path: result.path,
+      steps: result.steps?.length || 0, usage: result.usage,
+      error: result.steps?.find(step => !step.ok)?.erro || null,
+    }, result.ok ? 200 : 422);
+  }
   const flowRoute = p.match(/^\/api\/jev\/flows\/([a-z][a-z0-9_-]{2,40})(?:\/(.*))?$/u);
   if (flowRoute) {
     const id=flowRoute[1], action=flowRoute[2]||'';

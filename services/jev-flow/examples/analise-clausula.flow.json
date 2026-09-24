@@ -1,0 +1,87 @@
+{
+  "id": "analise-clausula",
+  "name": "Análise de cláusula (Ship Pack)",
+  "description": "Exemplo Ship Pack: o jevlet sinais-alerta aponta armadilha em cláusula de contrato ou proposta — desequilíbrio desproporcional vira revisão humana urgente, risco presente entra na fila de revisão, cláusula padrão passa.",
+  "input_schema": {
+    "clausula": "string — cláusula ou trecho do contrato/proposta"
+  },
+  "limits": {
+    "maxSteps": 8,
+    "maxJevCalls": 1,
+    "maxInputTokens": 4000
+  },
+  "fixtures": [
+    {
+      "id": "armadilha",
+      "name": "multa rescisória assimétrica — urgente",
+      "input": {
+        "clausula": "O CONTRATADO poderá rescindir a qualquer tempo sem ônus; o CONTRATANTE que rescindir antes de 24 meses pagará multa de 100% do valor restante do contrato."
+      },
+      "answers": { "risco": 0.95, "tema": "rescisao", "gravidade": 3 },
+      "esperado": { "pathIncludes": ["escalar-urgente"], "status": "revisao_humana_urgente" }
+    },
+    {
+      "id": "risco-moderado",
+      "name": "renovação automática — fila de revisão",
+      "input": {
+        "clausula": "O plano será renovado automaticamente por períodos de 12 meses, com reajuste pelo IGP-M mais 5% ao ano."
+      },
+      "answers": { "risco": 0.85, "tema": "prazo", "gravidade": 2 },
+      "esperado": { "pathIncludes": ["fila-revisao"], "status": "marcar_para_revisao" }
+    },
+    {
+      "id": "padrao",
+      "name": "cláusula padrão inofensiva — ok",
+      "input": {
+        "clausula": "Este contrato é regido pelas leis brasileiras e as partes elegem o foro da comarca de São Paulo."
+      },
+      "answers": { "risco": 0.1, "tema": "nenhum", "gravidade": 0 },
+      "esperado": { "pathIncludes": ["registrar-ok"], "status": "ok" }
+    }
+  ],
+  "start": "julgar",
+  "nodes": {
+    "julgar": {
+      "type": "jev.jevlet",
+      "jevlet": "sinais-alerta",
+      "next": "rotear"
+    },
+    "rotear": {
+      "type": "flow.switch",
+      "on": "{{julgar.acao}}",
+      "cases": {
+        "revisao_humana_urgente": "escalar-urgente",
+        "marcar_para_revisao": "fila-revisao",
+        "_default": "registrar-ok"
+      }
+    },
+    "escalar-urgente": {
+      "type": "action.set",
+      "values": {
+        "status": "revisao_humana_urgente",
+        "resposta": "🚨 Armadilha desproporcional na cláusula — revisão humana antes de aceitar. ({{julgar.explica}})"
+      },
+      "next": "log-decisao"
+    },
+    "fila-revisao": {
+      "type": "action.set",
+      "values": {
+        "status": "marcar_para_revisao",
+        "resposta": "⚠️ Risco presente na cláusula — entrou na fila de revisão. ({{julgar.explica}})"
+      },
+      "next": "log-decisao"
+    },
+    "registrar-ok": {
+      "type": "action.set",
+      "values": {
+        "status": "ok",
+        "resposta": "✔ Sem risco material identificado na cláusula."
+      },
+      "next": "log-decisao"
+    },
+    "log-decisao": {
+      "type": "action.log",
+      "texto": "analise-clausula: acao={{julgar.acao}} · status={{vars.status}}"
+    }
+  }
+}

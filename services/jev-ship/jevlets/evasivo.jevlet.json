@@ -1,0 +1,50 @@
+{
+  "id": "evasivo",
+  "descricao": "Detecta evasiva em alegações: suavização, esquiva de número ou de responsabilidade, com nível de fundamentação.",
+  "categoria": "verificacao",
+  "state_schema": {
+    "alegacao": "string — a afirmação a examinar (frase ou parágrafo curto)"
+  },
+  "questions": {
+    "evasivo": {
+      "type": "noul",
+      "instructions": "A `alegacao` é evasiva — usa suavização ou esquiva em vez de afirmar um fato concreto verificável?"
+    },
+    "fundamentacao": {
+      "type": "score",
+      "instructions": "Qual o nível de fundamentação concreta da `alegacao`?",
+      "criteria": [
+        "Sem número, fonte ou exemplo — opinião solta",
+        "Fonte vaga citada sem dado verificável",
+        "Dado ou fonte concreta, mas de escopo parcial",
+        "Dado concreto com fonte verificável e escopo declarado"
+      ]
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "evasivo >= 0.7 && fundamentacao <= 1", "acao": "marcar_evasiva", "explica": "evasiva sem base — sinaliza no texto" },
+      { "quando": "fundamentacao <= 0", "acao": "marcar_evasiva", "explica": "opinião solta sem nenhum suporte" },
+      { "quando": "evasivo >= 0.7", "acao": "revisar_tom", "explica": "evasiva com algum fundamento — reescrever com compromisso claro" }
+    ],
+    "default": "deixar_passar"
+  },
+  "limiares": { "evasivo": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "evasiva clássica",
+      "state": {
+        "alegacao": "Estudos sugerem que talvez possa haver algum tipo de impacto em certos cenários."
+      },
+      "espera": { "evasivo": { "min": 0.7 }, "fundamentacao": { "max": 1 } }
+    },
+    {
+      "nome": "afirmação com dado e fonte (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "alegacao": "A migração reduziu o custo mensal de 4.100 para 2.700 reais, conforme a planilha de outubro anexada ao contrato."
+      },
+      "espera": { "evasivo": { "max": 0.3 }, "fundamentacao": { "min": 2 } }
+    }
+  ]
+}

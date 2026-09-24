@@ -145,3 +145,20 @@ h2{font-size:clamp(2.7rem,4.5vw,5.2rem);font-weight:680;margin-bottom:1.2rem}
 @media(max-width:800px){.site-header nav{order:4}.language-control{margin-left:auto}}
 @media(max-width:520px){.site-header{gap:.7rem}.language-control{order:2;width:100%;margin:0;justify-content:space-between}.language-control select{max-width:70%}.header-repo{order:1}}
 @media(max-width:800px){.hero{grid-template-columns:minmax(0,1fr)}.hero-copy,.hero-visual{min-width:0}.hero h1,.hero .eyebrow,.frame-top{overflow-wrap:anywhere}}
+.toolkit{padding-block:6.5rem;border-block:1px solid #344741}
+.toolkit-heading{max-width:880px;margin-bottom:2.4rem}
+.toolkit-heading h2{font-size:clamp(2.5rem,4vw,4.5rem)}
+.toolkit-heading>p:last-child{max-width:740px;color:#b8c8bd;font-size:1.02rem;line-height:1.7}
+.toolkit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #455c51}
+.toolkit-card{min-width:0;min-height:320px;padding:1.6rem;display:flex;flex-direction:column;border-right:1px solid #455c51;background:#1d2b2a}
+.toolkit-card:last-child{border-right:0}
+.toolkit-card:nth-child(2){background:#22322d}
+.toolkit-label{color:var(--lime);font:650 .67rem ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.12em}
+.toolkit-card h3{font-size:1.3rem;letter-spacing:-.035em;line-height:1.2;margin:1.4rem 0 .8rem}
+.toolkit-card p{color:#b7c8bd;font-size:.88rem;line-height:1.6}
+.toolkit-links{display:flex;flex-wrap:wrap;gap:.5rem 1rem;margin-top:auto}
+.toolkit-links a{font-size:.76rem;color:var(--lime);border-bottom:1px solid #789467;padding-bottom:.22rem}
+.toolkit-links a:hover{color:#e5ffae}
+.toolkit-caveat{max-width:830px;margin:1.4rem 0 0;color:#a4b6aa;font-size:.8rem;line-height:1.6}
+@media(max-width:1050px){.toolkit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.toolkit-card{min-height:280px}.toolkit-card:nth-child(2){border-right:0}.toolkit-card:nth-child(-n+2){border-bottom:1px solid #455c51}}
+@media(max-width:560px){.toolkit{padding-block:4.5rem}.toolkit-grid{grid-template-columns:minmax(0,1fr)}.toolkit-card{min-height:0;padding:1.4rem;border-right:0;border-bottom:1px solid #455c51}.toolkit-card:last-child{border-bottom:0}.toolkit-card:nth-child(3){border-bottom:1px solid #455c51}.toolkit-links{margin-top:.8rem}}

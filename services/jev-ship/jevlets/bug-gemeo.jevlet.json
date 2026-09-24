@@ -1,0 +1,51 @@
+{
+  "id": "bug-gemeo",
+  "descricao": "Julga se dois relatos de erro são o mesmo bug de causa raiz, relacionados ou independentes.",
+  "categoria": "suporte",
+  "state_schema": {
+    "erro_a": "string — resumo do primeiro erro (mensagem, stack, contexto)",
+    "erro_b": "string — resumo do segundo erro"
+  },
+  "questions": {
+    "parentesco": {
+      "type": "choice",
+      "instructions": "Qual a relação de causa raiz entre o `erro_a` e o `erro_b`?",
+      "criteria": {
+        "mesmo_bug": "Mesma causa raiz — consertar um resolve o outro",
+        "relacionados": "Compartilham componente ou sintoma, mas causas distintas",
+        "diferentes": "Problemas independentes",
+        "nao_sei": "Material insuficiente para comparar"
+      }
+    },
+    "ponto_igual": {
+      "type": "noul",
+      "instructions": "Os dois rastros de erro apontam para o mesmo ponto de código ou configuração?"
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "parentesco == 'mesmo_bug'", "acao": "marcar_duplicata", "explica": "uma correção só resolve os dois" },
+      { "quando": "parentesco == 'relacionados'", "acao": "agrupar", "explica": "mesma investigação, correções distintas" }
+    ],
+    "default": "manter_separado"
+  },
+  "tests": [
+    {
+      "nome": "mesma stacktrace",
+      "state": {
+        "erro_a": "TypeError: Cannot read properties of undefined (reading 'id') em parseWebhookEvent linha 88",
+        "erro_b": "TypeError: Cannot read properties of undefined (reading 'id') em parseWebhookEvent linha 88, com payload sem o campo event"
+      },
+      "espera": { "parentesco": "mesmo_bug", "ponto_igual": { "min": 0.7 } }
+    },
+    {
+      "nome": "erros independentes (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "erro_a": "ECONNREFUSED do cliente Postgres logo após o deploy do banco",
+        "erro_b": "CSS do menu quebra em viewport de 320px apenas no Safari"
+      },
+      "espera": { "parentesco": "diferentes", "ponto_igual": { "max": 0.3 } }
+    }
+  ]
+}

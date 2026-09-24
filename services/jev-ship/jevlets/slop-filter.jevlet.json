@@ -1,0 +1,57 @@
+{
+  "id": "slop-filter",
+  "descricao": "Julga se um conteúdo (post/artigo/feed) é slop de IA — genérico e sem fato novo — e qual o destino dele no agregador.",
+  "categoria": "pesquisa",
+  "state_schema": {
+    "titulo": "string — título do conteúdo",
+    "texto": "string — primeiros parágrafos do conteúdo"
+  },
+  "questions": {
+    "slop": {
+      "type": "noul",
+      "instructions": "O `texto` é slop gerado em massa: texto inflado, genérico e sem nenhum conteúdo específico?"
+    },
+    "fato_novo": {
+      "type": "noul",
+      "instructions": "O `texto` traz ao menos um fato, número ou exemplo específico que falta em qualquer resumo genérico do tema?"
+    },
+    "veredito": {
+      "type": "choice",
+      "instructions": "Considerando `titulo` com `texto`, qual o destino do conteúdo no agregador? Se o texto não traz NADA verificável, acionável ou específico, é descartar — reservar revisar para quando houver sinal real de valor.",
+      "criteria": {
+        "manter": "Conteúdo útil ou original — publica normal",
+        "revisar": "Tem algum sinal de valor real que mereça corte ou contexto antes de publicar",
+        "descartar": "Slop puro — nenhuma informação verificável, número, exemplo ou utilidade prática",
+        "nao_sei": "Não dá para julgar com o material enviado"
+      }
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "slop >= 0.7 && fato_novo <= 0.3", "acao": "descartar", "explica": "slop sem fato novo não entra no agregador" },
+      { "quando": "slop >= 0.7", "acao": "revisar", "explica": "parece slop, mas pode ter algo — fila de revisão" },
+      { "quando": "veredito == 'descartar'", "acao": "descartar", "explica": "veredito explícito do julgamento" }
+    ],
+    "default": "manter"
+  },
+  "limiares": { "slop": { "limiar": 0.7 }, "fato_novo": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "slop genérico",
+      "state": {
+        "titulo": "10 hábitos que vão transformar sua produtividade em 2026",
+        "texto": "A jornada de mil milhas começa com um único passo. Cada novo dia é uma oportunidade de recomeçar e crescer. Com foco, disciplina e acreditação no próprio potencial, os resultados inevitavelmente aparecem. Siga em frente, um hábito de cada vez, e colha os frutos da sua transformação."
+      },
+      "espera": { "slop": { "min": 0.7 }, "fato_novo": { "max": 0.3 }, "veredito": "descartar" }
+    },
+    {
+      "nome": "artigo técnico real (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "titulo": "Migrando de Express para Hono: benchmarks de cold start",
+        "texto": "Medimos cold start de 214ms no Express contra 63ms no Hono em Lambda arm, com o mesmo middleware de autenticação. O repositório do teste e a metodologia estão publicados; uma ressalva honesta: o pooling de conexões difere entre os dois setups."
+      },
+      "espera": { "slop": { "max": 0.3 }, "fato_novo": { "min": 0.7 }, "veredito": "manter" }
+    }
+  ]
+}

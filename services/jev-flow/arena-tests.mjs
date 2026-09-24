@@ -10,6 +10,7 @@ import { createArenaJevClient, arenaCost, recordArenaTrace, validateJevEngine } 
 import { randomUUID } from 'node:crypto';
 import { executeChat, resolveModel } from './llm-gateway.mjs';
 import { jevCost, llmCost, readUsage } from './metrics.mjs';
+import { SHIP_TESTES } from './ship-tests.mjs';
 
 const LLM_TIMEOUT = 30_000;
 const JEV_TIMEOUT = 10_000;
@@ -498,6 +499,7 @@ export const TESTES = [
     casos: [], // o jogo gera os estados dinamicamente
     gameOnly: true,
   },
+  ...SHIP_TESTES,
 ];
 
 // ── Runner ─────────────────────────────────────────────────────────────────

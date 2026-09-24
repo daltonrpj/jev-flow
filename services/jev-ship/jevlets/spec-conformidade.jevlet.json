@@ -1,0 +1,52 @@
+{
+  "id": "spec-conformidade",
+  "descricao": "Compara um critério de spec com o entregável e decide aprovar, pedir complemento ou recusar.",
+  "categoria": "verificacao",
+  "state_schema": {
+    "criterio": "string — requisito ou critério de aceite da spec",
+    "entregavel": "string — resumo/evidência do que foi construído"
+  },
+  "questions": {
+    "conformidade": {
+      "type": "choice",
+      "instructions": "O `entregavel` satisfaz o `criterio`?",
+      "criteria": {
+        "conforme": "A evidência cobre o critério por completo",
+        "parcial": "Algo já feito cobre parte do critério; falta sub-requisito",
+        "ausente": "Nada no `entregavel` toca o `criterio` — promessa ou plano futuro conta como ausente, não parcial",
+        "nao_sei": "Impossível comparar com o material enviado"
+      }
+    },
+    "evidencia_clara": {
+      "type": "noul",
+      "instructions": "A evidência relatada no `entregavel` é concreta — cita teste, arquivo, número, ferramenta ou saída específica? Julgue pela especificidade do relato; você não precisa verificar de fato: promessa genérica de fazer depois não é evidência."
+    }
+  },
+  "politica": {
+    "regras": [
+      { "quando": "conformidade == 'conforme' && evidencia_clara >= 0.7", "acao": "aprovar", "explica": "critério coberto com evidência verificável" },
+      { "quando": "conformidade == 'ausente'", "acao": "recusar", "explica": "nada no entregável toca o critério" }
+    ],
+    "default": "pedir_complemento"
+  },
+  "limiares": { "evidencia_clara": { "limiar": 0.7 } },
+  "tests": [
+    {
+      "nome": "critério coberto com teste",
+      "state": {
+        "criterio": "Exportação CSV escapa vírgula e quebra de linha dentro de aspas",
+        "entregavel": "PR 118 adiciona escapeCsv() com testes de campo com vírgula, aspas e quebra de linha embutida; cobertura de 96% no arquivo"
+      },
+      "espera": { "conformidade": "conforme", "evidencia_clara": { "min": 0.7 } }
+    },
+    {
+      "nome": "promessa sem evidência (negativo)",
+      "tipo": "negativo",
+      "state": {
+        "criterio": "Backup diário restaurável em até 1 hora",
+        "entregavel": "Planejamos adicionar a rotina de backup no próximo sprint, com restauração rápida"
+      },
+      "espera": { "conformidade": "ausente", "evidencia_clara": { "max": 0.3 } }
+    }
+  ]
+}
