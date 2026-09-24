@@ -35,6 +35,9 @@ test('public guide and protected app retain the real walkthrough, English captio
     'carrinho-screenshot.png', 'labs-screenshot.png', 'chess-screenshot.png',
     'jev-flow-walkthrough-teaser.gif', 'jev-flow-walkthrough-transcript.md',
     'jev-flow-walkthrough.vtt', 'jev-flow-walkthrough.webm',
+    'jev-flow-deterministic-ai-explainer-en-poster.png', 'jev-flow-deterministic-ai-explainer-en-transcript.md',
+    'jev-flow-deterministic-ai-explainer-en.json', 'jev-flow-deterministic-ai-explainer-en.vtt',
+    'jev-flow-deterministic-ai-explainer-en.webm',
   ]) {
     assert.equal(existsSync(join(root, 'media', name)), true, name);
   }
@@ -61,6 +64,24 @@ test('public guide and protected app retain the real walkthrough, English captio
   assert.match(readme, /media\/jev-flow-walkthrough-teaser\.gif/u);
   assert.match(readme, /GitHub Pages/u);
   assert.match(readme, /https:\/\/daltonrpj\.github\.io\/jev-flow\//u);
+
+  const explainerVideo = statSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en.webm'));
+  const explainerPoster = readFileSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en-poster.png'));
+  const explainer = JSON.parse(readFileSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en.json'), 'utf8'));
+  const explainerCaptions = readFileSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en.vtt'), 'utf8');
+  assert.ok(explainerVideo.size > 10_000_000, 'the narrated explainer should contain the rendered app and audio');
+  assert.equal(explainerPoster.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.match(explainerCaptions, /^WEBVTT\r?\n/u);
+  const spokenCues = explainerCaptions.trim().split(/\r?\n\s*\r?\n/u).slice(1).map(block => {
+    const lines = block.split(/\r?\n/u);
+    assert.match(lines[1], /^(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})$/u);
+    assert.ok(lines.slice(2).length > 0 && lines.slice(2).length <= 2);
+    return lines.slice(2).join(' ');
+  });
+  assert.equal(spokenCues.length, 49);
+  assert.equal(spokenCues.join(' '), explainer.turns.map(turn => turn.text).join(' '));
+  assert.match(readme, /media\/jev-flow-deterministic-ai-explainer-en\.webm/u);
+  assert.match(readme, /media\/jev-flow-deterministic-ai-explainer-en\.vtt/u);
 });
 
 test('static guide uses real relative media, labels pre-run evidence, and never enables duplicate captions', () => {

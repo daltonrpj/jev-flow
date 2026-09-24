@@ -163,6 +163,35 @@ test('standalone server opens the Studio, protects local mutations and fulfills 
   const createdPayload = await created.json();
   if (created.status !== 201) throw new Error(`flow create failed: ${JSON.stringify(createdPayload)}`);
   assert.equal(createdPayload.flow.id, 'smoke-flow');
+
+  const supportFlow = JSON.parse(readFileSync(join(root, 'examples', 'support-triage.flow.json'), 'utf8'));
+  supportFlow.id = 'fixture-preview-flow';
+  const savedSupportFlow = await fetch(`${baseUrl}/api/jev/flows`, { method: 'POST', headers, body: JSON.stringify(supportFlow) });
+  assert.equal(savedSupportFlow.status, 201);
+  const draft = structuredClone(supportFlow);
+  draft.name = 'Unsaved support triage draft';
+  const localPreview = await fetch(`${baseUrl}/api/jev/flows/fixture-preview-flow/run`, {
+    method: 'POST', headers,
+    body: JSON.stringify({ mode: 'simulate', flow: draft,
+      input: { message: 'Example: I see a duplicate charge on my invoice.' },
+      answers: { area: 'billing', deadline: 0.1 } }),
+  });
+  const localPreviewPayload = await localPreview.json();
+  assert.equal(localPreview.status, 200, JSON.stringify(localPreviewPayload));
+  assert.equal(localPreviewPayload.mode, 'simulation');
+  assert.equal(localPreviewPayload.simulado, true);
+  assert.equal(localPreviewPayload.origem, 'simulação determinística · sem chamada Jev');
+  assert.deepEqual(localPreviewPayload.path, ['judge', 'route', 'billing_gate', 'standard']);
+  const savedName = await (await fetch(`${baseUrl}/api/jev/flows/fixture-preview-flow`)).json();
+  assert.equal(savedName.name, supportFlow.name, 'simulating a draft must not persist it');
+  const wrongFlow = await fetch(`${baseUrl}/api/jev/flows/fixture-preview-flow/run`, {
+    method: 'POST', headers,
+    body: JSON.stringify({ mode: 'simulate', flow: { ...draft, id: 'other-flow' },
+      input: { message: 'Example: I see a duplicate charge on my invoice.' },
+      answers: { area: 'billing', deadline: 0.1 } }),
+  });
+  assert.equal(wrongFlow.status, 400, 'simulation drafts must match the route id');
+
   for (const path of ['/', '/jev/flows/smoke-flow/demo']) {
     const status = await statusWithHost(baseUrl, path, `evil.example:${new URL(baseUrl).port}`);
     assert.equal(status, 403, `reject DNS-rebinding Host on ${path}`);

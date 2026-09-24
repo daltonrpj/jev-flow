@@ -29,6 +29,10 @@ import * as scheduler from './scheduler.mjs';
 
 export const FLOWS_DIR = join(JEV_DATA_DIR, 'flows');
 export const EXAMPLES_DIR = join(dirname(fileURLToPath(import.meta.url)), 'examples');
+const ROOT_EXAMPLES_DIR = join(dirname(dirname(dirname(fileURLToPath(import.meta.url)))), 'examples');
+function shippedExamplePaths(id) {
+  return [join(EXAMPLES_DIR, `${id}.flow.json`), join(ROOT_EXAMPLES_DIR, `${id}.flow.json`)];
+}
 
 export const NODE_TYPES = new Set(CATALOG_NODE_TYPES);
 
@@ -435,7 +439,7 @@ export function loadFlow(idOrPath, { dir = FLOWS_DIR } = {}) {
   const caminhos = isAbsolute(requested) && requested.endsWith('.json')
     ? [requested]
     : isFlowId(requested)
-      ? [flowPath(requested, { dir }), join(EXAMPLES_DIR, `${requested}.flow.json`)]
+      ? [flowPath(requested, { dir }), ...shippedExamplePaths(requested)]
       : [];
   for (const c of caminhos) {
     try { return JSON.parse(readFileSync(c, 'utf8')); } catch { /* próximo */ }
@@ -472,7 +476,7 @@ export function listFlows({ dir = FLOWS_DIR } = {}) {
 export function deleteFlow(id, { dir = FLOWS_DIR } = {}) {
   const path = flowPath(id, { dir });
   if (!existsSync(path)) {
-    const ehExemplo = existsSync(join(EXAMPLES_DIR, `${id}.flow.json`));
+    const ehExemplo = shippedExamplePaths(id).some(existsSync);
     throw new FlowError(
       ehExemplo ? `"${id}" é um exemplo shipped (services/jev-flow/examples/) — somente leitura; duplique para editar` : `flow não encontrado: ${id}`,
       ehExemplo ? 'READONLY_EXEMPLO' : 'NOT_FOUND',

@@ -3,7 +3,11 @@
   "capture": {
     "application": "standalone Jev Flow running on loopback",
     "browser": "Microsoft Edge via Playwright",
-    "viewport": { "width": 1920, "height": 1080, "deviceScaleFactor": 1 },
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "deviceScaleFactor": 1
+    },
     "locale": "en",
     "network": "loopback only; external requests blocked; provider credentials removed from process environment",
     "content": "synthetic fixture or local state only; no video caption overlay"
@@ -12,10 +16,10 @@
     {
       "file": "studio-screenshot.png",
       "route": "/jev/flows/support-triage/demo?lang=en",
-      "state": "editable English support-triage example; deterministic synthetic fixture preview and trace",
+      "state": "English Studio after editing a synthetic support input and fixed typed answers; 4/4 deterministic local simulation, no Jev call",
       "width": 1920,
       "height": 1080,
-      "sha256": "e603296d2ba8b0c89987052891b8d58bf612202b59e7d3300f85625e4a4730c0"
+      "sha256": "37b8775b413057c437452d739dd8e9453cda93f717ac493f29bfe673455a275f"
     },
     {
       "file": "compendium-screenshot.png",

@@ -4,6 +4,14 @@
 
 Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, decision Labs, local examples, tests, and an English narrated walkthrough. A static product guide is prepared for [GitHub Pages](https://daltonrpj.github.io/jev-flow/) with real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. GitHub Pages does not host the server or execute a model call.
 
+## Watch: deterministic AI and Jev Flow
+
+[![Preview of the Jev Flow English explainer](media/jev-flow-deterministic-ai-explainer-en-poster.png)](media/jev-flow-deterministic-ai-explainer-en.webm)
+
+[Play the 4:53 two-voice explainer](media/jev-flow-deterministic-ai-explainer-en.webm) · [English WebVTT captions](media/jev-flow-deterministic-ai-explainer-en.vtt) · [Exact spoken transcript](media/jev-flow-deterministic-ai-explainer-en-transcript.md)
+
+The explainer uses 26 alternating Gemini 3.1 Flash TTS turns (Charon and Kore). It introduces deterministic workflow design, Jev's typed judgments, optional local Laya, then walks through the standalone Studio and other product surfaces. The support example is synthetic and uses fixed typed answers; the video does not claim a live Jev or LLM run. Captions contain only the English dialogue.
+
 [![A short animated preview of the real Jev Flow application](media/jev-flow-walkthrough-teaser.gif)](media/jev-flow-walkthrough.webm)
 
 The GIF is a short preview. [Download the full WebM](media/jev-flow-walkthrough.webm), [read the English captions](media/jev-flow-walkthrough.vtt), or [inspect the transcript and demo provenance](media/jev-flow-walkthrough-transcript.md). The [Pages guide](https://daltonrpj.github.io/jev-flow/#watch) provides a real video player when published; repository Markdown links to the file. The recording uses synthetic fixtures and local rules. It does not claim a live remote Jev or LLM run.

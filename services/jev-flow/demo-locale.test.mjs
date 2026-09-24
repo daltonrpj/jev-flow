@@ -22,6 +22,18 @@ test('Studio English demo localizes presentation without changing the fixture or
   assert.deepEqual(flow.fixtures[0].input, { message: 'Example: I see a duplicate charge on my invoice.' });
 });
 
+test('English Studio exposes an explicit local fixture mode with typed answers', async () => {
+  const { html } = await buildDemoPage(flow.id, { flow, locale: 'en' });
+  assert.match(html, /<option value="simulate">Local fixture simulation<\/option>/u);
+  assert.match(html, /<option value="live">Live Jev call<\/option>/u);
+  assert.match(html, /id="gAnswers"/u);
+  assert.match(html, /Typed fixture answers \(JSON\)/u);
+  assert.match(html, /The input changed: enter typed answers/u);
+  assert.match(html, /deterministic fixture simulation · no Jev call/u);
+  assert.match(html, /Edit input/u);
+  assert.match(html, /Local fixture simulation/u);
+});
+
 test('Studio exposes only the exact shipped public fixture input', async () => {
   const shipped = (await buildDemoPage(flow.id, { flow, locale: 'en' })).html;
   assert.match(shipped, /Example: I see a duplicate charge on my invoice\./);

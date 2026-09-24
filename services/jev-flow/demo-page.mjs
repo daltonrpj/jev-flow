@@ -1198,21 +1198,21 @@ function CANVAS_HTML(p) {
   <div class="crumb">/ <a href="/">dashboard</a> / <a href="/jev/flows">jev flow</a></div>
   <div class="sep"></div>
   <h1>${esc(p.flow.name)}</h1>
-  <span class="pill ${p.meta.simulado ? 'sim' : 'real'}">${esc(p.meta.simulado ? 'julgamento simulado' : 'execução real')}</span>
-  ${p.catalogPreview ? '<span class="pill dim">cenário sintético · sem chamada Jev</span>' : ''}
+  <span class="pill ${p.meta.simulado ? 'sim' : 'real'}">${esc(p.meta.simulado ? (english ? 'simulated judgment' : 'julgamento simulado') : (english ? 'live execution' : 'execução real'))}</span>
+  ${p.catalogPreview ? `<span class="pill dim">${english ? 'synthetic fixture · no Jev call' : 'cenário sintético · sem chamada Jev'}</span>` : ''}
   <span class="pill dim">${p.steps.length} ${english ? 'steps' : 'passos'} · ${p.edges.length} ${english ? 'edges' : 'arestas'}${!p.meta.simulado && p.meta.custo ? ' · ≈$' + p.meta.custo.toFixed(6) : ''}</span>
   <div class="spacer"></div>
   <button class="run" id="btnTeste">${esc(p.locale?.execution || 'Testar')}</button>
   <div class="save-cluster">
-    <button class="run save" id="btnSalvar" aria-describedby="saveStatus" aria-label="${p.readonly ? 'Salvar desabilitado: exemplo shipped somente leitura' : 'Salvar flow'}"${p.readonly ? ' disabled' : ''}>${p.readonly ? 'Somente leitura' : 'Salvar'}</button>
-    <div class="save-status ${p.readonly ? 'readonly' : 'saved'}" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"${p.readonly ? ' aria-label="Somente leitura; duplique para editar"' : ''}><span id="saveStatusText">${p.catalogPreview ? 'Prévia do catálogo · somente leitura' : p.readonly ? 'Exemplo somente leitura' : english ? 'All changes saved' : 'Tudo salvo'}</span></div>
-    ${p.readonly ? '<button class="run duplicate" id="btnDuplicar" type="button" aria-describedby="saveStatus">Duplicar para editar</button>' : ''}
+  <button class="run save" id="btnSalvar" aria-describedby="saveStatus" aria-label="${p.readonly ? (english ? 'Save disabled: read-only example' : 'Salvar desabilitado: exemplo shipped somente leitura') : (english ? 'Save flow' : 'Salvar flow')}"${p.readonly ? ' disabled' : ''}>${p.readonly ? (english ? 'Read only' : 'Somente leitura') : (english ? 'Save' : 'Salvar')}</button>
+    <div class="save-status ${p.readonly ? 'readonly' : 'saved'}" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"${p.readonly ? ` aria-label="${english ? 'Read only; duplicate to edit' : 'Somente leitura; duplique para editar'}"` : ''}><span id="saveStatusText">${p.catalogPreview ? (english ? 'Catalog preview · read only' : 'Prévia do catálogo · somente leitura') : p.readonly ? (english ? 'Read-only example' : 'Exemplo somente leitura') : english ? 'All changes saved' : 'Tudo salvo'}</span></div>
+    ${p.readonly ? `<button class="run duplicate" id="btnDuplicar" type="button" aria-describedby="saveStatus">${english ? 'Duplicate to edit' : 'Duplicar para editar'}</button>` : ''}
   </div>
-  <select id="vel" title="velocidade do replay" style="background:#17171f;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer">
+  <select id="vel" title="${english ? 'Replay speed' : 'velocidade do replay'}" style="background:#17171f;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer">
     <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.6">1.6×</option>
   </select>
-  <button class="run primary" id="play">${p.catalogPreview ? 'Reproduzir amostra' : 'Executar'}</button>
-  <label class="locale-picker canvas-locale" title="Idioma"><span aria-hidden="true">◎</span><select id="canvasLocale" aria-label="Idioma"><option value="pt-BR"${p.locale?.locale === 'pt-BR' ? ' selected' : ''}>Português (Brasil)</option><option value="en"${p.locale?.locale === 'en' ? ' selected' : ''}>English</option><option value="es"${p.locale?.locale === 'es' ? ' selected' : ''}>Español</option></select></label>
+  <button class="run primary" id="play">${p.catalogPreview ? (english ? 'Play sample' : 'Reproduzir amostra') : (english ? 'Play' : 'Executar')}</button>
+  <label class="locale-picker canvas-locale" title="${english ? 'Language' : 'Idioma'}"><span aria-hidden="true">◎</span><select id="canvasLocale" aria-label="${english ? 'Language' : 'Idioma'}"><option value="pt-BR"${p.locale?.locale === 'pt-BR' ? ' selected' : ''}>Português (Brasil)</option><option value="en"${p.locale?.locale === 'en' ? ' selected' : ''}>English</option><option value="es"${p.locale?.locale === 'es' ? ' selected' : ''}>Español</option></select></label>
 </header>
 <main>
   <div id="viewport">
@@ -1220,15 +1220,15 @@ function CANVAS_HTML(p) {
       <svg class="wires" id="wires"></svg>
       <div id="nodes"></div>
     </div>
-    <div class="layout-switch" id="layoutSwitch" role="group" aria-label="Layout do grafo">
+    <div class="layout-switch" id="layoutSwitch" role="group" aria-label="${english ? 'Graph layout' : 'Layout do grafo'}">
       <button class="on" data-layout="timeline" aria-pressed="true">⇄ ${english ? 'Flow' : 'Fluxo'}</button>
       <button data-layout="camadas" aria-pressed="false">⇊ ${english ? 'Layers' : 'Camadas'}</button>
       <button data-layout="radial" aria-pressed="false">◎ Radial</button>
     </div>
     <div id="minimap" title="minimapa — clique para navegar"></div>
-    <div class="canvas-mode-switch" role="group" aria-label="Modo de representação">
-      <button class="on" data-canvas-mode="flow" aria-pressed="true">Fluxo</button>
-      <button data-canvas-mode="reasoning" aria-pressed="false">Raciocínio</button>
+    <div class="canvas-mode-switch" role="group" aria-label="${english ? 'Canvas mode' : 'Modo de representação'}">
+      <button class="on" data-canvas-mode="flow" aria-pressed="true">${english ? 'Flow' : 'Fluxo'}</button>
+      <button data-canvas-mode="reasoning" aria-pressed="false">${english ? 'Reasoning' : 'Raciocínio'}</button>
     </div>
     <section class="reasoning-surface" id="reasoningSurface" aria-label="Grafo de Raciocínio" hidden>
       <div class="reasoning-shell">
@@ -1265,40 +1265,47 @@ function CANVAS_HTML(p) {
 
     <div class="gaveta" id="gaveta">
       <div class="gt">
-    <div class="tabs2" role="tablist" aria-label="Ferramentas do flow">
-          <div class="on" data-g="teste" role="tab" tabindex="0" aria-selected="true">Teste</div>
-          <div data-g="simulador" role="tab" tabindex="0" aria-selected="false">🧪 Simulador</div>
-          <div data-g="conex" role="tab" tabindex="0" aria-selected="false">Conexões</div>
+    <div class="tabs2" role="tablist" aria-label="${english ? 'Flow tools' : 'Ferramentas do flow'}">
+          <div class="on" data-g="teste" role="tab" tabindex="0" aria-selected="true">${english ? 'Test' : 'Teste'}</div>
+          <div data-g="simulador" role="tab" tabindex="0" aria-selected="false">🧪 ${english ? 'Simulator' : 'Simulador'}</div>
+          <div data-g="conex" role="tab" tabindex="0" aria-selected="false">${english ? 'Connections' : 'Conexões'}</div>
         </div>
         <div class="gact">
-          <button id="gInputBtn">editar input</button>
-          <button class="p" id="gRodar">▶ rodar</button>
+          <label id="testModeLabel" for="testMode" style="margin-right:auto;display:flex;align-items:center;gap:8px;color:var(--dim);font-size:11px">${english ? 'Mode' : 'Modo'}
+            <select id="testMode" aria-label="${english ? 'Execution mode' : 'Modo de execução'}" style="background:#17171f;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px">
+              <option value="simulate">${english ? 'Local fixture simulation' : 'Simulação local da fixture'}</option>
+              ${p.catalogPreview ? '' : `<option value="live">${english ? 'Live Jev call' : 'Chamada ao Jev'}</option>`}
+            </select>
+          </label>
+          <button id="gInputBtn">${english ? 'Edit input' : 'editar input'}</button>
+          <button class="p" id="gRodar">${english ? '▶ simulate locally' : '▶ simular localmente'}</button>
         </div>
       </div>
       <div class="gb" data-g="teste">
         <section class="fixture-panel" id="fixturePanel" aria-labelledby="fixtureTitle">
           <div class="fixture-head">
-            <div><h4 id="fixtureTitle">Fixtures reproduzíveis</h4><p>Salve entradas nomeadas no rascunho para repetir um teste sem alterar histórico.</p></div>
-            <div class="fixture-state" id="gFixtureState" role="status" aria-live="polite" aria-atomic="true" data-state="idle">nenhuma fixture selecionada</div>
+            <div><h4 id="fixtureTitle">${english ? 'Reproducible fixtures' : 'Fixtures reproduzíveis'}</h4><p>${english ? 'Save named inputs in the draft to repeat a test without changing history.' : 'Salve entradas nomeadas no rascunho para repetir um teste sem alterar histórico.'}</p></div>
+            <div class="fixture-state" id="gFixtureState" role="status" aria-live="polite" aria-atomic="true" data-state="idle">${english ? 'no fixture selected' : 'nenhuma fixture selecionada'}</div>
           </div>
           <div class="fixture-grid">
             <div class="fixture-field">
-              <label for="gFixtureSelect">fixture selecionada</label>
-              <select id="gFixtureSelect" aria-describedby="gFixtureHelp"><option value="">nova fixture</option></select>
-              <div class="fixture-actions"><button id="gFixtureNew" type="button">＋ nova</button><button id="gFixtureRemove" class="danger" type="button" disabled>remover</button></div>
+              <label for="gFixtureSelect">${english ? 'Selected fixture' : 'fixture selecionada'}</label>
+              <select id="gFixtureSelect" aria-describedby="gFixtureHelp"><option value="">${english ? 'new fixture' : 'nova fixture'}</option></select>
+              <div class="fixture-actions"><button id="gFixtureNew" type="button">＋ ${english ? 'new' : 'nova'}</button><button id="gFixtureRemove" class="danger" type="button" disabled>${english ? 'remove' : 'remover'}</button></div>
             </div>
             <div class="fixture-field">
-              <label for="gFixtureName">nome</label>
-              <input id="gFixtureName" type="text" maxlength="80" placeholder="ex.: cobrança urgente" autocomplete="off" />
-              <div class="fixture-actions"><button id="gFixtureSave" class="primary" type="button">Salvar fixture</button></div>
+              <label for="gFixtureName">${english ? 'Name' : 'nome'}</label>
+              <input id="gFixtureName" type="text" maxlength="80" placeholder="${english ? 'e.g. urgent billing request' : 'ex.: cobrança urgente'}" autocomplete="off" />
+              <div class="fixture-actions"><button id="gFixtureSave" class="primary" type="button">${english ? 'Save fixture' : 'Salvar fixture'}</button></div>
             </div>
           </div>
           <p id="gFixtureHelp" class="fixture-note" hidden></p>
           <pre id="gFixtureExpected" class="fixture-note" hidden></pre>
         </section>
         <textarea id="gInput" style="display:none;width:100%;min-height:64px;background:#0c0c11;color:#d2a8ff;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:11.5px;font-family:ui-monospace,monospace"></textarea>
-        ${p.catalogPreview ? '<label for="gAnswers" style="display:block;color:var(--dim);font-size:11px;margin-top:10px">Respostas Jev simuladas (JSON) — cenário fixo de exemplo. O input não é analisado por Jev. Se editar a entrada, informe também as respostas tipadas do caso.</label><textarea id="gAnswers" spellcheck="false" style="display:block;width:100%;min-height:86px;background:#0c0c11;color:#d2a8ff;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:11.5px;font-family:ui-monospace,monospace"></textarea>' : ''}
-        <div id="gResultado" data-state="idle" role="status" aria-live="polite" aria-atomic="true" style="margin-top:8px"><span style="color:var(--dim)"><b style="color:var(--txt)">pronto para testar</b> — edite o input se necessário e rode o flow; sem chave Jev, a simulação é determinística e não grava histórico.</span></div>
+        <label id="gAnswersLabel" for="gAnswers" style="display:${p.catalogPreview ? 'block' : 'none'};color:var(--dim);font-size:11px;margin-top:10px">${english ? 'Typed fixture answers (JSON) — fixed example answers; the input is not sent to Jev. If you edit the input, supply the typed answers for that case.' : 'Respostas Jev simuladas (JSON) — cenário fixo de exemplo. O input não é analisado por Jev. Se editar a entrada, informe também as respostas tipadas do caso.'}</label>
+        <textarea id="gAnswers" spellcheck="false" style="display:${p.catalogPreview ? 'block' : 'none'};width:100%;min-height:86px;background:#0c0c11;color:#d2a8ff;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:11.5px;font-family:ui-monospace,monospace"></textarea>
+        <div id="gResultado" data-state="idle" role="status" aria-live="polite" aria-atomic="true" style="margin-top:8px"><span style="color:var(--dim)"><b style="color:var(--txt)">${english ? 'ready to test' : 'pronto para testar'}</b> — ${english ? 'edit the input and run the flow; local simulation is deterministic and does not call Jev or write history.' : 'edite o input se necessário e rode o flow; sem chave Jev, a simulação é determinística e não grava histórico.'}</span></div>
       </div>
       <div class="gb" data-g="simulador" style="display:none">
         <p style="color:var(--dim);font-size:11.5px;line-height:1.6;margin-bottom:10px">
@@ -1352,11 +1359,11 @@ function CANVAS_HTML(p) {
     </div>
     <div class="tabbody on" data-t="exec">
       <div class="evidence-summary ${operacaoOk ? 'ok' : 'fail'}" role="status" aria-live="polite">
-        <div class="evidence-kicker"><span class="evidence-dot"></span>${operacaoOk ? 'operação concluída' : 'operação com falha'}<span class="evidence-mode">${p.meta.simulado ? 'SIMULAÇÃO' : 'EXECUÇÃO REAL'}</span></div>
+      <div class="evidence-kicker"><span class="evidence-dot"></span>${operacaoOk ? (english ? 'operation complete' : 'operação concluída') : (english ? 'operation failed' : 'operação com falha')}<span class="evidence-mode">${p.meta.simulado ? (english ? 'SIMULATION' : 'SIMULAÇÃO') : (english ? 'LIVE RUN' : 'EXECUÇÃO REAL')}</span></div>
         <div class="evidence-metrics"><span><b>${passosOk}/${p.steps.length}</b> ${english ? 'steps' : 'passos'}</span><span><b>${tempoTotal}ms</b> ${english ? 'duration' : 'duração'}</span><span><b>${p.meta.caminho.length}</b> ${english ? 'path nodes' : 'caminho'}</span></div>
         ${confiancaMin == null ? '' : '<div class="evidence-note ' + (confiancaMin < 0.65 ? 'warn' : '') + '">' + (p.meta.simulado ? (english ? 'simulated scenario confidence ' : 'confiança do cenário simulado ') : (english ? 'lowest Jev confidence ' : 'menor confiança Jev ')) + '<b>' + Math.round(confiancaMin * 100) + '%</b>' + (p.meta.simulado ? (english ? ' · no inference from input' : ' · sem inferência do input') : confiancaMin < 0.65 ? (english ? ' · review before automation' : ' · revisar antes de automatizar') : (english ? ' · evidence within operational threshold' : ' · evidência dentro do limiar operacional')) + '</div>'}
       </div>
-      <div class="info-linha">input: <code>${esc(JSON.stringify(p.input))}</code></div>
+  <div class="info-linha">${english ? 'Input' : 'input'}: <code>${esc(JSON.stringify(p.input))}</code></div>
       <div id="cards"></div>
       <div class="banner" id="banner"></div>
     </div>
@@ -1407,6 +1414,7 @@ function CANVAS_HTML(p) {
 
 <script>
   var D = ${serializeForInlineScript(p)};
+  var englishUI = D.locale && D.locale.locale === 'en';
   function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   var canvasLocale = document.getElementById('canvasLocale');
   if (canvasLocale) canvasLocale.onchange = function () { var u = new URL(location.href); u.searchParams.set('lang', canvasLocale.value); location.href = u.toString(); };
@@ -2060,21 +2068,22 @@ function CANVAS_HTML(p) {
   D.steps.forEach(function (s) {
     var c = document.createElement('div');
     c.className = 'card ' + (s.ok ? 'ok' : 'fail');
-    var confianca = Number.isFinite(s.confianca) ? '<span class="confidence ' + (s.confianca < 0.65 ? 'warn' : '') + '">confiança ' + Math.round(s.confianca * 100) + '%</span>' : '';
+    var confianca = Number.isFinite(s.confianca) ? '<span class="confidence ' + (s.confianca < 0.65 ? 'warn' : '') + '">' + (englishUI ? 'confidence ' : 'confiança ') + Math.round(s.confianca * 100) + '%</span>' : '';
     var det = '';
     if (s.valores) det = JSON.stringify(s.valores);
     else if (s.linha) det = s.linha;
-    else if (s.acao) det = 'ação: ' + s.acao;
+    else if (s.acao) det = (englishUI ? 'action: ' : 'ação: ') + s.acao;
     else if (s.status) det = 'HTTP ' + s.status + ' → ' + s.url;
-    if (s.erro) det = 'erro: ' + s.erro + (det ? '\\n' + det : '');
+    if (s.erro) det = (englishUI ? 'error: ' : 'erro: ') + s.erro + (det ? '\\n' + det : '');
+    det = localizeRunText(det);
     c.innerHTML = (s.ok ? '✔' : '✖') + ' <b>' + esc(s.no) + '</b> <span class="k">· ' + esc(s.tipo) + ' · ' + esc(s.ms) + 'ms</span>' + confianca +
-      (s.resumo ? '<div class="k" style="margin-top:4px">' + esc(s.resumo) + '</div>' : '') +
+      (s.resumo ? '<div class="k" style="margin-top:4px">' + esc(localizeRunText(s.resumo)) + '</div>' : '') +
       (det ? '<pre>' + esc(det) + '</pre>' : '');
     cardsEl.appendChild(c);
 
     var d = document.createElement('div');
     d.className = 'card on ' + (s.ok ? 'ok' : 'fail');
-    d.innerHTML = '<b>' + esc(s.no) + '</b>' + (confianca ? '<div class="k" style="margin-top:4px">' + confianca + '</div>' : '') + (s.regra ? '<div class="k" style="margin-top:4px">regra ' + esc(s.regra) + ' · ' + esc(s.veredicto || '') + (s.existe != null ? ' · existe ' + esc(Number(s.existe).toFixed(2)) : '') + '</div>' : '') + '<pre>' + esc(JSON.stringify({ valores: s.valores, confianca: s.confianca, veredicto: s.veredicto, regra: s.regra, existe: s.existe, linha: s.linha, acao: s.acao, status: s.status, erro: s.erro }, null, 1)) + '</pre>';
+    d.innerHTML = '<b>' + esc(s.no) + '</b>' + (confianca ? '<div class="k" style="margin-top:4px">' + confianca + '</div>' : '') + (s.regra ? '<div class="k" style="margin-top:4px">' + (englishUI ? 'rule ' : 'regra ') + esc(s.regra) + ' · ' + esc(s.veredicto || '') + (s.existe != null ? ' · ' + (englishUI ? 'exists ' : 'existe ') + esc(Number(s.existe).toFixed(2)) : '') + '</div>' : '') + '<pre>' + esc(JSON.stringify({ valores: s.valores, confianca: s.confianca, veredicto: s.veredicto, regra: s.regra, existe: s.existe, linha: s.linha, acao: s.acao, status: s.status, erro: s.erro }, null, 1)) + '</pre>';
     dadosEl.appendChild(d);
   });
   D.chamadas.forEach(function (w) {
@@ -2633,11 +2642,33 @@ function CANVAS_HTML(p) {
   gInput.value = JSON.stringify(D.input && Object.keys(D.input).length ? D.input : exemploDeInput(), null, 1);
   var gAnswers = document.getElementById('gAnswers');
   if (gAnswers) gAnswers.value = JSON.stringify(D.sampleAnswers || {}, null, 2);
+  var testMode = document.getElementById('testMode');
+  var gAnswersLabel = document.getElementById('gAnswersLabel');
+  function updateTestMode() {
+    var localSimulation = D.catalogPreview || !testMode || testMode.value === 'simulate';
+    if (testMode) {
+      testMode.disabled = D.catalogPreview;
+      testMode.value = D.catalogPreview ? 'simulate' : testMode.value;
+    }
+    if (gAnswers) gAnswers.style.display = localSimulation ? 'block' : 'none';
+    if (gAnswersLabel) gAnswersLabel.style.display = localSimulation ? 'block' : 'none';
+    document.getElementById('gRodar').textContent = D.catalogPreview
+      ? (englishUI ? '▶ simulate locally' : '▶ simular localmente')
+      : localSimulation
+        ? (englishUI ? '▶ simulate locally' : '▶ simular localmente')
+        : (englishUI ? '▶ run live' : '▶ executar ao vivo');
+  }
+  if (testMode) {
+    testMode.value = 'simulate';
+    testMode.onchange = updateTestMode;
+  }
+  updateTestMode();
   if (gAnswers) gInput.addEventListener('input', function () {
     gAnswers.value = '{}';
-    gAnswers.title = 'A entrada mudou: informe respostas tipadas para este cenário antes de simular.';
+    gAnswers.title = englishUI
+      ? 'The input changed: enter typed answers for this scenario before simulating.'
+      : 'A entrada mudou: informe respostas tipadas para este cenário antes de simular.';
   });
-  if (D.catalogPreview) document.getElementById('gRodar').textContent = '▶ simular';
   var gFixtureSelect = document.getElementById('gFixtureSelect');
   var gFixtureName = document.getElementById('gFixtureName');
   var gFixtureSave = document.getElementById('gFixtureSave');
@@ -2658,7 +2689,7 @@ function CANVAS_HTML(p) {
     return 'fixture-' + i;
   }
   function renderFixtures() {
-    gFixtureSelect.innerHTML = '<option value="">nova fixture</option>' + DRAFT.fixtures.map(function (fixture) {
+    gFixtureSelect.innerHTML = '<option value="">' + (englishUI ? 'new fixture' : 'nova fixture') + '</option>' + DRAFT.fixtures.map(function (fixture) {
       return '<option value="' + esc(fixture.id) + '">' + esc(fixture.name) + '</option>';
     }).join('');
     gFixtureSelect.value = FIXTURE_ID || '';
@@ -2669,13 +2700,17 @@ function CANVAS_HTML(p) {
     gFixtureNew.disabled = SOMENTE_LEITURA;
     if (SOMENTE_LEITURA) {
       gFixtureHelp.hidden = false;
-      gFixtureHelp.textContent = 'Exemplo shipped somente leitura: selecione e edite o input para testar, depois use “Duplicar para editar” para salvar fixtures.';
+      gFixtureHelp.textContent = englishUI
+        ? 'Read-only shipped example: edit the input to test, then use “Duplicate to edit” to save fixtures.'
+        : 'Exemplo shipped somente leitura: selecione e edite o input para testar, depois use “Duplicar para editar” para salvar fixtures.';
     } else {
       gFixtureHelp.hidden = true;
       gFixtureHelp.textContent = '';
     }
-    if (fixture) fixtureState('ok', 'selecionada: ' + fixture.name);
-    else fixtureState('idle', DRAFT.fixtures.length ? 'selecione ou crie uma fixture' : 'nenhuma fixture salva');
+    if (fixture) fixtureState('ok', (englishUI ? 'selected: ' : 'selecionada: ') + fixture.name);
+    else fixtureState('idle', DRAFT.fixtures.length
+      ? (englishUI ? 'select or create a fixture' : 'selecione ou crie uma fixture')
+      : (englishUI ? 'no saved fixture' : 'nenhuma fixture salva'));
   }
   function selecionarFixture(id) {
     FIXTURE_ID = id || null;
@@ -2684,19 +2719,21 @@ function CANVAS_HTML(p) {
       gInput.value = JSON.stringify(fixture.input || {}, null, 1);
       if (gAnswers) {
         gAnswers.value = JSON.stringify(fixture.answers || {}, null, 2);
-        gAnswers.title = fixture.answers ? 'Respostas tipadas desta fixture.' : 'Fixture sem respostas tipadas: informe-as antes de simular.';
+        gAnswers.title = fixture.answers
+          ? (englishUI ? 'Typed answers for this fixture.' : 'Respostas tipadas desta fixture.')
+          : (englishUI ? 'This fixture has no typed answers; enter them before simulating.' : 'Fixture sem respostas tipadas: informe-as antes de simular.');
       }
       gFixtureExpected.hidden = !fixture.esperado;
-      gFixtureExpected.textContent = fixture.esperado ? 'Resultado esperado: ' + JSON.stringify(fixture.esperado) : '';
+      gFixtureExpected.textContent = fixture.esperado ? (englishUI ? 'Expected result: ' : 'Resultado esperado: ') + JSON.stringify(fixture.esperado) : '';
       gInput.style.display = 'block';
       document.getElementById('gInputBtn').textContent = 'ocultar input';
       document.getElementById('gInputBtn').setAttribute('aria-expanded', 'true');
-      fixtureState('ok', 'selecionada: ' + fixture.name);
+      fixtureState('ok', (englishUI ? 'selected: ' : 'selecionada: ') + fixture.name);
     } else {
-      if (gAnswers) { gAnswers.value = '{}'; gAnswers.title = 'Informe respostas tipadas para este cenário antes de simular.'; }
+      if (gAnswers) { gAnswers.value = '{}'; gAnswers.title = englishUI ? 'Enter typed answers for this scenario before simulating.' : 'Informe respostas tipadas para este cenário antes de simular.'; }
       gFixtureExpected.hidden = true;
       gFixtureExpected.textContent = '';
-      fixtureState('idle', 'nova fixture — edite o input e salve');
+      fixtureState('idle', englishUI ? 'new fixture — edit the input and save' : 'nova fixture — edite o input e salve');
     }
     renderFixtures();
   }
@@ -2705,7 +2742,7 @@ function CANVAS_HTML(p) {
   gFixtureSave.onclick = function () {
     if (SOMENTE_LEITURA) return;
     var name = gFixtureName.value.trim();
-    if (!name) { fixtureState('error', 'informe um nome'); gFixtureName.focus(); return; }
+    if (!name) { fixtureState('error', englishUI ? 'enter a name' : 'informe um nome'); gFixtureName.focus(); return; }
     var input;
     try { input = JSON.parse(gInput.value); } catch (error) { fixtureState('error', 'input inválido: ' + textoTeste(error && error.message, 'JSON inválido')); gInput.style.display = 'block'; gInput.focus(); return; }
     if (!input || typeof input !== 'object' || Array.isArray(input)) { fixtureState('error', 'o input deve ser um objeto JSON'); gInput.focus(); return; }
@@ -2720,7 +2757,7 @@ function CANVAS_HTML(p) {
     if (fixture) { fixture.name = name; fixture.input = input; if (gAnswers) fixture.answers = answers; }
     else { fixture = { id: fixtureNextId(), name: name, input: input, answers: answers, esperado: null }; DRAFT.fixtures.push(fixture); FIXTURE_ID = fixture.id; }
     renderFixtures();
-    fixtureState('ok', 'fixture salva — há alterações não salvas no flow');
+    fixtureState('ok', englishUI ? 'fixture saved — unsaved flow changes' : 'fixture salva — há alterações não salvas no flow');
     marcarSujo();
   };
   gFixtureRemove.onclick = function () {
@@ -2730,7 +2767,7 @@ function CANVAS_HTML(p) {
     DRAFT.fixtures = DRAFT.fixtures.filter(function (item) { return item.id !== FIXTURE_ID; });
     FIXTURE_ID = null;
     renderFixtures();
-    fixtureState('ok', 'fixture removida — há alterações não salvas no flow');
+    fixtureState('ok', englishUI ? 'fixture removed — unsaved flow changes' : 'fixture removida — há alterações não salvas no flow');
     marcarSujo();
   };
   renderFixtures();
@@ -2753,7 +2790,9 @@ function CANVAS_HTML(p) {
   }
   document.getElementById('gInputBtn').onclick = function () {
     gInput.style.display = gInput.style.display === 'none' ? 'block' : 'none';
-    this.textContent = gInput.style.display === 'none' ? 'editar input' : 'ocultar input';
+    this.textContent = gInput.style.display === 'none'
+      ? (englishUI ? 'Edit input' : 'editar input')
+      : (englishUI ? 'Hide input' : 'ocultar input');
     this.setAttribute('aria-expanded', gInput.style.display === 'none' ? 'false' : 'true');
   };
   if (location.hash === '#fixtures') {
@@ -2809,47 +2848,70 @@ function CANVAS_HTML(p) {
     var res = document.getElementById('gResultado');
     res.dataset.state = 'loading'; res.setAttribute('aria-busy', 'true');
     res.innerHTML = '<span class="spin" style="border-color:rgba(124,92,255,.4);border-top-color:#fff"></span> ' +
-      (D.catalogPreview ? 'simulando' : 'executando') + (SUJO ? ' o RASCUNHO (não salvo)' : '') + '…';
+      (englishUI ? (D.catalogPreview || testMode.value === 'simulate' ? 'simulating locally' : 'running live')
+        : (D.catalogPreview || testMode.value === 'simulate' ? 'simulando localmente' : 'executando')) +
+      (SUJO ? (englishUI ? ' the unsaved draft' : ' o RASCUNHO (não salvo)') : '') + '…';
   }
   function renderTesteFalha(message) {
     var res = document.getElementById('gResultado');
-    var safeMessage = textoTeste(message, 'a execução falhou; revise o input e tente novamente');
+    var safeMessage = textoTeste(message, englishUI ? 'The run failed; review the input and try again.' : 'a execução falhou; revise o input e tente novamente');
+    if (englishUI) safeMessage = safeMessage
+      .replaceAll('TYPESAFE_API_KEY ausente', 'TypeSafe API key is not configured')
+      .replaceAll('informe respostas tipadas para simular; o input não é analisado pelo Jev nesta rota', 'Enter typed answers to simulate; Jev does not analyze the input on this route')
+      .replaceAll('input inválido', 'Invalid input')
+      .replaceAll('respostas simuladas inválidas', 'Invalid simulated answers')
+      .replaceAll('verifique o campo', 'check the field');
     res.dataset.state = 'failure'; res.setAttribute('aria-busy', 'false');
-    res.innerHTML = '<div role="alert" style="color:#ff8a8a"><b>✖ falha</b><div style="margin-top:5px">status: falha · ' + esc(safeMessage) + '</div>' +
-      '<div style="margin-top:7px;color:var(--dim)">ação: revise o input ou o rascunho e tente novamente.</div>' +
-      '<button id="gRetry" type="button" style="margin-top:9px;border:1px solid rgba(255,138,138,.45);background:rgba(255,82,82,.08);color:#ffb2b2;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer">↻ tentar novamente</button></div>';
+    res.innerHTML = '<div role="alert" style="color:#ff8a8a"><b>✖ ' + (englishUI ? 'failed' : 'falha') + '</b><div style="margin-top:5px">' + (englishUI ? 'Status: failed · ' : 'status: falha · ') + esc(safeMessage) + '</div>' +
+      '<div style="margin-top:7px;color:var(--dim)">' + (englishUI ? 'Action: review the input or draft, then try again.' : 'ação: revise o input ou o rascunho e tente novamente.') + '</div>' +
+      '<button id="gRetry" type="button" style="margin-top:9px;border:1px solid rgba(255,138,138,.45);background:rgba(255,82,82,.08);color:#ffb2b2;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer">↻ ' + (englishUI ? 'try again' : 'tentar novamente') + '</button></div>';
     document.getElementById('gRetry').onclick = rodarTeste;
     if (D.catalogPreview) {
       banner.className = 'banner fail';
-      banner.textContent = 'Último teste: falha. O canvas mostra a amostra inicial; detalhes no painel Teste.';
+      banner.textContent = englishUI ? 'Last test failed. The canvas shows the initial sample; details are in the Test panel.' : 'Último teste: falha. O canvas mostra a amostra inicial; detalhes no painel Teste.';
     }
+  }
+  function localizeRunText(value) {
+    var text = String(value || '');
+    if (!englishUI) return text;
+    return text.replaceAll('concluído · valores redigidos', 'complete · values redacted')
+      .replaceAll('duração indisponível', 'duration unavailable')
+      .replaceAll('caminho não informado', 'path not provided')
+      .replaceAll('saída não informada', 'output not provided');
+  }
+  function displayNodeId(id) {
+    if (!englishUI) return id;
+    return ({ classificar: 'classify', rotear: 'route', urgente: 'urgent', fila: 'queue', 'revisao-humana': 'human-review' })[id] || id;
   }
   function renderTesteSucesso(result) {
     var res = document.getElementById('gResultado');
     var okSteps = result.steps.filter(function (step) { return step.ok; }).length;
-    var caminho = result.path.length ? result.path.join(' → ') : 'caminho não informado';
-    var html = '<div style="margin-bottom:9px;font-size:11px;color:#2ecc71"><b>✔ sucesso</b> · ' + esc(result.origem) + '</div>' +
+    var caminho = result.path.length ? result.path.map(displayNodeId).join(' → ') : (englishUI ? 'path not provided' : 'caminho não informado');
+    var origin = result.mode === 'simulation' ? (englishUI ? 'deterministic fixture simulation · no Jev call' : 'simulação determinística · sem chamada Jev') : localizeRunText(result.origem);
+    var html = '<div style="margin-bottom:9px;font-size:11px;color:#2ecc71"><b>✔ ' + (englishUI ? 'success' : 'sucesso') + '</b> · ' + esc(origin) + '</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:9px;color:var(--dim);font-size:10.5px">' +
-      '<span><b style="color:var(--txt)">status:</b> sucesso</span>' +
-      '<span><b style="color:var(--txt)">caminho:</b> <span style="font-family:ui-monospace">' + esc(caminho) + '</span></span>' +
-      '<span><b style="color:var(--txt)">passos:</b> ' + okSteps + '/' + result.steps.length + '</span>' +
-      '<span><b style="color:var(--txt)">' + (result.mode === 'simulation' ? 'duração da simulação local:' : 'duração:') + '</b> ' + result.duration + ' ms</span>' +
-      '<span><b style="color:var(--txt)">julgamentos:</b> ' + esc(result.usage.jevCalls ?? '—') + (result.mode === 'simulation' ? ' simulados' : '') + '</span>' +
-      '<span><b style="color:var(--txt)">tokens de entrada:</b> ' + esc(result.usage.inputTokensBudgeted ?? '—') + (result.mode === 'simulation' ? ' estimados' : '') + '</span>' +
-      (result.mode === 'simulation' ? '<span><b style="color:var(--txt)">custo real:</b> US$0 · sem chamada Jev</span>' : '') + '</div>';
+      '<span><b style="color:var(--txt)">' + (englishUI ? 'Status:' : 'status:') + '</b> ' + (englishUI ? 'success' : 'sucesso') + '</span>' +
+      '<span><b style="color:var(--txt)">' + (englishUI ? 'Path:' : 'caminho:') + '</b> <span style="font-family:ui-monospace">' + esc(caminho) + '</span></span>' +
+      '<span><b style="color:var(--txt)">' + (englishUI ? 'Steps:' : 'passos:') + '</b> ' + okSteps + '/' + result.steps.length + '</span>' +
+      '<span><b style="color:var(--txt)">' + (result.mode === 'simulation' ? (englishUI ? 'Local simulation duration:' : 'duração da simulação local:') : (englishUI ? 'Duration:' : 'duração:')) + '</b> ' + result.duration + ' ms</span>' +
+      '<span><b style="color:var(--txt)">' + (englishUI ? 'Judgments:' : 'julgamentos:') + '</b> ' + esc(result.usage.jevCalls ?? '—') + (result.mode === 'simulation' ? (englishUI ? ' simulated' : ' simulados') : '') + '</span>' +
+      '<span><b style="color:var(--txt)">' + (englishUI ? 'Input tokens:' : 'tokens de entrada:') + '</b> ' + esc(result.usage.inputTokensBudgeted ?? '—') + (result.mode === 'simulation' ? (englishUI ? ' estimated' : ' estimados') : '') + '</span>' +
+      (result.mode === 'simulation' ? '<span><b style="color:var(--txt)">' + (englishUI ? 'Actual cost:' : 'custo real:') + '</b> $0 · ' + (englishUI ? 'no Jev call' : 'sem chamada Jev') + '</span>' : '') + '</div>';
     result.steps.forEach(function (step, index) {
       var out = result.outputs[step.no];
       var resumo = step.ok ? step.resumo : step.erro;
       html += '<div class="tpasso"><div class="th" data-i="' + index + '">' + (step.ok ? '✔' : '✖') +
-        ' <b>' + esc(step.no) + '</b> <span class="k">· ' + esc(step.tipo) + ' · ' + (step.ms == null ? 'duração indisponível' : esc(step.ms + 'ms')) + (resumo ? ' · ' + esc(resumo.slice(0, 60)) : '') + '</span></div>' +
-        '<pre>' + esc(out === undefined ? 'saída não informada' : JSON.stringify(out, null, 1)) + '</pre></div>';
+        ' <b>' + esc(displayNodeId(step.no)) + '</b> <span class="k">· ' + esc(step.tipo) + ' · ' + (step.ms == null ? (englishUI ? 'duration unavailable' : 'duração indisponível') : esc(step.ms + 'ms')) + (resumo ? ' · ' + esc(localizeRunText(resumo).slice(0, 60)) : '') + '</span></div>' +
+        '<pre>' + esc(out === undefined ? (englishUI ? 'output not provided' : 'saída não informada') : JSON.stringify(out, null, 1)) + '</pre></div>';
     });
-    if (!result.steps.length) html += '<div style="color:var(--dim)">nenhum passo retornado pela execução.</div>';
+    if (!result.steps.length) html += '<div style="color:var(--dim)">' + (englishUI ? 'No steps were returned.' : 'nenhum passo retornado pela execução.') + '</div>';
     res.dataset.state = 'success'; res.setAttribute('aria-busy', 'false'); res.innerHTML = html;
     res.querySelectorAll('.th').forEach(function (th) { th.onclick = function () { th.parentElement.classList.toggle('aberto'); }; });
     if (D.catalogPreview) {
       banner.className = 'banner ok';
-      banner.textContent = 'Último teste: ' + caminho + '. O canvas mostra a amostra inicial; detalhes no painel Teste.';
+      banner.textContent = englishUI
+        ? 'Last test: ' + caminho + '. The canvas shows the initial sample; details are in the Test panel.'
+        : 'Último teste: ' + caminho + '. O canvas mostra a amostra inicial; detalhes no painel Teste.';
     }
   }
   async function rodarTeste() {
@@ -2864,14 +2926,16 @@ function CANVAS_HTML(p) {
     var res = document.getElementById('gResultado');
     var input;
     try { input = JSON.parse(gInput.value); }
-    catch (e) { renderTesteFalha('input inválido: ' + textoTeste(e && e.message, 'JSON inválido')); return; }
+    catch (e) { renderTesteFalha((englishUI ? 'Invalid input: ' : 'input inválido: ') + textoTeste(e && e.message, englishUI ? 'invalid JSON' : 'JSON inválido')); return; }
     renderTesteLoading();
     var body = D.catalogPreview ? { ...D.catalogKey, input: input } : { input: input };
-    if (D.catalogPreview) {
+    var localSimulation = D.catalogPreview || testMode.value === 'simulate';
+    if (localSimulation) {
       try {
         body.answers = JSON.parse(gAnswers.value);
-        if (!body.answers || typeof body.answers !== 'object' || Array.isArray(body.answers) || !Object.keys(body.answers).length) throw new Error('informe respostas tipadas para o input atual');
-      } catch (error) { renderTesteFalha('respostas simuladas inválidas: ' + textoTeste(error && error.message, 'JSON inválido')); gAnswers.focus(); return; }
+        if (!body.answers || typeof body.answers !== 'object' || Array.isArray(body.answers) || !Object.keys(body.answers).length) throw new Error(englishUI ? 'enter typed answers for the current input' : 'informe respostas tipadas para o input atual');
+      } catch (error) { renderTesteFalha((englishUI ? 'Invalid simulated answers: ' : 'respostas simuladas inválidas: ') + textoTeste(error && error.message, englishUI ? 'invalid answers' : 'JSON inválido')); gAnswers.focus(); return; }
+      if (!D.catalogPreview) body.mode = 'simulate';
     }
     if (SUJO && !D.catalogPreview) body.flow = DRAFT;
     var endpoint = D.catalogPreview ? '/api/jev/flows/compendium/simulate'

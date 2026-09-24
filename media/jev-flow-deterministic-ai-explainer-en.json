@@ -1,0 +1,160 @@
+{
+  "turns": [
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "What if the most useful AI workflow is not one that lets a model control everything, but one that knows exactly where the model stops?",
+      "scene": "opening"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "That is the idea behind Jev Flow. Start with deterministic code: explicit inputs, validated types, conditions, and branches.",
+      "scene": "deterministic"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Given the same validated state and policy, the code takes the same route. That makes a workflow testable, replayable, and easier to explain.",
+      "scene": "deterministic"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "The model judgment itself may still be uncertain. Deterministic AI means the workflow controls uncertainty; it does not mean the model is infallible or magically repeatable.",
+      "scene": "uncertainty"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Jev is TypeSafe's System One model for bounded, typed judgments. Instead of asking for free-form prose, ask one well-defined question about the supplied state.",
+      "scene": "jev"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "Jev can return a Choice, a Noul probability, or a Score. The flow validates the shape, checks confidence and policy thresholds, and selects the permitted branch.",
+      "scene": "typed-judgments"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Treat that answer as evidence, not authority. It can be incomplete or wrong. Code owns validation, routing, budgets, retries, and consequential effects.",
+      "scene": "policy-boundary"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "Laya has a different role: it is an optional local adapter for compatible models. You install Python and a compatible checkpoint yourself; Jev Flow does not bundle or download model weights.",
+      "scene": "laya"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Running locally changes privacy, latency, and compute tradeoffs, but it does not remove model uncertainty. Hardware and model quality still matter.",
+      "scene": "laya"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "Other language models can draft or transform text. Jev can provide a typed judgment, while deterministic nodes enforce rules. Give each system one clear job and label what actually ran.",
+      "scene": "model-roles"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Now let's open the Jev Flow Studio. A flow is a graph: judgment, switch, threshold gate, and output nodes connected by visible paths.",
+      "scene": "studio-graph"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "Here is our synthetic customer-support request. I am changing the input field to a made-up duplicate-charge example, then entering fixed typed answers beside it.",
+      "scene": "studio-input"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Notice the banner: this is a synthetic scenario. The answers come from the test fixture; the input text is not sent to Jev or interpreted by a live model.",
+      "scene": "fixture-provenance"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "Run the preview, and the graph highlights the route. We can inspect each step, see the branch, and replay the same fixture.",
+      "scene": "studio-route"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "That separation is practical: test the policy path before connecting a provider, and keep the output trace beside the schema and conditions.",
+      "scene": "studio-trace"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "After you explicitly configure Jev or another supported provider, a live run can report its source, model, latency, and usage when those measurements are returned.",
+      "scene": "live-setup"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "A missing key, invalid answer, or unknown price should stay visible as unavailable. A preview must never be described as a live judgment.",
+      "scene": "honest-metrics"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "The Compendium helps you explore combinations of patterns, domains, variants, and thresholds. Its 388,080 figure counts generated configurations, not 388,080 model calls.",
+      "scene": "compendium"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "In the Battle Arena, a fair comparison needs real configured responses and observed measurements from both sides. Without them, there is no winner to claim.",
+      "scene": "arena"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "In the self-driving simulation, code creates each obstacle and packages its type, lane, and distance with the car's lane and speed.",
+      "scene": "cart-data"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Jev does not learn from each frame or inspect camera pixels here. No OpenCV perception runs in this demo; real image understanding would require a separate vision system.",
+      "scene": "cart-no-vision"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "The cart, chessboard, and other labs are bounded simulations or local rules examples. They make behavior observable; they are not safety guarantees or proof of real-world performance.",
+      "scene": "labs"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "This is deterministic workflow design in practice: let models supply structured evidence, and let ordinary code own the rules that turn it into action.",
+      "scene": "architecture"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "Build from an example, edit a field, validate the graph, and replay fixtures. Add a live provider only when you want a measured live call.",
+      "scene": "workflow"
+    },
+    {
+      "speaker": "Alex",
+      "voice": "Charon",
+      "text": "Inspect every node, threshold, and trace. Keep uncertainty visible, and keep human review available wherever your policy needs it.",
+      "scene": "observability"
+    },
+    {
+      "speaker": "Maya",
+      "voice": "Kore",
+      "text": "That is Jev Flow: a studio for workflows you can run, inspect, test, and explain.",
+      "scene": "closing"
+    }
+  ]
+}

@@ -331,7 +331,17 @@ async function route(req, res) {
     if (method==='PUT' && !action) { const flow=body.flow || body; flow.id=id; const validation=validateFlow(flow); if(!validation.ok)return json(res,{validacao:validation},422); const result=saveFlow(flow); if(!result.salvo)return json(res,{validacao:result.validacao},422); return json(res,{flow,validacao:validation}); }
     if (method==='DELETE' && !action) return json(res,{deleted:deleteFlow(id)});
     if (method==='POST' && action==='validate') { const flow=body.flow||loadFlow(id); return json(res,validateFlow(flow)); }
-    if (method==='POST' && action==='run') { const flow=loadFlow(id); const isSimulation=body.mode==='simulate'||body.simulate===true; return json(res,isSimulation?await simulatePreviewFlow(flow,normalizeInput(body.input),body.answers):await runFlow(flow,normalizeInput(body.input),{gravar:true})); }
+    if (method==='POST' && action==='run') {
+      const isSimulation=body.mode==='simulate'||body.simulate===true;
+      let flow=loadFlow(id);
+      if (isSimulation && body.flow) {
+        if (body.flow.id !== id) return json(res,{error:'simulation flow id must match the route'},400);
+        const validation=validateFlow(body.flow);
+        if (!validation.ok) return json(res,{validacao:validation},422);
+        flow=body.flow;
+      }
+      return json(res,isSimulation?await simulatePreviewFlow(flow,normalizeInput(body.input),body.answers):await runFlow(flow,normalizeInput(body.input),{gravar:true}));
+    }
     if (method==='POST' && action==='simulate') { const flow=loadFlow(id); return json(res,await simularBateria(flow,{inputs:body.inputs})); }
     if (method==='POST' && action==='assist') return json(res,await assistFlow({flow:body.flow||loadFlow(id),message:body.message}));
     if (method==='POST' && action==='schedule') return json(res,await scheduleFlow({flowId:id,schedule:body.schedule,input:body.input,ativo:body.ativo!==false}));

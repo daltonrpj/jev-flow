@@ -1,0 +1,223 @@
+WEBVTT
+
+1
+00:00:00.464 --> 00:00:09.478
+What if the most useful AI workflow is not one that lets a model
+control everything, but one that knows exactly where the model
+
+2
+00:00:09.478 --> 00:00:09.904
+stops?
+
+3
+00:00:10.123 --> 00:00:19.763
+That is the idea behind Jev Flow. Start with deterministic code:
+explicit inputs, validated types, conditions, and branches.
+
+4
+00:00:19.941 --> 00:00:29.517
+Given the same validated state and policy, the code takes the same
+route. That makes a workflow testable, replayable, and easier to
+
+5
+00:00:29.517 --> 00:00:30.101
+explain.
+
+6
+00:00:30.341 --> 00:00:39.688
+The model judgment itself may still be uncertain. Deterministic AI
+means the workflow controls uncertainty; it does not mean the
+
+7
+00:00:39.688 --> 00:00:42.901
+model is infallible or magically repeatable.
+
+8
+00:00:43.104 --> 00:00:52.176
+Jev is TypeSafe's System One model for bounded, typed judgments.
+Instead of asking for free-form prose, ask one well-defined
+
+9
+00:00:52.176 --> 00:00:54.664
+question about the supplied state.
+
+10
+00:00:54.864 --> 00:01:04.067
+Jev can return a Choice, a Noul probability, or a Score. The flow
+validates the shape, checks confidence and policy thresholds, and
+
+11
+00:01:04.067 --> 00:01:06.104
+selects the permitted branch.
+
+12
+00:01:06.320 --> 00:01:16.537
+Treat that answer as evidence, not authority. It can be incomplete
+or wrong. Code owns validation, routing, budgets, retries, and
+
+13
+00:01:16.537 --> 00:01:18.280
+consequential effects.
+
+14
+00:01:18.480 --> 00:01:27.338
+Laya has a different role: it is an optional local adapter for
+compatible models. You install Python and a compatible checkpoint
+
+15
+00:01:27.338 --> 00:01:31.560
+yourself; Jev Flow does not bundle or download model weights.
+
+16
+00:01:31.760 --> 00:01:40.972
+Running locally changes privacy, latency, and compute tradeoffs,
+but it does not remove model uncertainty. Hardware and model
+
+17
+00:01:40.972 --> 00:01:42.520
+quality still matter.
+
+18
+00:01:42.741 --> 00:01:53.254
+Other language models can draft or transform text. Jev can provide
+a typed judgment, while deterministic nodes enforce rules. Give
+
+19
+00:01:53.254 --> 00:01:57.621
+each system one clear job and label what actually ran.
+
+20
+00:01:57.824 --> 00:02:08.248
+Now let's open the Jev Flow Studio. A flow is a graph: judgment,
+switch, threshold gate, and output nodes connected by visible
+
+21
+00:02:08.248 --> 00:02:08.744
+paths.
+
+22
+00:02:08.960 --> 00:02:17.573
+Here is our synthetic customer-support request. I am changing the
+input field to a made-up duplicate-charge example, then entering
+
+23
+00:02:17.573 --> 00:02:19.560
+fixed typed answers beside it.
+
+24
+00:02:19.760 --> 00:02:27.995
+Notice the banner: this is a synthetic scenario. The answers come
+from the test fixture; the input text is not sent to Jev or
+
+25
+00:02:27.995 --> 00:02:29.840
+interpreted by a live model.
+
+26
+00:02:30.064 --> 00:02:38.344
+Run the preview, and the graph highlights the route. We can
+inspect each step, see the branch, and replay the same fixture.
+
+27
+00:02:38.544 --> 00:02:47.037
+That separation is practical: test the policy path before
+connecting a provider, and keep the output trace beside the schema
+
+28
+00:02:47.037 --> 00:02:48.064
+and conditions.
+
+29
+00:02:48.261 --> 00:02:57.345
+After you explicitly configure Jev or another supported provider,
+a live run can report its source, model, latency, and usage when
+
+30
+00:02:57.345 --> 00:02:59.581
+those measurements are returned.
+
+31
+00:02:59.781 --> 00:03:09.505
+A missing key, invalid answer, or unknown price should stay
+visible as unavailable. A preview must never be described as a
+
+32
+00:03:09.505 --> 00:03:10.621
+live judgment.
+
+33
+00:03:10.821 --> 00:03:22.341
+The Compendium helps you explore combinations of patterns,
+domains, variants, and thresholds. Its 388,080 figure counts
+
+34
+00:03:22.341 --> 00:03:27.181
+generated configurations, not 388,080 model calls.
+
+35
+00:03:27.381 --> 00:03:36.066
+In the Battle Arena, a fair comparison needs real configured
+responses and observed measurements from both sides. Without them,
+
+36
+00:03:36.066 --> 00:03:37.981
+there is no winner to claim.
+
+37
+00:03:38.181 --> 00:03:47.491
+In the self-driving simulation, code creates each obstacle and
+packages its type, lane, and distance with the car's lane and
+
+38
+00:03:47.491 --> 00:03:47.941
+speed.
+
+39
+00:03:48.144 --> 00:03:57.590
+Jev does not learn from each frame or inspect camera pixels here.
+No OpenCV perception runs in this demo; real image understanding
+
+40
+00:03:57.590 --> 00:04:00.424
+would require a separate vision system.
+
+41
+00:04:00.661 --> 00:04:10.017
+The cart, chessboard, and other labs are bounded simulations or
+local rules examples. They make behavior observable; they are not
+
+42
+00:04:10.017 --> 00:04:13.861
+safety guarantees or proof of real-world performance.
+
+43
+00:04:14.064 --> 00:04:23.397
+This is deterministic workflow design in practice: let models
+supply structured evidence, and let ordinary code own the rules
+
+44
+00:04:23.397 --> 00:04:25.264
+that turn it into action.
+
+45
+00:04:25.461 --> 00:04:34.954
+Build from an example, edit a field, validate the graph, and
+replay fixtures. Add a live provider only when you want a measured
+
+46
+00:04:34.954 --> 00:04:35.701
+live call.
+
+47
+00:04:35.904 --> 00:04:44.797
+Inspect every node, threshold, and trace. Keep uncertainty
+visible, and keep human review available wherever your policy
+
+48
+00:04:44.797 --> 00:04:45.464
+needs it.
+
+49
+00:04:45.680 --> 00:04:53.280
+That is Jev Flow: a studio for workflows you can run, inspect,
+test, and explain.

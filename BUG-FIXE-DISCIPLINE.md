@@ -135,3 +135,19 @@
 - **Cause:** font rules and a duplicate icon remained from an earlier visual pass without the corresponding packaged font assets or consumers.
 - **Fix:** remove the stale font-face declarations, use the already specified Segoe UI and Georgia fallbacks directly, and delete only the unused duplicate `assets/favicon.svg`.
 - **Regression checks:** the focused Studio test failed on the absent font URLs before the edit and passed 3/3 afterward for both rendered pages; HTTP smoke covers `/favicon.svg`, `/logo.svg`, and `/assets/mark.svg`, while the public guide keeps `site/favicon.svg`. The full offline suite passed 73/73, catalog certification confirmed 388,080 valid unique configurations, and `site:build` produced 23 allowlisted public files. `git diff --check` passed.
+
+## 2026-09-24 — shipped support flow returned 500 in the standalone Studio
+
+- **Input:** request `/jev/flows/support-triage/demo?lang=en` from an isolated standalone server with provider credentials removed and an empty data directory.
+- **State:** the Studio returned a flow-not-found error even though `examples/support-triage.flow.json` is shipped in the repository and is used by the English Studio fixtures.
+- **Cause:** `loadFlow` searched the writable data directory and `services/jev-flow/examples/`, but not the repository-root `examples/` directory that contains the public support-triage sample.
+- **Fix:** resolve shipped flow IDs in both example directories, keeping either copy read-only.
+- **Regression checks:** a new isolated test loads the root example and asserts deletion is rejected as read-only; the actual English page returned 200 and its local fixture simulation reached `judge → route → billing_gate → standard`; server smoke and focused Studio tests passed, and the 388,080-entry catalog was re-certified against the changed engine fingerprint.
+
+## 2026-09-24 — English Studio showed Portuguese strings in run cards
+
+- **Input:** open the support-triage Studio with `?lang=en`, open the Test drawer, change the synthetic input, enter typed fixture answers, and run local simulation.
+- **State:** the simulation succeeded, but initial result cards still showed Portuguese step summaries and the fixture dropdown rendered `nova fixture`.
+- **Cause:** those cards and the dynamically rebuilt fixture option were created after static locale translation and emitted source strings directly.
+- **Fix:** render the step summary, confidence/action/error labels, fixture option, and fixture status in the selected locale.
+- **Regression checks:** a headless English browser run edited the support request, used `area: billing` and `deadline: 0.1`, and verified a 4/4 local path with no Jev call, console errors, or Portuguese result labels; the English Studio and server smoke tests passed.
