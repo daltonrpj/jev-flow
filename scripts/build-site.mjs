@@ -5,7 +5,9 @@ import { localeNames, siteTranslations } from '../site/translations.mjs';
 
 const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const comparePath = value => process.platform === 'win32' ? value.toLowerCase() : value;
-export const siteSourceFiles = Object.freeze(['index.html', 'styles.css', 'main.js', 'favicon.svg']);
+export const siteSourceFiles = Object.freeze([
+  'index.html', 'styles.css', 'main.js', 'favicon.svg', 'assets/jev-flow-logo-master.png',
+]);
 export const mediaFiles = Object.freeze([
   'studio-screenshot.png', 'compendium-screenshot.png', 'arena-screenshot.png',
   'carrinho-screenshot.png', 'labs-screenshot.png', 'chess-screenshot.png',

@@ -13,8 +13,7 @@ figure{margin:0}
 .section-shell{width:min(100% - 7.5rem,1500px);margin-inline:auto}
 .site-header{height:76px;display:flex;align-items:center;justify-content:space-between;gap:2rem;padding:0 max(3.75rem,calc((100vw - 1500px)/2));border-bottom:1px solid #283537;background:#101719ed;position:relative;z-index:5}
 .wordmark{display:inline-flex;align-items:center;gap:.7rem;font-weight:750;letter-spacing:-.035em;font-size:1.1rem;white-space:nowrap}
-.brand-symbol{height:33px;width:33px;display:grid;place-items:center;background:var(--lime);color:var(--ink);font-weight:900;font-size:1.35rem;letter-spacing:-.14em;padding-right:.15rem}
-.brand-dot{font-size:1rem;margin-left:.06rem}
+.brand-symbol{height:33px;width:33px;display:block;object-fit:cover;border-radius:8px;background:var(--lime);flex:none}
 .site-header nav{display:flex;gap:2rem;align-items:center;color:#c3ceca;font-size:.84rem}
 .site-header nav a,.header-repo,.text-link,.film-links a,.install-links a,.catalog-metric a{transition:color .2s ease}
 .site-header nav a:hover,.header-repo:hover,.text-link:hover,.film-links a:hover,.install-links a:hover,.catalog-metric a:hover{color:var(--lime)}
