@@ -1,5 +1,13 @@
 # Bug fix log
 
+## 2026-09-24 — public-site build tests omitted the new logo asset
+
+- **Input:** add `site/assets/jev-flow-logo-master.png` to the public build allowlist and run `npm test`.
+- **State:** the production site build passed, but the isolated build fixture did not create the nested `site/assets` directory, and the repository-contract check classified the new asset as a project-root file. The test suite failed 2 of 138 tests before deployment.
+- **Cause:** both test harnesses assumed every site source file lived directly in `site/`.
+- **Fix:** create the nested asset directory in the isolated fixture, validate the translated logo link, and resolve `assets/` references from the site source directory.
+- **Regression checks:** `npm test` passed 138/138; `npm run site:build` built 24 allowlisted public files; `git diff --check` passed.
+
 ## 2026-09-23 — catalog certificate changed across operating systems
 
 - **Input:** the four catalog source modules in the Windows checkout; compare the certificate fingerprint with the same files using LF-only line endings as in a normalized Git checkout.

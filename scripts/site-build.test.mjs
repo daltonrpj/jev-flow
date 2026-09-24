@@ -14,7 +14,7 @@ const englishSource = await readFile(join(sourceRoot, 'site', 'index.html'), 'ut
 test('site:build copies only the explicit public allowlist', async () => {
   const root = await mkdtemp(join(tmpdir(), 'jev-flow-public-build-'));
   try {
-    for (const dir of ['site', 'media', 'examples', 'server', 'services', 'data']) {
+    for (const dir of ['site', 'site/assets', 'media', 'examples', 'server', 'services', 'data']) {
       await mkdir(join(root, dir), { recursive: true });
     }
     for (const name of siteSourceFiles) {
