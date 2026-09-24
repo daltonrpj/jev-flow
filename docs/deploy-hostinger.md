@@ -1,5 +1,15 @@
 # Hostinger Ubuntu deployment
 
+## Current `jevflow.cloud` deployment (2026-09-24)
+
+The production domain is a **public static guide**. Caddy already owns TLS and ports 80/443. It forwards `jevflow.cloud` to Nginx on `172.19.0.1:18080`; that Nginx virtual host serves `/srv/jev-flow-site/current`, an immutable build made with `npm run site:build`. The standalone Node application runs separately as `jev-flow.service` from `/opt/jev-flow/current` on `127.0.0.1:8723`. It is **not** exposed through the public guide. Provider settings and application data remain outside both release trees.
+
+For an update to this existing deployment, fetch a reviewed commit in `/root/jev-flow-source`, run `npm ci --omit=dev --ignore-scripts`, `npm test`, `npm run catalog:certify -- --check`, and `npm run site:build`. Build new immutable release directories from that exact commit, retain the previous symlinks, and atomically switch `/opt/jev-flow/current` and `/srv/jev-flow-site/current`. Restart `jev-flow.service` for application changes; Nginx reads the static symlink without a reload. Keep Caddy and its TLS configuration in place. Before switching the application, back up `/var/lib/jev-flow` and verify that the archive can be read.
+
+Verify the active deployment with `systemctl is-active jev-flow nginx`, a loopback request to `http://127.0.0.1:8723/api/health` using `Host: jevflow.cloud`, and HTTPS requests to `/`, `/pt-BR/`, and `/media/jev-flow-walkthrough.webm`. The public `/api` and `/jev` paths do not proxy to Node. The saved releases and `previous` symlinks provide rollback targets. Do not enable the stock Nginx default site on port 80 alongside the existing Caddy listener: it prevents Nginx from starting and makes the public domain return 502.
+
+The procedure below describes a **different**, single-tenant deployment in which Nginx directly owns TLS and Basic Auth for the full application. Use it only on a hostname and port arrangement deliberately prepared for that topology; it is not the active `jevflow.cloud` configuration.
+
 This runbook deploys the standalone Jev Flow application as a single-tenant service. Nginx protects **every application path**, including `/`, `/jev`, `/api`, docs, examples and media, with HTTP Basic Auth over HTTPS. Node remains bound to `127.0.0.1:8723`. User data, auth hashes and provider keys stay outside the release checkout.
 
 Replace `flow.example.org` with the exact DNS name selected for Jev Flow. Use a canonical origin such as `https://flow.example.org`, without a trailing slash, path, query, fragment or credentials. The initial service is for one trusted operator: provider connections and flows are shared by the whole process.

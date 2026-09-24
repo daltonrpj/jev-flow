@@ -247,3 +247,11 @@
 - **Cause:** the README was updated for the custom domain without preserving the older mirror reference; the full suite had not been rerun after that edit.
 - **Fix:** restore a direct mirror link and clarify that both public guides are static, while the Node application requires a local or protected deployment.
 - **Regression checks:** rerun the focused repository contract, full `npm test`, catalog certificate check, and public-site build before switching the VPS release.
+
+## 2026-09-24 — static site release returned 502 after the file switch
+
+- **Input:** switch `/srv/jev-flow-site/current` to the tested 23-file release and request `https://jevflow.cloud/`.
+- **State:** the public request returned 502 although the new static files existed and the standalone Node service answered locally.
+- **Cause:** Nginx was inactive. Its stock default site tried to bind port 80, which the existing Caddy listener already owned; the old Jev Flow vhost also described a full application proxy instead of the public static guide.
+- **Fix:** retain Caddy/TLS, save the old vhost, use a domain-specific Nginx static vhost on the existing `172.19.0.1:18080` bridge, unlink only the stock default-site symlink, validate the configuration, and enable/start Nginx. Keep Node on loopback.
+- **Regression checks:** `nginx -t` passed; Nginx and `jev-flow.service` were active; loopback health and four application routes returned 200; public `/`, `/pt-BR/`, and the WebM returned HTTPS 200. The runbook now distinguishes this static topology from the alternative authenticated full-app deployment.
