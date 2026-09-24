@@ -21,3 +21,4 @@ jobs:
       - run: node --check server.mjs
       - run: npm test
       - run: npm run catalog:certify -- --check
+      - run: npm run site:build

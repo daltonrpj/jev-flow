@@ -255,3 +255,11 @@
 - **Cause:** Nginx was inactive. Its stock default site tried to bind port 80, which the existing Caddy listener already owned; the old Jev Flow vhost also described a full application proxy instead of the public static guide.
 - **Fix:** retain Caddy/TLS, save the old vhost, use a domain-specific Nginx static vhost on the existing `172.19.0.1:18080` bridge, unlink only the stock default-site symlink, validate the configuration, and enable/start Nginx. Keep Node on loopback.
 - **Regression checks:** `nginx -t` passed; Nginx and `jev-flow.service` were active; loopback health and four application routes returned 200; public `/`, `/pt-BR/`, and the WebM returned HTTPS 200. The runbook now distinguishes this static topology from the alternative authenticated full-app deployment.
+
+## 2026-09-24 — obsolete GitHub Pages workflow failed on every push
+
+- **Input:** push the standalone release to `main` and inspect the two GitHub Actions workflows.
+- **State:** application CI passed, while `Publish Jev Flow guide` failed at `actions/configure-pages@v5` with `Get Pages site failed: Not Found` and skipped deployment.
+- **Cause:** the repository has no enabled GitHub Pages site. The guide now ships from the VPS on `jevflow.cloud`, so the legacy Pages deployment path no longer matches the active architecture.
+- **Fix:** remove the Pages deployment workflow and stale mirror claims; keep `npm run site:build` in the application CI so the public guide remains tested before a separate VPS release.
+- **Regression checks:** the repository contract now requires no Pages workflow, a successful site build step in CI, and no CI deployment permission; run that test, the full suite, certificate check, and site build before publication.

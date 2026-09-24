@@ -52,4 +52,4 @@ npm run catalog:certify -- --check
 npm run site:build
 ~~~
 
-O certificado em [`catalog-certification.json`](catalog-certification.json) comprova a contagem de configurações geradas para o fingerprint do catálogo atual; não é uma métrica de qualidade do modelo. `site:build` gera a apresentação estática em `site/dist` com uma lista restrita de arquivos públicos. O aplicativo Node em produção deve permanecer protegido por TLS, autenticação HTTP Basic e proxy para loopback; o [runbook](docs/deploy-hostinger.md) detalha essa fronteira. O workflow Pages publica só o guia estático após os testes, sem expor o runtime.
+O certificado em [`catalog-certification.json`](catalog-certification.json) comprova a contagem de configurações geradas para o fingerprint do catálogo atual; não é uma métrica de qualidade do modelo. `site:build` gera a apresentação estática em `site/dist` com uma lista restrita de arquivos públicos. A CI testa o aplicativo e gera o site, sem publicá-lo. Em `jevflow.cloud`, o guia é servido na VPS e o aplicativo Node permanece no loopback; o [runbook](docs/deploy-hostinger.md) detalha essa fronteira.

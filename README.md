@@ -4,7 +4,7 @@
 
 Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, Ship Pack, live fixture suite, interactive games, prompt/context tools, webhook and subflow nodes, local examples, tests, and an English narrated walkthrough. The [public product guide](https://jevflow.cloud/) has real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. The public guide does not host the server or execute a model call.
 
-The [GitHub Pages mirror](https://daltonrpj.github.io/jev-flow/) serves the same static public guide as jevflow.cloud; use a local or protected Node deployment for the application.
+The public guide is hosted at [jevflow.cloud](https://jevflow.cloud/). Use a local or protected Node deployment for the application.
 
 ## Watch: deterministic AI and Jev Flow
 
@@ -95,7 +95,7 @@ npm run catalog:certify -- --check
 npm run site:build
 ```
 
-After changing catalog source, run `npm run catalog:certify` to regenerate the manifest and root certificate. The application CI runs tests and verifies the certificate without provider calls or deployment. A separate Pages workflow runs the same offline checks, builds the public guide from an explicit asset allowlist, and publishes only `site/dist`.
+After changing catalog source, run `npm run catalog:certify` to regenerate the manifest and root certificate. CI runs tests, verifies the certificate, and builds the public guide from an explicit asset allowlist without provider calls or deployment. The guide is released separately on the VPS; GitHub does not publish it.
 
 ## Deployment and media
 

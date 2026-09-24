@@ -28,7 +28,7 @@ test('five root examples validate, contain fixtures, and cannot trigger external
 
 test('public guide and protected app retain the real walkthrough, English captions and readable source links', () => {
   assert.equal(existsSync(join(root, 'site', 'index.html')), true);
-  assert.equal(existsSync(join(root, '.github', 'workflows', 'pages.yml')), true);
+  assert.equal(existsSync(join(root, '.github', 'workflows', 'pages.yml')), false);
   assert.equal(existsSync(join(root, '.github', 'workflows', 'ci.yml')), true);
   for (const name of [
     'studio-screenshot.png', 'compendium-screenshot.png', 'arena-screenshot.png',
@@ -62,8 +62,7 @@ test('public guide and protected app retain the real walkthrough, English captio
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   assert.match(readme, /media\/jev-flow-walkthrough\.webm/u);
   assert.match(readme, /media\/jev-flow-walkthrough-teaser\.gif/u);
-  assert.match(readme, /GitHub Pages/u);
-  assert.match(readme, /https:\/\/daltonrpj\.github\.io\/jev-flow\//u);
+  assert.match(readme, /https:\/\/jevflow\.cloud\//u);
 
   const explainerVideo = statSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en.webm'));
   const explainerPoster = readFileSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en-poster.png'));
@@ -117,7 +116,7 @@ test('static guide uses real relative media, labels pre-run evidence, and never 
   assert.doesNotMatch(html, /https?:\/\/[^"\s]+\.(?:png|jpe?g|gif|svg|webp|css|js)/iu);
 });
 
-test('single-tenant proxy protects app root and media; CI and Pages jobs stay separate', () => {
+test('single-tenant proxy protects app root and media; CI builds without deploying', () => {
   const nginx = readFileSync(join(root, 'deploy', 'nginx-jev-flow.conf'), 'utf8');
   const rootLocation = /location \/ \{\r?\n([\s\S]*?)\r?\n    \}/u.exec(nginx)?.[1] || '';
   assert.match(rootLocation, /auth_basic "JEV Flow"/u);
@@ -126,13 +125,8 @@ test('single-tenant proxy protects app root and media; CI and Pages jobs stay se
   const ci = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/u);
   assert.match(ci, /catalog:certify -- --check/u);
+  assert.match(ci, /npm run site:build/u);
   assert.doesNotMatch(ci, /deploy-pages|upload-pages|pages: write/u);
-  const pages = readFileSync(join(root, '.github', 'workflows', 'pages.yml'), 'utf8');
-  assert.match(pages, /npm test/u);
-  assert.match(pages, /catalog:certify -- --check/u);
-  assert.match(pages, /npm run site:build/u);
-  assert.match(pages, /upload-pages-artifact@v3[\s\S]*?path: site\/dist/u);
-  assert.match(pages, /deploy-pages@v4/u);
 });
 
 test('root catalog certificate matches the generator and manifest, including across LF checkouts', () => {

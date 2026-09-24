@@ -32,4 +32,4 @@ npm test
 npm run catalog:certify
 ```
 
-The full walkthrough, English captions, transcript, and real application screenshots are in [`media/`](../media/README.md). The animated GIF in the README links to the full WebM; the separate public guide contains a video player. GitHub's Markdown view and GitHub Pages do not run this repository's Node server; start the local process to use the app.
+The full walkthrough, English captions, transcript, and real application screenshots are in [`media/`](../media/README.md). The animated GIF in the README links to the full WebM; the separate public guide contains a video player. GitHub's Markdown view and the public guide do not run this repository's Node server; start the local process to use the app.
