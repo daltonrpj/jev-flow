@@ -72,3 +72,33 @@ test('default endpoint and environment key stay paired when both vendor keys exi
     clearLLMConfiguration();
   }
 });
+
+test('executor accepts a provider model ID already resolved by the Arena', async () => {
+  const names = ['OPENAI_API_KEY', 'GEMINI_API_KEY', 'JEVFLOW_LLM_API_KEY', 'JEVFLOW_LLM_BASE_URL', 'JEVFLOW_LLM_MODEL'];
+  const previous = Object.fromEntries(names.map(name => [name, process.env[name]]));
+  const originalFetch = globalThis.fetch;
+  let captured;
+  try {
+    for (const name of names) delete process.env[name];
+    clearLLMConfiguration();
+    configureLLM({ apiKey: 'scoped-provider-key-marker', baseUrl: 'https://openrouter.example/api/v1',
+      model: 'openai-compatible/vendor/model:free' });
+    globalThis.fetch = async (url, options) => {
+      captured = { url: String(url), body: JSON.parse(options.body) };
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'live-shaped answer' } }],
+        model: 'vendor/model:free' }), { status: 200, headers: { 'content-type': 'application/json' } });
+    };
+    const result = await executeChat({ providerId: 'openai-compatible', modelId: 'vendor/model:free',
+      messages: [{ role: 'user', content: 'synthetic test' }] });
+    assert.equal(captured.url, 'https://openrouter.example/api/v1/chat/completions');
+    assert.equal(captured.body.model, 'vendor/model:free');
+    assert.equal(result.content, 'live-shaped answer');
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const name of names) {
+      if (previous[name] === undefined) delete process.env[name];
+      else process.env[name] = previous[name];
+    }
+    clearLLMConfiguration();
+  }
+});

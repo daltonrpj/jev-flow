@@ -1,5 +1,29 @@
 # Bug fix log
 
+## 2026-09-24 — rendered WebMs had no duration metadata for reliable seeking
+
+- **Input:** open both 1920×1080 narrated product tours in Chromium and inspect the media duration and seekable ranges.
+- **State:** audio/video tracks decoded, but the browser reported an infinite duration and did not expose reliable seek metadata for the MediaRecorder WebM.
+- **Cause:** Chromium's streaming WebM omitted the Segment Info Duration value when the recorder stopped.
+- **Fix:** after rendering, insert or correct the EBML Duration field using the final synchronized caption cue time; preserve the original audio/video streams.
+- **Regression checks:** a container-level test verifies absent and pre-existing Duration elements, and a Chromium playback check must report finite duration and a seekable range for both published videos.
+
+## 2026-09-24 — explainer renderer referenced an undefined clip options object
+
+- **Input:** render the paid-model product tour with `--clips-dir` pointing to the captured Studio, Compendium, Arena, games, chess, and cart videos.
+- **State:** audio generation completed, but the renderer exited before opening Chromium with `options is not defined`.
+- **Cause:** the render function accepted `clipsDir`, while the new clip-path mapping referenced a nonexistent `options` variable; unit tests covered argument parsing but not the mapping used by rendering.
+- **Fix:** extract `resolveClipPaths(clipsDir)` and use the declared function parameter.
+- **Regression checks:** assert clip paths are resolved for Studio-scene assets and remain empty when omitted; rerun focused renderer tests and render both complete WebMs.
+
+## 2026-09-24 — Arena rejected a configured provider model with a slash
+
+- **Input:** run one synthetic Arena comparison with the configured OpenRouter model `nvidia/nemotron-3-super-120b-a12b:free`.
+- **State:** the model appeared in the selector, but the LLM pane returned `LLM model is required` before a provider request. The Jev pane attempted the live call and returned `fetch failed` in the restricted shell.
+- **Cause:** `battleLlm` first resolved the qualified provider/model, then passed the bare provider model ID to `executeChat`, which interpreted its first slash-delimited segment as a different provider and rejected it.
+- **Fix:** allow the executor to resolve a caller's already-validated bare model ID inside the configured provider; the provider selection and endpoint stay unchanged.
+- **Regression checks:** added an injected-transport test that verifies the OpenRouter-compatible endpoint and exact `vendor/model:free` request ID. A live call still requires network access and must be verified separately.
+
 ## 2026-09-24 — public-site build tests omitted the new logo asset
 
 - **Input:** add `site/assets/jev-flow-logo-master.png` to the public build allowlist and run `npm test`.
@@ -271,3 +295,11 @@
 - **Cause:** the repository has no enabled GitHub Pages site. The guide now ships from the VPS on `jevflow.cloud`, so the legacy Pages deployment path no longer matches the active architecture.
 - **Fix:** remove the Pages deployment workflow and stale mirror claims; keep `npm run site:build` in the application CI so the public guide remains tested before a separate VPS release.
 - **Regression checks:** the repository contract now requires no Pages workflow, a successful site build step in CI, and no CI deployment permission; run that test, the full suite, certificate check, and site build before publication.
+
+## 2026-09-24 — Chess narration did not match the captured lab screen
+
+- **Input:** seek to the Chess chapter in both final product tours and compare the visible app panel with the narration.
+- **State:** the first draft showed the Labs page with Spam radar selected while the narration described Chess legality.
+- **Cause:** the screen capture was taken before the asynchronous lab selection completed.
+- **Fix:** replace the clip with a gentle pan over a verified Chess Lab capture showing the selected e2 pawn and its locally computed e3/e4 legal destinations; render both language versions again.
+- **Regression checks:** seekable final WebMs report 1920×1080, finite durations, 19/21 subtitle cues, and matching Chess footage; full test suite, catalog certification, and site build pass.

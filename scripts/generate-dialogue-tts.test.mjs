@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SPEECH_MODEL, SPEECH_URL } from './generate-walkthrough-tts.mjs';
+import { SPEECH_MODEL, SPEECH_MODEL_GEMINI_FLASH_LITE, SPEECH_URL } from './generate-walkthrough-tts.mjs';
 import { runDialogueCli } from './generate-dialogue-tts.mjs';
 
 const pcm = Uint8Array.from([0, 0, 0xff, 0x7f]);
@@ -76,6 +76,31 @@ test('a provider failure is not retried and removes earlier WAVs from the incomp
   }), /HTTP 503/u);
   assert.equal(calls, 2);
   assert.deepEqual(await readdir(outputDir), []);
+});
+
+test('dialogue production can select Gemini Flash Lite TTS and pass voice direction as metadata', async t => {
+  const root = await makeTempDirectory(t);
+  const input = join(root, 'dialogue.json');
+  const outputDir = join(root, 'audio');
+  await writeFile(input, JSON.stringify({ turns: [
+    { speaker: 'Alex', voice: 'Charon', text: 'A natural English line.' },
+    { speaker: 'Maya', voice: 'Kore', text: 'A natural Portuguese line.', style: 'Brazilian Portuguese, warm female voice.' },
+  ] }));
+  const requests = [];
+  await runDialogueCli(['--input', input, '--output-dir', outputDir, '--model', SPEECH_MODEL_GEMINI_FLASH_LITE,
+    '--style', 'Corporate documentary, conversational pace.'], { OPENROUTER_API_KEY: 'mock-secret' }, {
+    stdout: { write() {} },
+    fetchImpl: async (_url, options) => {
+      requests.push(JSON.parse(options.body));
+      return new Response(pcm, { status: 200, headers: { 'content-type': 'audio/pcm' } });
+    },
+  });
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].model, SPEECH_MODEL_GEMINI_FLASH_LITE);
+  assert.equal(requests[0].provider.options['google-ai-studio'].speech_metadata.style, 'Corporate documentary, conversational pace.');
+  assert.equal(requests[1].provider.options['google-ai-studio'].speech_metadata.style, 'Brazilian Portuguese, warm female voice.');
+  assert.equal(JSON.parse(await readFile(join(outputDir, 'manifest.json'), 'utf8')).model, SPEECH_MODEL_GEMINI_FLASH_LITE);
+  assert.notEqual(SPEECH_MODEL_GEMINI_FLASH_LITE, SPEECH_MODEL);
 });
 
 test('invalid voice is rejected before any provider request', async t => {

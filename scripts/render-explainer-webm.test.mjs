@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  captionChunks, formatWebVtt, parseArguments, readWavDuration, validateProduction,
+  captionChunks, formatWebVtt, indexWebmDuration, parseArguments, readWavDuration, readWebmDuration,
+  resolveClipPaths, validateProduction,
 } from './render-explainer-webm.mjs';
 
 function pcmWav(seconds = 1) {
@@ -18,6 +19,21 @@ test('render inputs are explicit and output stays a WebM', () => {
   assert.equal(parseArguments(['--help']), null);
   assert.throws(() => parseArguments(['--input', 'dialogue.json', '--audio-dir', 'audio']), /Usage:/u);
   assert.throws(() => parseArguments(['--input', 'dialogue.json', '--audio-dir', 'audio', '--output', 'video.mp4']), /\.webm/u);
+  assert.equal(parseArguments(['--input', 'dialogue.json', '--audio-dir', 'audio', '--output', 'video.webm', '--clips-dir', 'clips']).clipsDir.endsWith('clips'), true);
+  assert.equal(resolveClipPaths(null).arena, undefined);
+  assert.equal(resolveClipPaths('clips').arena.endsWith('clips\\arena.webm'), true);
+  assert.equal(resolveClipPaths('clips').cart.endsWith('clips\\cart.webm'), true);
+});
+
+test('Portuguese Gemini Flash Lite dialogue validates with its exact two-voice WAV set', () => {
+  const turns = [
+    { speaker: 'Alex', voice: 'Charon', scene: 'opening', text: 'Uma decisão tipada.' },
+    { speaker: 'Maya', voice: 'Kore', scene: 'closing', text: 'O código controla a rota.' },
+  ];
+  const manifest = { model: 'google/gemini-3.8-flash-lite-tts',
+    audio: { sample_rate_hz: 24_000, channels: 1, bits_per_sample: 16 },
+    turns: turns.map((turn, index) => ({ turn: index + 1, ...turn, file: `turn-${String(index + 1).padStart(3, '0')}.wav` })) };
+  assert.deepEqual(validateProduction({ locale: 'pt-BR', turns }, manifest, [pcmWav(1), pcmWav(2)]), [1, 2]);
 });
 
 test('PCM WAV duration and Gemini manifest are validated against every spoken turn', () => {
@@ -38,6 +54,21 @@ test('PCM WAV duration and Gemini manifest are validated against every spoken tu
   repeatedVoice.turns[1] = { ...repeatedVoice.turns[1], speaker: 'Alex', voice: 'Charon' };
   assert.throws(() => validateProduction({ turns: [turns[0], { ...turns[1], speaker: 'Alex', voice: 'Charon' }] }, repeatedVoice, wavs), /alternate Alex\/Charon and Maya\/Kore/u);
   assert.throws(() => readWavDuration(Buffer.from('not audio')), /PCM WAV/u);
+});
+
+test('renderer indexes the final WebM duration so browsers can seek to recorded scenes', () => {
+  const header = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x80]);
+  const segment = Buffer.from([0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+  const info = Buffer.from([0x15, 0x49, 0xa9, 0x66, 0x87, 0x2a, 0xd7, 0xb1, 0x83, 0x0f, 0x42, 0x40]);
+  const source = Buffer.concat([header, segment, info, Buffer.from([0x1f, 0x43, 0xb6, 0x75])]);
+  const indexed = indexWebmDuration(source, 12.5);
+  assert.equal(indexed.length, source.length + 11);
+  assert.ok(Math.abs(readWebmDuration(indexed) - 12.5) < 1e-9);
+  const corrected = indexWebmDuration(indexed, 5.25);
+  assert.equal(corrected.length, indexed.length);
+  assert.ok(Math.abs(readWebmDuration(corrected) - 5.25) < 1e-9);
+  assert.equal(readWebmDuration(source), null);
+  assert.throws(() => indexWebmDuration(source, 0), /positive, finite/u);
 });
 
 test('long narration is split into readable English captions with ordered timings', () => {

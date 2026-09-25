@@ -26,7 +26,7 @@ test('five root examples validate, contain fixtures, and cannot trigger external
   }
 });
 
-test('public guide and protected app retain the real walkthrough, English captions and readable source links', () => {
+test('public guide and protected app retain the bilingual tours, captions and readable source links', () => {
   assert.equal(existsSync(join(root, 'site', 'index.html')), true);
   assert.equal(existsSync(join(root, '.github', 'workflows', 'pages.yml')), false);
   assert.equal(existsSync(join(root, '.github', 'workflows', 'ci.yml')), true);
@@ -60,8 +60,19 @@ test('public guide and protected app retain the real walkthrough, English captio
   });
   assert.equal(cues.length, 20);
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  assert.match(readme, /media\/jev-flow-walkthrough\.webm/u);
-  assert.match(readme, /media\/jev-flow-walkthrough-teaser\.gif/u);
+  for (const locale of ['en', 'pt-BR']) {
+    const stem = `jev-flow-product-tour-${locale}`;
+    assert.ok(statSync(join(root, 'media', `${stem}.webm`)).size > 10_000_000, `${locale} video should include recorded scenes and narrated audio`);
+    assert.ok(statSync(join(root, 'media', `${stem}-poster.png`)).size > 10_000, `${locale} poster should be a real image`);
+    const script = JSON.parse(readFileSync(join(root, 'media', `${stem}.json`), 'utf8'));
+    const captions = readFileSync(join(root, 'media', `${stem}.vtt`), 'utf8');
+    const transcript = readFileSync(join(root, 'media', `${stem}-transcript.md`), 'utf8');
+    assert.equal(script.turns.length, 14);
+    assert.match(captions, /^WEBVTT\r?\n/u);
+    assert.match(transcript, /## Notas de produção \(não narradas\)|## Production notes \(not spoken\)/u);
+    assert.ok(script.turns.every((turn, index) => turn.speaker === (index % 2 ? 'Maya' : 'Alex')));
+    assert.ok(readme.includes(`media/${stem}.webm`) && readme.includes(`media/${stem}.vtt`));
+  }
   assert.match(readme, /https:\/\/jevflow\.cloud\//u);
 
   const explainerVideo = statSync(join(root, 'media', 'jev-flow-deterministic-ai-explainer-en.webm'));
@@ -79,8 +90,7 @@ test('public guide and protected app retain the real walkthrough, English captio
   });
   assert.equal(spokenCues.length, 49);
   assert.equal(spokenCues.join(' '), explainer.turns.map(turn => turn.text).join(' '));
-  assert.match(readme, /media\/jev-flow-deterministic-ai-explainer-en\.webm/u);
-  assert.match(readme, /media\/jev-flow-deterministic-ai-explainer-en\.vtt/u);
+  assert.match(readme, /media\/jev-flow-product-tour-en\.webm/u);
 });
 
 test('static guide explains Jev Flow, embeds the tour, and keeps media references relative', () => {
@@ -89,8 +99,12 @@ test('static guide explains Jev Flow, embeds the tour, and keeps media reference
   const js = readFileSync(join(root, 'site', 'main.js'), 'utf8');
   assert.match(html, /Build AI workflows[\s\S]*?with clear decisions/u);
   assert.match(html, /Jev answers a focused question[\s\S]*?The workflow checks the answer[\s\S]*?An execution trace/u);
-  assert.match(html, /<video controls playsinline preload="none" poster="\.\/media\/studio-screenshot\.png"/u);
-  assert.match(html, /<source src="\.\/media\/jev-flow-walkthrough\.webm" type="video\/webm"/u);
+  assert.match(html, /<video id="product-tour-video" controls playsinline preload="none" poster="\.\/media\/jev-flow-product-tour-en-poster\.png"/u);
+  assert.match(html, /<source id="product-tour-source" src="\.\/media\/jev-flow-product-tour-en\.webm" type="video\/webm"/u);
+  assert.match(html, /id="tour-language"[\s\S]*?Português \(Brasil\)/u);
+  assert.match(js, /const base = `media\/jev-flow-product-tour-\$\{locale\}`/u);
+  assert.match(js, /tourSource\.src = new URL\(`\$\{base\}\.webm`, siteRoot\)/u);
+  assert.match(js, /tourCaptions\.href = new URL\(`\$\{base\}\.vtt`, siteRoot\)/u);
   assert.doesNotMatch(html, /<track\b/iu);
   assert.match(html, /SEE JEV FLOW IN ACTION[\s\S]*?Follow the flow from input to outcome\./u);
   assert.doesNotMatch(html, /FIELD NOTES|Download WebM|Read English VTT|Transcript &amp; provenance|REAL APP CAPTURE|SYNTHETIC &amp; LOCAL DEMONSTRATIONS|synthetic fixtures/iu);

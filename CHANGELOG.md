@@ -2,6 +2,13 @@
 
 User-visible releases of Jev Flow are recorded here. See [`docs/UPDATE-CONTEXT.md`](docs/UPDATE-CONTEXT.md) for the longer project and deployment context.
 
+## 1.2.0 — 2026-09-24
+
+- Adds English and Brazilian Portuguese product tours with alternating Gemini TTS voices, synchronized burned-in captions, WebVTT sidecars, exact transcripts, and recorded app scenes.
+- Captures one real Arena comparison between TypeSafe Jev and paid OpenAI GPT-4.1 Mini, with the script and transcript identifying it as a demonstration rather than a benchmark.
+- Embeds both videos in the multilingual public guide with a narration-language selector; updates GitHub READMEs and the media-production documentation.
+- Fixes provider model-ID selection for paid OpenRouter-compatible models and adds regression coverage for dynamic clip rendering.
+
 ## 1.1.1 — 2026-09-24
 
 - Rewrites the public guide in plain English and replaces the walkthrough production notes with a short description of the product tour.

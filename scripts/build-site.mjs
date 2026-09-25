@@ -11,8 +11,10 @@ export const siteSourceFiles = Object.freeze([
 export const mediaFiles = Object.freeze([
   'studio-screenshot.png', 'compendium-screenshot.png', 'arena-screenshot.png',
   'carrinho-screenshot.png', 'labs-screenshot.png', 'chess-screenshot.png',
-  'jev-flow-walkthrough.webm', 'jev-flow-walkthrough.vtt',
-  'jev-flow-walkthrough-transcript.md',
+  'jev-flow-product-tour-en.webm', 'jev-flow-product-tour-en.vtt',
+  'jev-flow-product-tour-en-poster.png', 'jev-flow-product-tour-en-transcript.md',
+  'jev-flow-product-tour-pt-BR.webm', 'jev-flow-product-tour-pt-BR.vtt',
+  'jev-flow-product-tour-pt-BR-poster.png', 'jev-flow-product-tour-pt-BR-transcript.md',
 ]);
 const invariantText = new Set([
   'J', 'Jev Flow', '.', '·', '{ }', '?', '◇', '↗', '↳', '/', '27', '388,080',

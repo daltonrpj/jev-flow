@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { generateSpeech, pcmToWav, speechPayload, SPEECH_MODEL, SPEECH_URL, SPEECH_VOICE } from './generate-walkthrough-tts.mjs';
+import { generateSpeech, pcmToWav, speechPayload, SPEECH_MODEL, SPEECH_MODEL_GEMINI_FLASH_LITE, SPEECH_URL, SPEECH_VOICE } from './generate-walkthrough-tts.mjs';
 
 const pcm = Uint8Array.from([0, 0, 0xff, 0x7f, 0, 0x80]);
 
@@ -37,6 +37,16 @@ test('missing key or empty narration makes no request', async () => {
   await assert.rejects(generateSpeech({ text: '  ', apiKey: 'unit-test-key', fetchImpl }), /non-empty/);
   assert.equal(calls, 0);
   assert.throws(() => speechPayload(null), /non-empty/);
+});
+
+test('Gemini Flash Lite TTS adds the OpenRouter speech style without speaking the instruction', () => {
+  assert.deepEqual(speechPayload('A clear spoken line.', 'Kore', { model: SPEECH_MODEL_GEMINI_FLASH_LITE,
+    style: 'Natural Brazilian Portuguese, warm and conversational.' }), {
+    model: SPEECH_MODEL_GEMINI_FLASH_LITE,
+    input: 'A clear spoken line.', voice: 'Kore', response_format: 'pcm',
+    provider: { options: { 'google-ai-studio': { speech_metadata: { style: 'Natural Brazilian Portuguese, warm and conversational.' } } } },
+  });
+  assert.throws(() => speechPayload('Hello', 'Kore', { model: 'free/unknown' }), /allowlist/u);
 });
 
 test('provider failures and non-audio bodies fail without a fallback request', async () => {

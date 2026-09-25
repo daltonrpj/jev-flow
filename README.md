@@ -2,21 +2,25 @@
 
 **Repository guide:** [English](README.md) · [Português (Brasil)](README.pt-BR.md). **Public guide:** [English](https://jevflow.cloud/) · [Português](https://jevflow.cloud/pt-BR/) · [Español](https://jevflow.cloud/es/) · [Français](https://jevflow.cloud/fr/) · [Deutsch](https://jevflow.cloud/de/).
 
-Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, Ship Pack, live fixture suite, interactive games, prompt/context tools, webhook and subflow nodes, local examples, tests, and an English narrated walkthrough. The [public product guide](https://jevflow.cloud/) has real captures and a playable walkthrough; the application itself runs locally or behind your own protected deployment. The public guide does not host the server or execute a model call.
+Jev Flow is a standalone Node.js application for building and testing workflows with typed Jev judgments and code-owned decisions. The repository includes the Studio, generated Compendium, Battle Arena, Self-Driving Cart simulation, Ship Pack, fixture suite, interactive games, prompt/context tools, webhook and subflow nodes, examples, tests, and bilingual narrated product tours. The [public product guide](https://jevflow.cloud/) explains the product and embeds both tours; the application itself runs locally or behind your own protected deployment.
 
 The public guide is hosted at [jevflow.cloud](https://jevflow.cloud/). Use a local or protected Node deployment for the application.
 
-## Watch: deterministic AI and Jev Flow
+## Bilingual product tour
 
-[![Preview of the Jev Flow English explainer](media/jev-flow-deterministic-ai-explainer-en-poster.png)](media/jev-flow-deterministic-ai-explainer-en.webm)
+### English
 
-[Play the 4:53 two-voice explainer](media/jev-flow-deterministic-ai-explainer-en.webm) · [English WebVTT captions](media/jev-flow-deterministic-ai-explainer-en.vtt) · [Exact spoken transcript](media/jev-flow-deterministic-ai-explainer-en-transcript.md)
+[![English Jev Flow product tour](media/jev-flow-product-tour-en-poster.png)](media/jev-flow-product-tour-en.webm)
 
-The explainer uses 26 alternating Gemini 3.1 Flash TTS turns (Charon and Kore). It introduces deterministic workflow design, Jev's typed judgments, optional local Laya, then walks through the standalone Studio and other product surfaces. The support example is synthetic and uses fixed typed answers; the video does not claim a live Jev or LLM run. Captions contain only the English dialogue.
+[Play the English tour](media/jev-flow-product-tour-en.webm) · [WebVTT captions](media/jev-flow-product-tour-en.vtt) · [Exact transcript and provenance](media/jev-flow-product-tour-en-transcript.md)
 
-[![A short animated preview of the real Jev Flow application](media/jev-flow-walkthrough-teaser.gif)](media/jev-flow-walkthrough.webm)
+### Português (Brasil)
 
-The GIF is a short preview. [Download the full WebM](media/jev-flow-walkthrough.webm), [read the English captions](media/jev-flow-walkthrough.vtt), or [inspect the transcript and demo provenance](media/jev-flow-walkthrough-transcript.md). The [public guide](https://jevflow.cloud/#watch) provides a video player; repository Markdown links to the file. The recording uses synthetic fixtures and local rules. It does not claim a live remote Jev or LLM run.
+[![Tour do Jev Flow em português](media/jev-flow-product-tour-pt-BR-poster.png)](media/jev-flow-product-tour-pt-BR.webm)
+
+[Assistir ao tour em português](media/jev-flow-product-tour-pt-BR.webm) · [Legendas WebVTT](media/jev-flow-product-tour-pt-BR.vtt) · [Transcrição e origem](media/jev-flow-product-tour-pt-BR-transcript.md)
+
+Each version has a two-speaker Gemini 3.8 Flash Lite TTS narration and burned-in captions. The Studio uses a labeled fixture; the Compendium count covers generated configurations, not model evaluations. The Arena shows one live TypeSafe Jev and paid GPT-4.1 Mini comparison, not a benchmark. Games use local rules by default. The Cart receives structured simulated state and uses no camera or OpenCV.
 
 ## Run locally
 

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import {
   generateSpeech,
   SPEECH_MODEL,
+  SPEECH_MODELS,
   SPEECH_SAMPLE_RATE,
   SPEECH_VOICES,
 } from './generate-walkthrough-tts.mjs';
@@ -12,10 +13,22 @@ const OUTPUT_MANIFEST = 'manifest.json';
 
 function parseCli(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return null;
-  if (args.length !== 4 || args[0] !== '--input' || args[2] !== '--output-dir' || !args[1] || !args[3]) {
-    throw new Error('Usage: node scripts/generate-dialogue-tts.mjs --input dialogue.json --output-dir audio');
+  const options = {};
+  for (let index = 0; index < args.length; index += 2) {
+    const key = args[index];
+    if (!['--input', '--output-dir', '--model', '--style'].includes(key) || !args[index + 1] || options[key]) {
+      throw new Error('Usage: node scripts/generate-dialogue-tts.mjs --input dialogue.json --output-dir audio [--model model-id] [--style direction]');
+    }
+    options[key] = args[index + 1];
   }
-  return { input: resolve(args[1]), outputDir: resolve(args[3]) };
+  if (!options['--input'] || !options['--output-dir']) {
+    throw new Error('Usage: node scripts/generate-dialogue-tts.mjs --input dialogue.json --output-dir audio [--model model-id] [--style direction]');
+  }
+  const model = options['--model'] || SPEECH_MODEL;
+  if (!SPEECH_MODELS.includes(model)) throw new Error('Speech model is not in the supported allowlist.');
+  const style = options['--style'] || '';
+  if (style.length > 500) throw new Error('Speech style must be at most 500 characters.');
+  return { input: resolve(options['--input']), outputDir: resolve(options['--output-dir']), model, style };
 }
 
 export function parseDialogue(input) {
@@ -38,7 +51,11 @@ export function parseDialogue(input) {
     if (typeof turn.text !== 'string' || !turn.text.trim()) {
       throw new Error(`Dialogue turn ${index + 1} needs non-empty text.`);
     }
-    return { speaker: turn.speaker.trim(), voice: turn.voice, text: turn.text.trim() };
+    if (turn.style !== undefined && (typeof turn.style !== 'string' || turn.style.length > 500)) {
+      throw new Error(`Dialogue turn ${index + 1} style must be a string of at most 500 characters.`);
+    }
+    return { speaker: turn.speaker.trim(), voice: turn.voice, text: turn.text.trim(),
+      ...(turn.style ? { style: turn.style.trim() } : {}) };
   });
 }
 
@@ -51,9 +68,9 @@ async function ensureAbsent(path) {
   if (exists) throw new Error('An output file already exists.');
 }
 
-function createManifest(turns) {
+function createManifest(turns, model) {
   return {
-    model: SPEECH_MODEL,
+    model,
     audio: { container: 'wav', sample_rate_hz: SPEECH_SAMPLE_RATE, channels: 1, bits_per_sample: 16 },
     turns: turns.map((turn, index) => ({
       turn: index + 1,
@@ -64,9 +81,10 @@ function createManifest(turns) {
   };
 }
 
-export async function generateDialogue({ turns, outputDir, apiKey, fetchImpl = globalThis.fetch }) {
+export async function generateDialogue({ turns, outputDir, apiKey, model = SPEECH_MODEL, style = '', fetchImpl = globalThis.fetch }) {
   if (typeof apiKey !== 'string' || !apiKey.trim()) throw new Error('OPENROUTER_API_KEY is required.');
-  const manifest = createManifest(turns);
+  if (!SPEECH_MODELS.includes(model)) throw new Error('Speech model is not in the supported allowlist.');
+  const manifest = createManifest(turns, model);
   const outputPaths = manifest.turns.map(turn => resolve(outputDir, turn.file));
   const manifestPath = resolve(outputDir, OUTPUT_MANIFEST);
   try { await mkdir(outputDir, { recursive: true }); }
@@ -79,6 +97,8 @@ export async function generateDialogue({ turns, outputDir, apiKey, fetchImpl = g
       const wav = await generateSpeech({
         text: turns[index].text,
         voice: turns[index].voice,
+        model,
+        style: turns[index].style || style,
         apiKey,
         fetchImpl,
       });
@@ -99,7 +119,7 @@ export async function generateDialogue({ turns, outputDir, apiKey, fetchImpl = g
 export async function runDialogueCli(args = process.argv.slice(2), env = process.env, { fetchImpl = globalThis.fetch, stdout = process.stdout } = {}) {
   const paths = parseCli(args);
   if (!paths) {
-    stdout.write('Generate one WAV per dialogue turn using OpenRouter Gemini TTS.\nUsage: node scripts/generate-dialogue-tts.mjs --input dialogue.json --output-dir audio\n');
+    stdout.write('Generate one WAV per dialogue turn using OpenRouter Gemini TTS.\nUsage: node scripts/generate-dialogue-tts.mjs --input dialogue.json --output-dir audio [--model model-id] [--style direction]\n');
     return;
   }
   if (!env.OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY is required.');
@@ -107,7 +127,8 @@ export async function runDialogueCli(args = process.argv.slice(2), env = process
   try { source = await readFile(paths.input, 'utf8'); }
   catch { throw new Error('Dialogue input file could not be read.'); }
   const turns = parseDialogue(source);
-  await generateDialogue({ turns, outputDir: paths.outputDir, apiKey: env.OPENROUTER_API_KEY, fetchImpl });
+  await generateDialogue({ turns, outputDir: paths.outputDir, apiKey: env.OPENROUTER_API_KEY,
+    model: paths.model, style: paths.style, fetchImpl });
   stdout.write('Dialogue WAVs and manifest saved.\n');
 }
 

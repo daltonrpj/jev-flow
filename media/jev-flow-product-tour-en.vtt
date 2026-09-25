@@ -1,0 +1,91 @@
+WEBVTT
+
+1
+00:00:00.464 --> 00:00:06.024
+What if AI could add judgment without taking control away from
+your software?
+
+2
+00:00:06.224 --> 00:00:15.264
+That is the idea behind Jev Flow: clear inputs, typed judgments,
+and routes the application can inspect.
+
+3
+00:00:15.483 --> 00:00:25.243
+Deterministic AI does not promise a perfect model. It means the
+workflow rules are explicit, validated, and owned by code.
+
+4
+00:00:25.440 --> 00:00:35.120
+Jev answers a bounded question with a Choice, a probability, or a
+score. Code validates the shape before any branch runs.
+
+5
+00:00:35.344 --> 00:00:43.184
+And Laya? It offers an optional local inference path for
+compatible models when a team prefers to run its own checkpoint.
+
+6
+00:00:43.381 --> 00:00:51.501
+In the Flow Studio, connect triggers, Jev judgments, conditions,
+and logs on one visual canvas.
+
+7
+00:00:51.760 --> 00:00:59.568
+This support-triage walkthrough uses a labeled fixture. It
+demonstrates a route without presenting fixture data as a provider
+
+8
+00:00:59.568 --> 00:00:59.880
+call.
+
+9
+00:01:00.181 --> 00:01:12.596
+The Compendium generates and certifies 388,080 configurations for
+validity and unique identifiers. That is catalog coverage, not
+
+10
+00:01:12.596 --> 00:01:14.341
+model evaluations.
+
+11
+00:01:14.581 --> 00:01:23.141
+Now the Battle Arena sends the same synthetic incident live to
+TypeSafe Jev and the selected paid OpenRouter model.
+
+12
+00:01:23.403 --> 00:01:34.955
+This captured run returned five typed Jev judgments in 740
+milliseconds; GPT-4.1 Mini answered in 1,638 milliseconds. One run
+
+13
+00:01:34.955 --> 00:01:38.283
+is a demonstration, not a benchmark.
+
+14
+00:01:38.560 --> 00:01:47.560
+The games make rules tangible. Tic-tac-toe uses a local minimax
+opponent, so its move needs no model or API call.
+
+15
+00:01:47.883 --> 00:01:57.083
+In Chess, local rules reject illegal moves. In Blast Garden and
+City, inspect how each state changes as you play.
+
+16
+00:01:57.344 --> 00:02:06.923
+The Self-Driving Sim sends structured lane, speed, and obstacle
+state to a decision step. This demo uses no camera vision or
+
+17
+00:02:06.923 --> 00:02:07.464
+OpenCV.
+
+18
+00:02:07.664 --> 00:02:17.153
+Inspect the trace, change a flow, and test it with your own
+synthetic cases. Jev Flow makes model-assisted workflows visible
+
+19
+00:02:17.153 --> 00:02:18.224
+and auditable.

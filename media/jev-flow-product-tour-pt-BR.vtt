@@ -1,0 +1,99 @@
+WEBVTT
+
+1
+00:00:00.480 --> 00:00:08.200
+E se a IA ajudasse a avaliar situações sem tirar do software o
+controle do que acontece em seguida?
+
+2
+00:00:08.421 --> 00:00:18.021
+Essa é a proposta do Jev Flow: entradas claras, julgamentos
+tipados e caminhos que a aplicação consegue inspecionar.
+
+3
+00:00:18.224 --> 00:00:27.740
+IA determinística não promete um modelo perfeito. Significa que as
+regras do fluxo são explícitas, validadas e controladas pelo
+
+4
+00:00:27.740 --> 00:00:28.264
+código.
+
+5
+00:00:28.464 --> 00:00:39.083
+O Jev responde a uma pergunta delimitada com uma escolha, uma
+probabilidade ou uma pontuação. O código valida o formato antes de
+
+6
+00:00:39.083 --> 00:00:39.664
+seguir.
+
+7
+00:00:39.861 --> 00:00:48.221
+E o Laya? É uma opção local para modelos compatíveis, quando a
+equipe prefere instalar e executar o próprio checkpoint.
+
+8
+00:00:48.464 --> 00:00:57.264
+No Estúdio de Fluxos, conecte gatilhos, julgamentos do Jev,
+condições e registros em uma tela visual.
+
+9
+00:00:57.520 --> 00:01:06.779
+Esta demonstração de triagem usa uma simulação identificada. Ela
+mostra o caminho sem apresentar dados fictícios como uma chamada
+
+10
+00:01:06.779 --> 00:01:07.640
+ao provedor.
+
+11
+00:01:07.904 --> 00:01:20.183
+O Compendium gera e certifica 388.080 configurações quanto à
+validade e aos identificadores únicos. Isso mede o catálogo, não
+
+12
+00:01:20.183 --> 00:01:22.344
+avaliações de modelos.
+
+13
+00:01:22.624 --> 00:01:31.464
+Agora a Arena envia o mesmo incidente sintético ao Jev da TypeSafe
+e ao modelo pago do OpenRouter selecionado.
+
+14
+00:01:31.680 --> 00:01:44.769
+Nesta execução, o Jev retornou cinco julgamentos tipados em 740
+milissegundos. O GPT-4.1 Mini respondeu em 1.638 milissegundos. É
+
+15
+00:01:44.769 --> 00:01:48.320
+uma demonstração, não um benchmark.
+
+16
+00:01:48.560 --> 00:01:58.920
+Os jogos deixam as regras visíveis. No jogo da velha, o adversário
+local usa minimax; não precisa de modelo nem de chamada à API.
+
+17
+00:01:59.163 --> 00:02:08.883
+No xadrez, as regras locais rejeitam lances ilegais. No Blast
+Garden e na cidade, acompanhe como o estado muda.
+
+18
+00:02:09.163 --> 00:02:20.119
+O Simulador Autônomo envia dados estruturados de faixa, velocidade
+e obstáculos ao fluxo. Esta demonstração não usa câmera, visão
+
+19
+00:02:20.119 --> 00:02:22.243
+computacional nem OpenCV.
+
+20
+00:02:22.464 --> 00:02:32.237
+Inspecione o histórico, altere o fluxo e teste com seus próprios
+casos sintéticos. No Jev Flow, o papel do modelo e o controle do
+
+21
+00:02:32.237 --> 00:02:33.904
+código ficam visíveis.

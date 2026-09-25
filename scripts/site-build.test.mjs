@@ -46,12 +46,13 @@ test('site:build copies only the explicit public allowlist', async () => {
       return files;
     }
     assert.deepEqual((await tree(result.output)).sort(), expected);
-    assert.equal(await readFile(join(result.output, 'media', 'jev-flow-walkthrough.vtt'), 'utf8'), 'jev-flow-walkthrough.vtt');
+    assert.equal(await readFile(join(result.output, 'media', 'jev-flow-product-tour-en.vtt'), 'utf8'), 'jev-flow-product-tour-en.vtt');
     for (const locale of Object.keys(localeNames)) {
       const html = await readFile(join(result.output, locale, 'index.html'), 'utf8');
       assert.match(html, new RegExp(`<html lang="${locale}" data-site-root="../">`, 'u'));
       assert.match(html, /href="\.\.\/styles\.css"/u);
-      assert.match(html, /src="\.\.\/media\/jev-flow-walkthrough\.webm"/u);
+      assert.match(html, /src="\.\.\/media\/jev-flow-product-tour-en\.webm"/u);
+      assert.match(html, /href="\.\.\/media\/jev-flow-product-tour-en\.vtt"/u);
       assert.match(html, /class="header-repo" href="https:\/\/github\.com\/daltonrpj\/jev-flow"/u);
       assert.match(html, /<svg class="github-mark"[^>]*aria-hidden="true"/u);
       assert.match(html, /<span class="header-repo-slug">daltonrpj\/jev-flow<\/span>/u);
@@ -83,7 +84,7 @@ test('all four localized pages translate metadata, visible text and accessibilit
     if (locale === 'pt-BR') assert.match(html, /Jev fornece um julgamento tipado\./u);
     assert.match(html, /<meta name="description" content="Jev Flow [^"]+"/u);
     assert.match(html, /<img src="\.\.\/media\/studio-screenshot\.png" alt="[^"]+"/u);
-    assert.match(html, /<video controls playsinline preload="none"/u);
+    assert.match(html, /<video id="product-tour-video" controls playsinline preload="none"/u);
     assert.doesNotMatch(html, /alt="Jev Flow Studio showing|aria-label="Jev Flow product tour showing/u);
     if (locale !== 'pt-BR') assert.doesNotMatch(html, /Carrinho/u);
     assert.doesNotMatch(html, /<track\b/iu);

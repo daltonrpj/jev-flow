@@ -1,48 +1,27 @@
 # Jev Flow update context
 
-This file preserves compact project context across releases and substantial updates. Keep the latest entry first. For every comparable update, record the upstream source, user-visible changes, verification, and actual deployment state. Never record credentials, assume a provider call happened, or describe a fixture as a live result.
+Use this file as the durable handoff for later Jev Flow releases. Add one dated entry for each substantial update: goal, changed surfaces, measured evidence, limits, verification, and publication state. Keep credentials, runtime records, and private Atlas workspace details out of this file.
 
-## 1.1.1 — 2026-09-24
+## Current release — 1.2.0 (2026-09-24)
 
-- **Upstream:** standalone repository `main`; guide changes were committed as `c75c8fb560c8f249f9367b9a0fddbe44b1e0956d` on top of the prior `v1.1.0` state `8b6a31a`.
-- **Changes:** replaced the field-note walkthrough block with a concise product-tour description and embedded player; explained Jev's structured answers and code-controlled routing in plain English; clarified Arena timing, token availability, and estimated costs; separated Jev-compatible backends, local Laya, and LLM use; corrected the Compendium certificate and Ship Suite descriptions; explained the games; translated the revised copy into pt-BR, es, fr, and de.
-- **Files:** `site/index.html`, `site/translations.mjs`, `scripts/site-build.test.mjs`, `scripts/repository-contract.test.mjs`, package metadata, `CHANGELOG.md`, and this context record.
-- **Verification:** local `npm run site:build` emitted 24 allowlisted public files; focused site tests passed 9/9; full `npm test` passed 138/138; `npm run catalog:certify -- --check` validated 388,080/388,080 configurations. On the VPS, `npm test` passed 136/136 with 2 Playwright-only checks skipped because Playwright is not installed there; catalog certification passed 388,080/388,080 and the site build emitted 24 files. No remote model provider was called.
-- **Release:** commit [`c75c8fb`](https://github.com/daltonrpj/jev-flow/commit/c75c8fb560c8f249f9367b9a0fddbe44b1e0956d) is on `main`; annotated tag [`v1.1.1`](https://github.com/daltonrpj/jev-flow/tree/v1.1.1) points to this deployment record commit.
-- **Deployment:** static site release `/srv/jev-flow-site/releases/c75c8fb560c8` is active at `https://jevflow.cloud/`; rollback target `/srv/jev-flow-site/releases/e1658374dd2b` is preserved. Root, pt-BR, es, fr, and de pages returned 200; the embedded WebM returned 200 `video/webm`; public `/api/health` returned the expected 404. The Node application service was not restarted or changed.
-- **Open items:** none for this guide update. The two Playwright-only checks were covered by the full local test run.
+### Product tours
 
-## Prior release context — 1.1.0
+- `media/jev-flow-product-tour-en.*` and `media/jev-flow-product-tour-pt-BR.*` contain the English and Brazilian Portuguese narrated tours, WebVTT sidecars, posters, source dialogues, and exact transcripts.
+- Each narration has 14 alternating Alex/Charon and Maya/Kore turns using OpenRouter `google/gemini-3.8-flash-lite-tts`. Raw WAVs and credentials were not added to Git.
+- Dynamic scenes were recorded from the standalone Studio, Compendium, Arena, tic-tac-toe, Chess Lab, and Self-Driving Sim. The Arena capture is one actual TypeSafe Jev versus paid OpenAI GPT-4.1 Mini run. Its observed UI latencies were 740 ms and 1,638 ms; this is demonstration evidence, not a benchmark.
+- Final renders: English 138.224 s / 47,742,928 bytes, SHA-256 `7429e10423c12ba05873d1d2f3702704159e0f77ec4a6fcd94345731802a22aa`; Portuguese (Brazil) 153.904 s / 53,510,422 bytes, SHA-256 `bf0fd20bc11aa1c644eee04b37e05dbe1941bd1fd404293df1f69afe4dc6e7d1`. Both are 1920×1080 VP9/Opus WebM with finite duration metadata and 19/21 WebVTT cues respectively.
+- The Studio result is a labeled fixture. The Compendium's 388,080 value counts generated configurations, not model evaluations. Games validate locally by default. Cart obstacles and lane state are generated structured simulator data; the demo has no camera/OpenCV perception.
+- `site/index.html` embeds the English and Portuguese videos in a language selector. `scripts/build-site.mjs` allowlists the selected WebMs, posters, VTT files, and transcripts. Both READMEs link directly to the videos and their text sidecars.
+- Final visual review seeks into both videos, checks subtitle tracks, and inspects Arena, Chess, and Cart. The Chess scene shows the real English app board with a selected pawn and code-computed legal destinations.
 
-- **Product:** standalone open-source Jev Flow repository: <https://github.com/daltonrpj/jev-flow>.
-- **Release:** 1.1.0, 2026-09-24. Local `main` was synchronized with `origin/main` at `0ed1384` before this release work; the complete product update is commit `e1658374dd2b`.
-- **Included product surfaces:** visual Flow Studio; lazily generated, certified Compendium (388,080 valid configurations); Battle Arena; Self-Driving Cart; Jev Ship Pack and its gates/CLI; 52-case synthetic Ship Suite; games/labs; prompt and context tools; webhook, subflow, loop, error-branch, and design-chat support.
-- **Branding:** `site/assets/jev-flow-logo-master.png` is the 1254 × 1254 ImageGen master, generated from the user-provided logo reference. The site header and footer use it; `scripts/build-site.mjs` copies it through the explicit public asset allowlist.
-- **Product boundary:** only this standalone Jev Flow checkout is published. The public multilingual guide is static. The Node Studio and provider calls run locally or in a separately protected deployment. Never add Atlas workspace files, `.env` files, credentials, or private runtime data.
-- **Deployment topology:** follow [`deploy-hostinger.md`](deploy-hostinger.md). The public guide is served from the VPS static site path; the application service is separate and protected. Use immutable release directories and atomic symlink switching; do not expose internal runtime APIs publicly.
+### Runtime fix and release rules
 
-## 1.1.0 — 2026-09-24
+- `services/jev-flow/llm-gateway.mjs` now accepts a model ID already resolved under the selected provider. The Arena had listed slash-qualified OpenRouter IDs but rejected the provider-specific ID before fetch; a mocked regression test covers routing.
+- `scripts/render-explainer-webm.mjs` resolves dynamic clip paths from its `clipsDir` parameter, with an explicit unit test. The first render reproduced an undefined-variable failure; details are in [`BUG-FIXE-DISCIPLINE.md`](../BUG-FIXE-DISCIPLINE.md).
+- Verify future updates with `npm test`, `npm run catalog:certify -- --check`, `npm run site:build`, and `git diff --check`. CI builds the public guide but does not deploy it.
+- A release or website change does not by itself update `jevflow.cloud`. The static guide's VPS release and the protected Node application's deployment are separate, and must each be verified if the requested scope includes publishing them.
+- Release verification on this update: `npm test` (145/145), `npm run catalog:certify -- --check` (388,080/388,080), and `npm run site:build` (29 public files). Run `git diff --check` before committing. Public publishing is a separate action.
 
-- Synced against the latest GitHub `main` before release; the complete Jev Flow feature set listed above was already present at `0ed1384`.
-- Added the ImageGen logo asset and integrated it into the multilingual static guide.
-- Added `CHANGELOG.md`, this persistent context file, and the `AGENTS.md` rule to maintain them on future releases.
-- Raised package version to 1.1.0.
-- **Verification:** Windows `npm test` passed 138/138; VPS `npm test` passed 136 with 2 Playwright checks skipped because Playwright is not installed on the host. GitHub Actions for tag `v1.1.0` passed in 44 seconds. `npm run catalog:certify -- --check` validated 388,080/388,080 configurations, and `npm run site:build` emitted 24 allowlisted files. No paid or remote model call was made. No tracked environment or runtime-data paths were included.
-- **Release:** pushed `main` through `e1658374dd2b`; annotated tag [`v1.1.0`](https://github.com/daltonrpj/jev-flow/tree/v1.1.0) points to the deployed source commit.
-- **Deployment:** VPS app and static guide now point to `/opt/jev-flow/releases/e1658374dd2b` and `/srv/jev-flow-site/releases/e1658374dd2b`. `jev-flow` and `nginx` are active; loopback `/api/health` returned 200 and the service process loaded the new app release. Public English and pt-BR pages returned 200; the logo returned 200 `image/png` (937,122 bytes); public `/api/health` returned the expected 404 because the app API is not exposed.
-- **Backup/rollback:** `/var/backups/jev-flow-pre-e1658374dd2b.tar.gz` was created with mode 0600 and verified readable. The previous app and site releases remain pointed to by their `previous` symlinks.
-- **Open items:** the two Playwright-only checks were not run on the VPS host; both passed as part of the Windows test suite. Live Jev/LLM benchmark runs remain deliberately out of scope for this release verification.
+## Previous release context
 
-## Future update entry template
-
-```md
-## X.Y.Z — YYYY-MM-DD
-
-- **Upstream:** remote/branch and source commit synchronized.
-- **Changes:** concise product and documentation changes, with important counts qualified.
-- **Files:** key paths added or changed.
-- **Verification:** exact build/check commands and outcomes; state whether any remote provider was called.
-- **Release:** commit and tag URLs after publishing.
-- **Deployment:** target and externally observed status codes/version, or `not deployed` with the reason.
-- **Open items:** only confirmed follow-up work.
-```
+Version 1.1.1 replaced placeholder production notes on the multilingual static guide with a plain-language explanation of Jev Flow, code-owned routing, the Arena, the Compendium, games, and local setup. Version 1.1.0 consolidated the standalone app, the 388,080-configuration Compendium, Ship Pack and suite, interactive games, prompt/context helpers, and webhook/subflow nodes in the Jev Flow repository. The original deterministic-AI explainer and fixture-only walkthrough remain archived media assets; the new bilingual product tours are the current presentation videos.

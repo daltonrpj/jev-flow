@@ -1,5 +1,12 @@
 # Jev Flow walkthrough and screenshots
 
+## Bilingual product tours
+
+- `jev-flow-product-tour-en.webm` and `jev-flow-product-tour-pt-BR.webm` are 1920×1080 product tours with 14 alternating Alex/Charon and Maya/Kore dialogue turns, recorded Studio, Compendium, Arena, game, chess and Cart scenes, burned-in captions, and matching WebVTT sidecars.
+- Both narration tracks were generated with Google Gemini 3.8 Flash Lite TTS through OpenRouter. The source dialogue JSON contains the exact spoken text, voice assignment, delivery direction, and scene for each turn; the transcript Markdown adds notes that are explicitly not narrated.
+- The Studio segment is a labeled fixture, and the Compendium count describes generated configurations rather than model evaluations. The Arena clip is one live comparison using TypeSafe Jev and the paid `openai/gpt-4.1-mini` model; the transcript records its measured latencies and explicitly says this is not a benchmark. The course and obstacles in the Cart are structured simulator data, not camera perception.
+- Poster PNGs are linked from the README. The site embeds both WebMs with a language selector and matching caption/transcript sidecar links. The WAV source turns are temporary and are not stored in Git.
+
 - `jev-flow-deterministic-ai-explainer-en.webm` is the 4:53 English explainer, rendered at 1920×1080 with 26 alternating Gemini 3.1 Flash TTS turns, captured application screens, and custom diagrams. The Studio scene is a local synthetic fixture preview; it makes no live Jev or LLM call. The narration covers deterministic workflow design, typed Jev judgments, optional Laya, the Studio, Compendium, Arena, self-driving simulation, and Labs.
 - `jev-flow-deterministic-ai-explainer-en.vtt` is the matching WebVTT sidecar; its 49 cues contain only the exact spoken dialogue. Multi-cue turns are timed across each generated WAV in proportion to caption text length; the file is not word-level forced alignment.
 - `jev-flow-deterministic-ai-explainer-en-poster.png` is the video poster shown in the repository README. Click it to open the WebM.

@@ -65,7 +65,12 @@ export async function executeChat({ providerId, modelId, messages, temperature, 
   const config = current();
   if (!config.apiKey) throw new Error('LLM_API_KEY is not configured; set JEVFLOW_LLM_API_KEY or OPENAI_API_KEY at runtime');
   if (providerId && providerId !== config.providerId) throw new Error(`unsupported provider: ${providerId}`);
-  const selected = resolveModel(modelId || config.model);
+  const requestedModel = modelId || config.model;
+  // Arena callers pass the already-resolved provider model ID (for example,
+  // `nvidia/model`) while public choices use a provider-qualified ID.
+  // Resolve that bare ID within the configured provider.
+  const selected = resolveModel(requestedModel)
+    || (modelId ? resolveModel(`${config.providerId}/${modelId}`) : null);
   if (!selected) throw new Error('LLM model is required; set JEVFLOW_LLM_MODEL or choose a model');
   if (!Array.isArray(messages) || !messages.length) throw new TypeError('messages must be a non-empty array');
   const request = { model: selected.modelId, messages, temperature, max_tokens: maxTokens, stream };

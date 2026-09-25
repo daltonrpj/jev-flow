@@ -4,20 +4,26 @@ import { fileURLToPath } from 'node:url';
 
 export const SPEECH_URL = 'https://openrouter.ai/api/v1/audio/speech';
 export const SPEECH_MODEL = 'google/gemini-3.1-flash-tts-preview';
+export const SPEECH_MODEL_GEMINI_FLASH_LITE = 'google/gemini-3.8-flash-lite-tts';
+export const SPEECH_MODELS = Object.freeze([SPEECH_MODEL, SPEECH_MODEL_GEMINI_FLASH_LITE]);
 export const SPEECH_VOICE = 'Charon';
 export const SPEECH_VOICES = Object.freeze(['Charon', 'Kore']);
 export const SPEECH_SAMPLE_RATE = 24_000;
 const MAX_PCM_BYTES = 64 * 1024 * 1024;
 
-export function speechPayload(text, voice = SPEECH_VOICE) {
+export function speechPayload(text, voice = SPEECH_VOICE, { model = SPEECH_MODEL, style = '' } = {}) {
   if (typeof text !== 'string' || !text.trim()) throw new Error('Narration text must be non-empty.');
   if (!SPEECH_VOICES.includes(voice)) throw new Error('Speech voice must be Charon or Kore.');
-  return {
-    model: SPEECH_MODEL,
+  if (!SPEECH_MODELS.includes(model)) throw new Error('Speech model is not in the supported allowlist.');
+  if (typeof style !== 'string' || style.length > 500) throw new Error('Speech style must be a string of at most 500 characters.');
+  const payload = {
+    model,
     input: text.trim(),
     voice,
     response_format: 'pcm',
   };
+  if (style.trim()) payload.provider = { options: { 'google-ai-studio': { speech_metadata: { style: style.trim() } } } };
+  return payload;
 }
 
 export function pcmToWav(pcm) {
@@ -43,8 +49,8 @@ export function pcmToWav(pcm) {
   return wav;
 }
 
-export async function generateSpeech({ text, voice = SPEECH_VOICE, apiKey, fetchImpl = globalThis.fetch, signal = AbortSignal.timeout(90_000) }) {
-  const body = speechPayload(text, voice);
+export async function generateSpeech({ text, voice = SPEECH_VOICE, model = SPEECH_MODEL, style = '', apiKey, fetchImpl = globalThis.fetch, signal = AbortSignal.timeout(90_000) }) {
+  const body = speechPayload(text, voice, { model, style });
   if (typeof apiKey !== 'string' || !apiKey.trim()) throw new Error('OPENROUTER_API_KEY is required.');
   if (typeof fetchImpl !== 'function') throw new Error('A fetch implementation is required.');
   let response;

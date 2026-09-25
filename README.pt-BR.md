@@ -4,9 +4,21 @@
 
 Jev Flow é um aplicativo Node.js independente para criar e testar fluxos com julgamentos tipados do Jev e decisões controladas por código. O Studio, Compendium, Battle Arena, Carrinho e Labs rodam localmente ou em uma instalação protegida. O guia público é apenas uma apresentação estática; não executa fluxos, modelos ou APIs.
 
-[![Prévia animada do aplicativo Jev Flow real](media/jev-flow-walkthrough-teaser.gif)](media/jev-flow-walkthrough.webm)
+## Vídeos de apresentação
 
-O GIF mostra uma prévia. [Abra o WebM completo](media/jev-flow-walkthrough.webm), [leia as legendas em inglês](media/jev-flow-walkthrough.vtt) e [consulte a transcrição e a origem da demonstração](media/jev-flow-walkthrough-transcript.md). O vídeo usa fixtures sintéticas e regras locais; não demonstra uma chamada remota real ao Jev ou a um LLM. O README do GitHub mostra o GIF e links para o vídeo; o player completo está no guia estático após a publicação.
+### Português (Brasil)
+
+[![Tour do Jev Flow em português](media/jev-flow-product-tour-pt-BR-poster.png)](media/jev-flow-product-tour-pt-BR.webm)
+
+[Assistir ao tour em português](media/jev-flow-product-tour-pt-BR.webm) · [Legendas WebVTT](media/jev-flow-product-tour-pt-BR.vtt) · [Transcrição e origem](media/jev-flow-product-tour-pt-BR-transcript.md)
+
+### English
+
+[![English Jev Flow product tour](media/jev-flow-product-tour-en-poster.png)](media/jev-flow-product-tour-en.webm)
+
+[Watch the English tour](media/jev-flow-product-tour-en.webm) · [WebVTT captions](media/jev-flow-product-tour-en.vtt) · [Transcript and provenance](media/jev-flow-product-tour-en-transcript.md)
+
+Os dois vídeos têm diálogo em duas vozes e legendas gravadas na imagem. O Studio usa um exemplo simulado identificado; o Compendium informa configurações geradas, não avaliações de modelos. A Arena mostra uma única comparação real entre o TypeSafe Jev e o GPT-4.1 Mini pago — demonstração, não benchmark. Jogos e xadrez usam regras locais; o Carrinho recebe dados estruturados do simulador, sem câmera nem OpenCV.
 
 ## Instalação local
 
