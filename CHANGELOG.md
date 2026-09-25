@@ -2,6 +2,13 @@
 
 User-visible releases of Jev Flow are recorded here. See [`docs/UPDATE-CONTEXT.md`](docs/UPDATE-CONTEXT.md) for the longer project and deployment context.
 
+## 1.1.1 — 2026-09-24
+
+- Rewrites the public guide in plain English and replaces the walkthrough production notes with a short description of the product tour.
+- Clarifies how typed Jev answers, code-controlled routes, Arena measurements, cost estimates, and separate Jev/LLM connections work.
+- States that the Compendium generates configurations on demand and that its certificate covers all 388,080 validity and unique-ID checks; describes the Ship Suite as 52 cases across 12 scenarios.
+- Explains the tic-tac-toe, fictional combat, and city decision demos; updates all four localized pages (pt-BR, es, fr, de).
+
 ## 1.1.0 — 2026-09-24
 
 - Consolidates the standalone Jev Flow Studio, generated Compendium, Battle Arena, Self-Driving Cart, Jev Ship Pack and suite, games, prompt/context tools, and webhook/subflow integrations already present on `main`.

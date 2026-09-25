@@ -72,18 +72,20 @@ test('site:build copies only the explicit public allowlist', async () => {
 
 test('all four localized pages translate metadata, visible text and accessibility descriptions', () => {
   const titleByLocale = {
-    'pt-BR': 'O limite da decisão está visível',
-    es: 'El límite de la decisión es visible',
-    fr: 'La frontière de décision est visible',
-    de: 'Die Entscheidungsgrenze ist sichtbar',
+    'pt-BR': 'Studio de código aberto para fluxos com IA',
+    es: 'Estudio de código abierto para flujos con IA',
+    fr: 'Studio open source pour les flux assistés par IA',
+    de: 'Open-Source-Studio für KI-gestützte Workflows',
   };
   for (const [locale, title] of Object.entries(titleByLocale)) {
     const html = renderSiteLocale(englishSource, locale);
     assert.ok(html.includes(`<title>Jev Flow — ${title}</title>`), locale);
-    if (locale === 'pt-BR') assert.match(html, /Evidência tipada entra no fluxo\./u);
-    assert.match(html, /<meta name="description" content="Jev Flow\s?: [^"]+"/u);
+    if (locale === 'pt-BR') assert.match(html, /Jev fornece um julgamento tipado\./u);
+    assert.match(html, /<meta name="description" content="Jev Flow [^"]+"/u);
     assert.match(html, /<img src="\.\.\/media\/studio-screenshot\.png" alt="[^"]+"/u);
     assert.match(html, /<video controls playsinline preload="none"/u);
+    assert.doesNotMatch(html, /alt="Jev Flow Studio showing|aria-label="Jev Flow product tour showing/u);
+    if (locale !== 'pt-BR') assert.doesNotMatch(html, /Carrinho/u);
     assert.doesNotMatch(html, /<track\b/iu);
   }
   assert.throws(() => renderSiteLocale(englishSource, 'it'), /Unsupported site locale/u);

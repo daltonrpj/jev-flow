@@ -2,6 +2,16 @@
 
 This file preserves compact project context across releases and substantial updates. Keep the latest entry first. For every comparable update, record the upstream source, user-visible changes, verification, and actual deployment state. Never record credentials, assume a provider call happened, or describe a fixture as a live result.
 
+## 1.1.1 — 2026-09-24
+
+- **Upstream:** standalone repository `main`, based on `8b6a31a` (the prior `v1.1.0` release state); release commit and tag are pending.
+- **Changes:** replaced the field-note walkthrough block with a concise product-tour description and embedded player; explained Jev's structured answers and code-controlled routing in plain English; clarified Arena timing, token availability, and estimated costs; separated Jev-compatible backends, local Laya, and LLM use; corrected the Compendium certificate and Ship Suite descriptions; explained the games; translated the revised copy into pt-BR, es, fr, and de.
+- **Files:** `site/index.html`, `site/translations.mjs`, `scripts/site-build.test.mjs`, `scripts/repository-contract.test.mjs`, package metadata, `CHANGELOG.md`, and this context record.
+- **Verification:** `npm run site:build` emitted 24 allowlisted public files; focused site tests passed 9/9; full `npm test` passed 138/138; `git diff --check` passed. Tests used local/injected responses; no remote model provider was called.
+- **Release:** pending commit and tag.
+- **Deployment:** pending publication to the existing public static guide at `https://jevflow.cloud/`; the Node application remains a separate protected service.
+- **Open items:** verify the public pages and the embedded video after switching the static release, then replace the pending fields above with actual commit, tag, and deployment evidence.
+
 ## Current release context
 
 - **Product:** standalone open-source Jev Flow repository: <https://github.com/daltonrpj/jev-flow>.

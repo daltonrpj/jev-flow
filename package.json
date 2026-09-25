@@ -1,18 +1,24 @@
 {
   "name": "jev-flow",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": false,
   "description": "Standalone open-source visual orchestration studio for typed Jev decisions.",
   "license": "MIT",
   "type": "module",
-  "bin": { "jev-flow": "bin/jev-flow.mjs" },
-  "engines": { "node": ">=20" },
+  "bin": {
+    "jev-flow": "bin/jev-flow.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server.mjs",
     "catalog:certify": "node scripts/certify-jev-flow-catalog.mjs",
     "site:build": "node scripts/build-site.mjs",
     "test": "node --test"
   },
-  "dependencies": { "undici": "^6.28.0" },
+  "dependencies": {
+    "undici": "^6.28.0"
+  },
   "devDependencies": {}
 }

@@ -83,22 +83,31 @@ test('public guide and protected app retain the real walkthrough, English captio
   assert.match(readme, /media\/jev-flow-deterministic-ai-explainer-en\.vtt/u);
 });
 
-test('static guide uses real relative media, labels pre-run evidence, and never enables duplicate captions', () => {
+test('static guide explains Jev Flow, embeds the tour, and keeps media references relative', () => {
   const html = readFileSync(join(root, 'site', 'index.html'), 'utf8');
   const css = readFileSync(join(root, 'site', 'styles.css'), 'utf8');
   const js = readFileSync(join(root, 'site', 'main.js'), 'utf8');
-  assert.match(html, /The decision[\s\S]*?boundary[\s\S]*?is visible/u);
+  assert.match(html, /Build AI workflows[\s\S]*?with clear decisions/u);
+  assert.match(html, /Jev answers a focused question[\s\S]*?The workflow checks the answer[\s\S]*?An execution trace/u);
   assert.match(html, /<video controls playsinline preload="none" poster="\.\/media\/studio-screenshot\.png"/u);
   assert.match(html, /<source src="\.\/media\/jev-flow-walkthrough\.webm" type="video\/webm"/u);
   assert.doesNotMatch(html, /<track\b/iu);
-  assert.match(html, /href="\.\/media\/jev-flow-walkthrough\.vtt"/u);
-  assert.match(html, /href="\.\/media\/jev-flow-walkthrough-transcript\.md"/u);
+  assert.match(html, /SEE JEV FLOW IN ACTION[\s\S]*?Follow the flow from input to outcome\./u);
+  assert.doesNotMatch(html, /FIELD NOTES|Download WebM|Read English VTT|Transcript &amp; provenance|REAL APP CAPTURE|SYNTHETIC &amp; LOCAL DEMONSTRATIONS|synthetic fixtures/iu);
+  assert.match(html, /same text to Jev and a selected language model[\s\S]*?structured answers to specific questions[\s\S]*?cost is labeled as an estimate/u);
   assert.match(html, /id="watch"/u);
   assert.match(html, /id="install"/u);
   assert.match(html, /href="\.\/favicon\.svg"/u);
   assert.match(html, /<img class="brand-symbol" src="\.\/assets\/jev-flow-logo-master\.png"/u);
-  assert.match(html, /ARENA \/ PRE-RUN[\s\S]*?TYPESAFE UNAVAILABLE/u);
-  assert.match(html, /388,080[\s\S]*?not a count of authored flows, executed model runs/u);
+  assert.match(html, /ARENA \/ COMPARISON SETUP/u);
+  assert.doesNotMatch(html, /TYPESAFE UNAVAILABLE|not a count of executed runs/iu);
+  assert.match(html, /388,080[\s\S]*?configurations passed validity and unique-ID checks[\s\S]*?certificate records validity and unique IDs for all 388,080/u);
+  assert.match(html, /52 repeatable cases across 12 scenarios and compare each answer with its fixed expected result/u);
+  assert.match(html, /tic-tac-toe against local minimax[\s\S]*?fictional combat[\s\S]*?city one tick at a time/u);
+  assert.match(html, /Jev-compatible backend for typed judgments[\s\S]*?Configure an LLM separately/u);
+  assert.match(html, /Change traffic and obstacles[\s\S]*?driving simulation/u);
+  assert.match(html, /webhooks, subflows, loops, error routes, and design chat/u);
+  assert.match(html, /optional local Laya[\s\S]*?LLM separately for Arena/u);
   assert.match(css, /\.install-copy,\.install-workbench\{min-width:0\}/u);
   assert.match(css, /\.install\{grid-template-columns:minmax\(0,1fr\)\}/u);
   assert.match(css, /\.install-workbench pre\{white-space:pre-wrap;overflow-wrap:anywhere\}/u);
