@@ -303,3 +303,11 @@
 - **Cause:** the screen capture was taken before the asynchronous lab selection completed.
 - **Fix:** replace the clip with a gentle pan over a verified Chess Lab capture showing the selected e2 pawn and its locally computed e3/e4 legal destinations; render both language versions again.
 - **Regression checks:** seekable final WebMs report 1920×1080, finite durations, 19/21 subtitle cues, and matching Chess footage; full test suite, catalog certification, and site build pass.
+
+## 2026-09-24 — renderer path test assumed Windows separators
+
+- **Input:** run the production release gate on Ubuntu after `npm ci --omit=dev --ignore-scripts`.
+- **State:** 142 tests passed and 2 browser tests skipped as expected without Playwright, but the renderer path contract failed because it expected a backslash in a resolved Linux path.
+- **Cause:** the test encoded a Windows-only path separator instead of the platform path API.
+- **Fix:** build the expected clip suffix with `node:path`'s `join()` so Windows and Linux verify the same path contract.
+- **Regression checks:** rerun the renderer contract and full suite locally, then repeat the production-only suite on Ubuntu before switching either active release.

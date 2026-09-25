@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
 import {
   captionChunks, formatWebVtt, indexWebmDuration, parseArguments, readWavDuration, readWebmDuration,
   resolveClipPaths, validateProduction,
@@ -21,8 +22,8 @@ test('render inputs are explicit and output stays a WebM', () => {
   assert.throws(() => parseArguments(['--input', 'dialogue.json', '--audio-dir', 'audio', '--output', 'video.mp4']), /\.webm/u);
   assert.equal(parseArguments(['--input', 'dialogue.json', '--audio-dir', 'audio', '--output', 'video.webm', '--clips-dir', 'clips']).clipsDir.endsWith('clips'), true);
   assert.equal(resolveClipPaths(null).arena, undefined);
-  assert.equal(resolveClipPaths('clips').arena.endsWith('clips\\arena.webm'), true);
-  assert.equal(resolveClipPaths('clips').cart.endsWith('clips\\cart.webm'), true);
+  assert.equal(resolveClipPaths('clips').arena.endsWith(join('clips', 'arena.webm')), true);
+  assert.equal(resolveClipPaths('clips').cart.endsWith(join('clips', 'cart.webm')), true);
 });
 
 test('Portuguese Gemini Flash Lite dialogue validates with its exact two-voice WAV set', () => {

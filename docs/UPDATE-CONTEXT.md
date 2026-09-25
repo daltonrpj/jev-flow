@@ -18,6 +18,7 @@ Use this file as the durable handoff for later Jev Flow releases. Add one dated 
 
 - `services/jev-flow/llm-gateway.mjs` now accepts a model ID already resolved under the selected provider. The Arena had listed slash-qualified OpenRouter IDs but rejected the provider-specific ID before fetch; a mocked regression test covers routing.
 - `scripts/render-explainer-webm.mjs` resolves dynamic clip paths from its `clipsDir` parameter, with an explicit unit test. The first render reproduced an undefined-variable failure; details are in [`BUG-FIXE-DISCIPLINE.md`](../BUG-FIXE-DISCIPLINE.md).
+- A production Linux test run exposed a Windows-only path assertion in that renderer contract; the test now uses `node:path.join()` on both platforms. The failed release gate was fixed before changing the active VPS release.
 - Verify future updates with `npm test`, `npm run catalog:certify -- --check`, `npm run site:build`, and `git diff --check`. CI builds the public guide but does not deploy it.
 - A release or website change does not by itself update `jevflow.cloud`. The static guide's VPS release and the protected Node application's deployment are separate, and must each be verified if the requested scope includes publishing them.
 - Release verification on this update: `npm test` (145/145), `npm run catalog:certify -- --check` (388,080/388,080), and `npm run site:build` (29 public files). Run `git diff --check` before committing. Public publishing is a separate action.
