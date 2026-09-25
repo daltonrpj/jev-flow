@@ -4,15 +4,15 @@ This file preserves compact project context across releases and substantial upda
 
 ## 1.1.1 — 2026-09-24
 
-- **Upstream:** standalone repository `main`, based on `8b6a31a` (the prior `v1.1.0` release state); release commit and tag are pending.
+- **Upstream:** standalone repository `main`; guide changes were committed as `c75c8fb560c8f249f9367b9a0fddbe44b1e0956d` on top of the prior `v1.1.0` state `8b6a31a`.
 - **Changes:** replaced the field-note walkthrough block with a concise product-tour description and embedded player; explained Jev's structured answers and code-controlled routing in plain English; clarified Arena timing, token availability, and estimated costs; separated Jev-compatible backends, local Laya, and LLM use; corrected the Compendium certificate and Ship Suite descriptions; explained the games; translated the revised copy into pt-BR, es, fr, and de.
 - **Files:** `site/index.html`, `site/translations.mjs`, `scripts/site-build.test.mjs`, `scripts/repository-contract.test.mjs`, package metadata, `CHANGELOG.md`, and this context record.
-- **Verification:** `npm run site:build` emitted 24 allowlisted public files; focused site tests passed 9/9; full `npm test` passed 138/138; `git diff --check` passed. Tests used local/injected responses; no remote model provider was called.
-- **Release:** pending commit and tag.
-- **Deployment:** pending publication to the existing public static guide at `https://jevflow.cloud/`; the Node application remains a separate protected service.
-- **Open items:** verify the public pages and the embedded video after switching the static release, then replace the pending fields above with actual commit, tag, and deployment evidence.
+- **Verification:** local `npm run site:build` emitted 24 allowlisted public files; focused site tests passed 9/9; full `npm test` passed 138/138; `npm run catalog:certify -- --check` validated 388,080/388,080 configurations. On the VPS, `npm test` passed 136/136 with 2 Playwright-only checks skipped because Playwright is not installed there; catalog certification passed 388,080/388,080 and the site build emitted 24 files. No remote model provider was called.
+- **Release:** commit [`c75c8fb`](https://github.com/daltonrpj/jev-flow/commit/c75c8fb560c8f249f9367b9a0fddbe44b1e0956d) is on `main`; annotated tag [`v1.1.1`](https://github.com/daltonrpj/jev-flow/tree/v1.1.1) points to this deployment record commit.
+- **Deployment:** static site release `/srv/jev-flow-site/releases/c75c8fb560c8` is active at `https://jevflow.cloud/`; rollback target `/srv/jev-flow-site/releases/e1658374dd2b` is preserved. Root, pt-BR, es, fr, and de pages returned 200; the embedded WebM returned 200 `video/webm`; public `/api/health` returned the expected 404. The Node application service was not restarted or changed.
+- **Open items:** none for this guide update. The two Playwright-only checks were covered by the full local test run.
 
-## Current release context
+## Prior release context — 1.1.0
 
 - **Product:** standalone open-source Jev Flow repository: <https://github.com/daltonrpj/jev-flow>.
 - **Release:** 1.1.0, 2026-09-24. Local `main` was synchronized with `origin/main` at `0ed1384` before this release work; the complete product update is commit `e1658374dd2b`.
